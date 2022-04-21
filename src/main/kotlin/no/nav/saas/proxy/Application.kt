@@ -1,28 +1,54 @@
 package no.nav.saas.proxy
 
+import io.prometheus.client.exporter.common.TextFormat
+import java.io.File
+import java.io.StringWriter
 import mu.KotlinLogging
+import no.nav.saas.proxy.token.TokenValidation
+import org.http4k.client.ApacheClient
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
+import org.http4k.core.Status.Companion.BAD_REQUEST
+import org.http4k.core.Status.Companion.NON_AUTHORITATIVE_INFORMATION
+import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.bind
+import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 
-private const val EV_bootstrapWaitTime = "MS_BETWEEN_WORK" // default to 10 minutes
-// private val bootstrapWaitTime = AnEnvironment.getEnvOrDefault(EV_bootstrapWaitTime, "60000").toLong()
+const val NAIS_DEFAULT_PORT = 8080
+const val NAIS_ISALIVE = "/internal/isAlive"
+const val NAIS_ISREADY = "/internal/isReady"
+const val NAIS_METRICS = "/internal/metrics"
 
-private val log = KotlinLogging.logger { }
+const val API_URI_VAR = "rest"
+const val API_INTERNAL_TEST_URI = "/internal/test/{$API_URI_VAR:.*}"
+const val API_URI = "/{$API_URI_VAR:.*}"
+
+const val TARGET_INGRESS = "target-ingress"
+const val TARGET_CLIENT_ID = "target-client-id"
+const val AUTHORIZATION = "Authorization"
+const val HOST = "host"
+const val X_FORWARDED_HOST = "x-forwarded-host"
+
+const val env_WHITELIST_FILE = "WHITELIST_FILE"
 
 object Application {
-    // val gson = Gson()
-
     private val log = KotlinLogging.logger { }
+
+    val rules = Rules.parse(System.getenv(env_WHITELIST_FILE))
+
+    val client = ApacheClient()
 
     fun start() {
         log.info { "Starting" }
+        log.info { "Rules $rules" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
     }
@@ -30,96 +56,9 @@ object Application {
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
     fun api(): HttpHandler = routes(
-
-        "/hello" bind Method.GET to {
-            Response(Status.OK).body("Hello there")
-        },
-        // "/static" bind static(Classpath("/static")),
-        /*
-        "/innboks" bind Method.POST to {
-            metrics.requestsInnboks.inc()
-            log.info { "innboks called${if (devContext) " with body ${it.bodyString()}" else ""}" }
-            if (containsValidToken(it)) {
-                try {
-                    val innboksRequest = Application.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
-                    val result: MutableList<InnboksInput> = mutableListOf()
-                    innboksRequest.forEach {
-                        val innboksbuilder = InnboksInputBuilder()
-                            .withEksternVarsling(it.eksternVarsling)
-                            .withSikkerhetsnivaa(it.sikkerhetsnivaa)
-                            .withTekst(it.tekst)
-                            .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
-                            .withEpostVarslingstekst(it.epostVarslingstekst)
-                            .withEpostVarslingstittel(it.epostVarslingstittel)
-                            .withSmsVarslingstekst(it.smsVarslingstekst)
-                        if (it.link.isNotEmpty()) {
-                            innboksbuilder.withLink(URL(it.link))
-                        }
-                        if (it.prefererteKanaler.isNotEmpty()) {
-                            innboksbuilder.withPrefererteKanaler(
-                                *it.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }
-                                    .toTypedArray()
-                            )
-                        }
-                        val innboks = innboksbuilder.build()
-                        Application.brukernotifikasjonService.sendInnboks(
-                            it.eventId,
-                            it.grupperingsId,
-                            it.fodselsnummer,
-                            innboks
-                        )
-                        result.add(innboks)
-                    }
-                    log.info("Published ${result.count()} Innboks events")
-                    Response(Status.OK).body("Published ${result.count()} Innboks events ${if (devContext) result.toString() else ""}")
-                } catch (e: Exception) {
-                    /*
-                    val sw = StringWriter()
-                    val pw = PrintWriter(sw)
-                    e.printStackTrace(pw)
-                    val error = sw.toString()
-                     */
-                    log.error { e.toString() }
-                    metrics.apiIssues.inc()
-                    Response(Status.EXPECTATION_FAILED).body(e.toString())
-                }
-            } else {
-                metrics.apiIssues.inc()
-                log.info { "saas-proxy api call denied - missing valid token" }
-                Response(Status.UNAUTHORIZED)
-            }
-        },
-        "/done" bind Method.POST to {
-            metrics.requestsDone.inc()
-            log.info { "done called${if (devContext) " with body ${it.bodyString()}" else ""}" }
-            if (containsValidToken(it)) {
-                try {
-                    val doneRequest = Application.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
-                    val result: MutableList<DoneInput> = mutableListOf()
-                    doneRequest.forEach {
-                        val done = DoneInputBuilder()
-                            .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
-                            .build()
-                        Application.brukernotifikasjonService.sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
-                        result.add(done)
-                    }
-                    Response(Status.OK).body("Published ${result.count()} Done events ${if (devContext) result.toString() else ""}")
-                } catch (e: Exception) {
-                    metrics.apiIssues.inc()
-                    log.error { e }
-                    Response(Status.EXPECTATION_FAILED)
-                }
-            } else {
-                metrics.apiIssues.inc()
-                log.info { "saas-proxy api call denied - missing valid token" }
-                Response(Status.UNAUTHORIZED)
-            }
-        },
-        */
         NAIS_ISALIVE bind Method.GET to { Response(Status.OK) },
         NAIS_ISREADY bind Method.GET to { Response(Status.OK) },
-        NAIS_METRICS bind Method.GET to { Response(Status.OK)
-            /*
+        NAIS_METRICS bind Method.GET to {
             runCatching {
                 StringWriter().let { str ->
                     TextFormat.write004(str, Metrics.cRegistry.metricFamilySamples())
@@ -129,48 +68,82 @@ object Application {
                 .onFailure {
                     log.error { "/prometheus failed writing metrics - ${it.localizedMessage}" }
                 }
-                .getOrDefault("")
-                .responseByContent()*/
-        },
-        NAIS_PRESTOP bind Method.GET to {
-            metrics.preStopHook.inc()
-            // PrestopHook.activate()
-            log.info { "Received PreStopHook from NAIS" }
-            Response(Status.OK)
-        }
-    )
-
-    const val NAIS_URL = "http://localhost:"
-    const val NAIS_DEFAULT_PORT = 8080
-
-    const val NAIS_ISALIVE = "/isAlive"
-    const val NAIS_ISREADY = "/isReady"
-    const val NAIS_METRICS = "/metrics"
-    const val NAIS_PRESTOP = "/stop"
-
-    val devContext: Boolean = System.getenv("SF_INSTANCE") == "PREPROD"
-
-    private fun String.responseByContent(): Response =
-        if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
-
-    // Variant to use to run a job loop as base, having the api enabled only until job loop breaks:
-    fun enableAPI(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
-        apiServer(port).let { srv ->
-            try {
-                srv.start().use {
-                    log.info { "NAIS DSL is up and running at port $port" }
-                    runCatching(doSomething)
-                        .onFailure {
-                            log.error { "Failure during doSomething in enableNAISAPI - ${it.localizedMessage}" }
-                        }
+                .getOrDefault("").let {
+                    if (it.isNotEmpty()) Response(Status.OK).body(it) else Response(Status.NO_CONTENT)
                 }
-                true
-            } catch (e: Exception) {
-                log.error { "Failure during enable/disable NAIS api for port $port - ${e.localizedMessage}" }
-                false
-            } finally {
-                srv.close()
-                log.info { "NAIS DSL is stopped at port $port" }
+        },
+        API_INTERNAL_TEST_URI bind { req: Request ->
+            val path = (req.path(API_URI_VAR) ?: "")
+            Metrics.testApiCalls.labels(path).inc()
+            log.info { "Test url called with path $path" }
+            val method = req.method
+            val targetIngress = req.requireHeader(TARGET_INGRESS)
+
+            val team = rules.filter { it.value.keys.contains(targetIngress) }.map { it.key }.firstOrNull()
+
+            if (team == null) {
+                Response(NON_AUTHORITATIVE_INFORMATION).body("Ingress not found in rules. Not approved")
+            }
+
+            var approved = false
+            var report = "Report:\n"
+            Application.rules[team]?.let { it[targetIngress] }?.filter {
+                report += "Evaluating $it on method $method, path /$path "
+                it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
+            }?.firstOrNull()?.let {
+                approved = true
+            }
+            report += if (approved)"Approved" else "Not approved"
+
+            Response(OK).body(report)
+        },
+        API_URI bind { req: Request ->
+            val path = req.path(API_URI_VAR) ?: ""
+            Metrics.apiCalls.labels(path).inc()
+
+            val method = req.method
+            val body = req.body
+            val uri = req.uri
+
+            val targetIngress = req.requireHeader(TARGET_INGRESS)
+            val targetClientId = req.requireHeader(TARGET_CLIENT_ID)
+
+            val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST)
+            val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
+
+            log.info { "Call:\nPath: $path\n Uri: $uri\nMethod: $method\nBody: $body\n" }
+            File("/tmp/latestcall").writeText("Call:\nPath: $path\n Uri: $uri\nMethod: $method\nBody: $body\nHeaders: $${req.headers}")
+
+            val containsValidFromClientId = TokenValidation.containsValidToken(req, targetClientId)
+            log.info { "Contains valid token from client id : $containsValidFromClientId" }
+
+            val team = rules.filter { it.value.keys.contains(targetIngress) }.map { it.key }.firstOrNull()
+
+            val approvedByRules =
+                if (team == null) {
+                    log.info { "Ingress not found in whitelist" }
+                    false
+                } else {
+                    var report: String = "Report:\n"
+                    Application.rules[team]?.let { it[targetIngress] }?.filter {
+                        report += "Evaluating $it on method $method, path /$path"
+                        it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
+                    }?.firstOrNull()?.let {
+                        report += "Approved\n"
+                        true
+                    } ?: false.also { log.info { "$report" } }
+                }
+
+            if (!approvedByRules) {
+                Response(BAD_REQUEST).body("Bad request")
+            } else if (!TokenValidation.containsValidToken(req, targetClientId)) {
+                Response(UNAUTHORIZED).body("Not authorized")
+            } else {
+                val redirect = Request(req.method, "$targetIngress/$uri").body(req.body).headers(forwardHeaders)
+                val result = client(redirect)
+                log.info { result }
+                result
             }
         }
+    )
 }

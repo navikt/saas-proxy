@@ -1,28 +1,21 @@
 package no.nav.saas.proxy
 
+import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Gauge
 
-class Metrics {
-    val preStopHook: Gauge = Gauge
-        .build()
-        .name("pre_stop__hook_gauge")
-        .help("No. of preStopHook activations since last restart")
-        .register()
-    val requestsDone: Gauge = Gauge
-        .build()
-        .name("request_done")
-        .help("request_done")
-        .register()
-    val requestsInnboks: Gauge = Gauge
-        .build()
-        .name("request_innboks")
-        .help("request_innboks")
-        .register()
-    val apiIssues: Gauge = Gauge
-        .build()
-        .name("api_issues")
-        .help("api_issues")
-        .register()
-}
+object Metrics {
 
-val metrics = Metrics()
+    val cRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
+
+    val apiCalls: Gauge = registerLabelGauge("api_calls", "ingress")
+
+    val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "ingress")
+
+    fun registerGauge(name: String): Gauge {
+        return Gauge.build().name(name).help(name).register()
+    }
+
+    fun registerLabelGauge(name: String, label: String): Gauge {
+        return Gauge.build().name(name).help(name).labelNames(label).register()
+    }
+}

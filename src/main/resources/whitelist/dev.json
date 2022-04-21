@@ -1,0 +1,13 @@
+{
+  "teamnks": {
+    "https://sf-brukernotifikasjon-v2.dev.intern.nav.no": [
+      "POST /innboks",
+      "POST /done"
+    ]
+  },
+  "teamcrm": {
+    "https://communitylogout.dev.intern.nav.no": [
+      "GET /logout"
+    ]
+  }
+}

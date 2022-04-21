@@ -6,25 +6,24 @@ metadata:
   labels:
     team: teamcrm
 spec:
-  webproxy: true
   image: {{ image }}
   port: 8080
   replicas:
     min: 1
-    max: 1
+    max: 2
   liveness:
-    path: /isAlive
+    path: /internal/isAlive
     initialDelay: 5
     periodSeconds: 5
     failureThreshold: 30
   readiness:
-    path: /isReady
+    path: /internal/isReady
     initialDelay: 5
     periodSeconds: 5
     failureThreshold: 30
   prometheus:
     enabled: true
-    path: /metrics
+    path: /internal/metrics
   resources:
     limits:
       cpu: 1000m
@@ -33,12 +32,8 @@ spec:
       cpu: 100m
       memory: 512Mi
   ingresses:
-    - "https://saas-proxy-v2.ekstern.dev.nav.no"
-    - "https://saas-proxy-v2.dev.intern.nav.no"
-  envFrom:
-    - secret: saas-proxy
-  filesFrom:
-    - secret: saas-proxy
+    - "https://saas-proxy.ekstern.dev.nav.no"
+    - "https://saas-proxy.dev.intern.nav.no"
   azure:
     application:
       enabled: true
@@ -49,28 +44,6 @@ spec:
         - application: salesforce
           namespace: teamcrm
           cluster: dev-external
-  kafka:
-    pool: nav-dev
   env:
-    - name: KAFKA_CLIENTID
-      value: saas-proxy
-    - name: KAFKA_TOPIC_NYBESKJED
-      value: 'min-side.aapen-brukernotifikasjon-nyBeskjed-v1'
-    - name: KAFKA_TOPIC_NYOPPGAVE
-      value: 'min-side.aapen-brukernotifikasjon-nyOppgave-v1'
-    - name: KAFKA_TOPIC_DONE
-      value: 'min-side.aapen-brukernotifikasjon-done-v1'
-    - name: KAFKA_TOPIC_INNBOKS
-      value: 'min-side.aapen-brukernotifikasjon-innboks-v1'
-    - name: MS_BETWEEN_WORK
-      value: '240000'
-    - name: SF_INSTANCE
-      value: PREPROD
-    - name: SF_TOKENHOST
-      value: 'https://test.salesforce.com'
-    - name: SF_VERSION
-      value: 'v48.0'
-    - name: VAULT_INSTANCE
-      value: GCP
-    - name: MS_BETWEEN_WORK
-      value: "6000000"
+    - name: WHITELIST_FILE
+      value: '/whitelist/dev.json'

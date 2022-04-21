@@ -28,7 +28,7 @@ jobs:
             ${{ runner.os }}-gradle-wrapper-
       - name: Build and run tests
         env:
-          GITHUB_TOKEN: ${{ secrets.GPR_READ }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean build
 
   build:
@@ -55,7 +55,7 @@ jobs:
             ${{ runner.os }}-gradle-wrapper-
       - name: Build JAR
         env:
-          GITHUB_TOKEN: ${{ secrets.GPR_READ }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean build shadowJar -x test
       - name: Build and publish Docker image
         env:
