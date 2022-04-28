@@ -3,6 +3,10 @@
     "https://sf-brukernotifikasjon-v2.dev.intern.nav.no": [
       "POST /innboks",
       "POST /done"
+    ],
+    "https://salesforce.poao.dev.ekstern.nav.no": [
+      "GET /v1/oppfolging/periode",
+      "GET /v1/oppfolging/info"
     ]
   },
   "teamcrm": {
