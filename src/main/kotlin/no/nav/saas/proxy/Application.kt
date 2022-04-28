@@ -48,7 +48,6 @@ object Application {
 
     fun start() {
         log.info { "Starting" }
-        log.info { "Rules $rules" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
     }
@@ -88,7 +87,7 @@ object Application {
             var approved = false
             var report = "Report:\n"
             Application.rules[team]?.let { it[targetIngress] }?.filter {
-                report += "Evaluating $it on method $method, path /$path "
+                report += "Evaluating $it on method ${req.method}, path /$path "
                 it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
             }?.firstOrNull()?.let {
                 approved = true
@@ -101,17 +100,10 @@ object Application {
             val path = req.path(API_URI_VAR) ?: ""
             Metrics.apiCalls.labels(path).inc()
 
-            val method = req.method
-            val body = req.body
-            val uri = req.uri
-
             val targetIngress = req.requireHeader(TARGET_INGRESS)
             val targetClientId = req.requireHeader(TARGET_CLIENT_ID)
 
-            val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST)
-            val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
-
-            File("/tmp/latestcall").writeText("Call:\nPath: $path\n Uri: $uri\nMethod: $method\nBody: $body\nHeaders: $${req.headers}")
+            File("/tmp/latestcall").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
 
             val team = rules.filter { it.value.keys.contains(targetIngress) }.map { it.key }.firstOrNull()
 
@@ -120,10 +112,10 @@ object Application {
                     false
                 } else {
                     Application.rules[team]?.let { it[targetIngress] }?.filter {
-                        it.evaluateAsRule(method, "/$path")
+                        it.evaluateAsRule(req.method, "/$path")
                     }?.firstOrNull()?.let {
                         true
-                    } ?: false.also { log.info { "" } }
+                    } ?: false
                 }
 
             if (!approvedByRules) {
@@ -131,7 +123,9 @@ object Application {
             } else if (!TokenValidation.containsValidToken(req, targetClientId)) {
                 Response(UNAUTHORIZED).body("Not authorized")
             } else {
-                val redirect = Request(req.method, "$targetIngress/$uri").body(req.body).headers(forwardHeaders)
+                val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST)
+                val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
+                val redirect = Request(req.method, "$targetIngress/${req.uri}").body(req.body).headers(forwardHeaders)
                 client(redirect)
             }
         }
