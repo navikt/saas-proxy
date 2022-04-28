@@ -111,27 +111,19 @@ object Application {
             val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST)
             val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
 
-            log.info { "Call:\nPath: $path\n Uri: $uri\nMethod: $method\nBody: $body\n" }
             File("/tmp/latestcall").writeText("Call:\nPath: $path\n Uri: $uri\nMethod: $method\nBody: $body\nHeaders: $${req.headers}")
-
-            val containsValidFromClientId = TokenValidation.containsValidToken(req, targetClientId)
-            log.info { "Contains valid token from client id : $containsValidFromClientId" }
 
             val team = rules.filter { it.value.keys.contains(targetIngress) }.map { it.key }.firstOrNull()
 
             val approvedByRules =
                 if (team == null) {
-                    log.info { "Ingress not found in whitelist" }
                     false
                 } else {
-                    var report: String = "Report:\n"
                     Application.rules[team]?.let { it[targetIngress] }?.filter {
-                        report += "Evaluating $it on method $method, path /$path"
-                        it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
+                        it.evaluateAsRule(method, "/$path")
                     }?.firstOrNull()?.let {
-                        report += "Approved\n"
                         true
-                    } ?: false.also { log.info { "$report" } }
+                    } ?: false.also { log.info { "" } }
                 }
 
             if (!approvedByRules) {
@@ -140,9 +132,7 @@ object Application {
                 Response(UNAUTHORIZED).body("Not authorized")
             } else {
                 val redirect = Request(req.method, "$targetIngress/$uri").body(req.body).headers(forwardHeaders)
-                val result = client(redirect)
-                log.info { result }
-                result
+                client(redirect)
             }
         }
     )
