@@ -1,15 +1,8 @@
 {
   "teamnks": {
     "https://sf-brukernotifikasjon.intern.nav.no": [
-      "GET /",
-      "GET /isAlive",
       "POST /innboks",
       "POST /done"
-    ]
-  },
-  "teamcrm": {
-    "https://communitylogout.intern.nav.no": [
-      "GET /logout"
     ]
   }
 }
