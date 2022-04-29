@@ -13,11 +13,10 @@ fun String.evaluateAsRule(method: Method, path: String): Boolean {
 }
 
 fun Request.requireHeader(header: String): String {
-    try {
-        return this.toNavRequest().getHeader(header)
-    } catch (e: Exception) {
-        throw IllegalArgumentException()
+    this.header(header)?.let {
+        return it
     }
+    throw IllegalArgumentException()
 }
 
 fun Request.toNavRequest(): HttpRequest {
