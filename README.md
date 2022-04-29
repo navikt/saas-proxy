@@ -18,6 +18,7 @@ Hvitelisten er strukturert under *"team"* *"ingress"* *"pattern"*, der *"pattern
 Du kan teste om ett anrop er bestått eller ikke mot aktive regler hvis du går imot (eks med postman)
 
 https://saas-proxy.dev.intern.nav.no/internal/test/<uri-du-vil-testa>
+
 https://saas-proxy.intern.nav.no/internal/test/<uri-du-vil-testa>
 
 med header **target-ingress** med ingressen du ønsker nå.
