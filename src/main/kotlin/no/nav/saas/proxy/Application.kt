@@ -82,19 +82,18 @@ object Application {
 
             if (team == null) {
                 Response(NON_AUTHORITATIVE_INFORMATION).body("Ingress not found in rules. Not approved")
+            } else {
+                var approved = false
+                var report = "Report:\n"
+                Application.rules[team]?.let { it[targetIngress] }?.filter {
+                    report += "Evaluating $it on method ${req.method}, path /$path "
+                    it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
+                }?.firstOrNull()?.let {
+                    approved = true
+                }
+                report += if (approved) "Approved" else "Not approved"
+                Response(OK).body(report)
             }
-
-            var approved = false
-            var report = "Report:\n"
-            Application.rules[team]?.let { it[targetIngress] }?.filter {
-                report += "Evaluating $it on method ${req.method}, path /$path "
-                it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
-            }?.firstOrNull()?.let {
-                approved = true
-            }
-            report += if (approved)"Approved" else "Not approved"
-
-            Response(OK).body(report)
         },
         API_URI bind { req: Request ->
             val path = req.path(API_URI_VAR) ?: ""
