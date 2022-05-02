@@ -37,7 +37,7 @@ object TokenValidation {
     fun containsValidToken(request: Request, clientId: String): Boolean {
         val firstValidToken = validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
         if (firstValidToken.isPresent) {
-            log.info { "Contains name claim: ${(firstValidToken.get().jwtTokenClaims.get("name") != null)}" }
+            // log.info { "Contains name claim: ${(firstValidToken.get().jwtTokenClaims.get("name") != null)}" }
         }
         return firstValidToken.isPresent
     }

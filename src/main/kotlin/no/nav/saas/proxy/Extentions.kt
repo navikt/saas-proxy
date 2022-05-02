@@ -16,7 +16,7 @@ fun Request.requireHeader(header: String): String {
     this.header(header)?.let {
         return it
     }
-    throw IllegalArgumentException()
+    throw IllegalArgumentException("Proxy: Illegal argument")
 }
 
 fun Request.toNavRequest(): HttpRequest {
