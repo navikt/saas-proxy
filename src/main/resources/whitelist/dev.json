@@ -4,7 +4,7 @@
       "POST /innboks",
       "POST /done"
     ],
-    "https://salesforce.poao.dev.ekstern.nav.no": [
+    "https://veilarbapi.dev.intern.nav.no": [
       "GET /v1/oppfolging/periode",
       "GET /v1/oppfolging/info"
     ]
