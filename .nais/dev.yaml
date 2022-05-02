@@ -44,6 +44,10 @@ spec:
         - application: salesforce
           namespace: teamcrm
           cluster: dev-external
+    outbound:
+      rules:
+        - application: veilarbapi
+          namespace: pto
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
