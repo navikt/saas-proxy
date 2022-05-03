@@ -7,6 +7,10 @@
     "http://veilarbapi.pto.svc.nais.local": [
       "GET /v1/oppfolging/periode",
       "GET /v1/oppfolging/info"
+    ],
+    "https://veilarbapi.dev.intern.nav.no": [
+      "GET /v1/oppfolging/periode",
+      "GET /v1/oppfolging/info"
     ]
   },
   "teamcrm": {
