@@ -126,7 +126,8 @@ object Application {
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
                 val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST, X_FORWARDED_SCHEME, X_FORWARDED_PROTO, X_SCHEME)
-                val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
+                val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) && !it.first.startsWith("x-") }.toList()
+                File("/tmp/forwarded").writeText(forwardHeaders.toString())
                 val redirect = Request(req.method, "$targetIngress${req.uri}").body(req.body).headers(forwardHeaders)
                 log.info { "Forwarded call to ${req.method} $targetIngress${req.uri}" }
                 client(redirect)
