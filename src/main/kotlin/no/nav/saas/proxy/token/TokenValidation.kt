@@ -45,5 +45,5 @@ object TokenValidation {
         return firstValidToken.isPresent
     }
 
-    val isDev = (System.getenv(env_WHITELIST_FILE) == "whitelist/dev.json")
+    val isDev = (System.getenv(env_WHITELIST_FILE) == "/whitelist/dev.json")
 }
