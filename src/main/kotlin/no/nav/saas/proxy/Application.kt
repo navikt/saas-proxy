@@ -124,8 +124,8 @@ object Application {
             } else {
                 val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST)
                 val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
-                val redirect = Request(req.method, "$targetIngress/${req.uri}").body(req.body).headers(forwardHeaders)
-                log.info { "Forwarded call to ${req.method} $targetIngress/${req.uri}" }
+                val redirect = Request(req.method, "$targetIngress${req.uri}").body(req.body).headers(forwardHeaders)
+                log.info { "Forwarded call to ${req.method} $targetIngress${req.uri}" }
                 client(redirect)
             }
         }
