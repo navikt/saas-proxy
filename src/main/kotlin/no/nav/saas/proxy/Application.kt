@@ -36,6 +36,9 @@ const val TARGET_CLIENT_ID = "target-client-id"
 const val AUTHORIZATION = "Authorization"
 const val HOST = "host"
 const val X_FORWARDED_HOST = "x-forwarded-host"
+const val X_FORWARDED_PROTO = "x-forwarded-proto"
+const val X_FORWARDED_SCHEME = "x-forwarded-scheme"
+const val X_SCHEME = "x-scheme"
 
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
 
@@ -122,7 +125,7 @@ object Application {
             } else if (!TokenValidation.containsValidToken(req, targetClientId)) {
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
-                val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST)
+                val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST, X_FORWARDED_SCHEME, X_FORWARDED_PROTO, X_SCHEME)
                 val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) }.toList()
                 val redirect = Request(req.method, "$targetIngress${req.uri}").body(req.body).headers(forwardHeaders)
                 log.info { "Forwarded call to ${req.method} $targetIngress${req.uri}" }
