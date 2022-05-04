@@ -2,7 +2,7 @@
 API for saas for å nå interna nav-apier i google cloud.
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
 
-Du må legga til inbound rule i den app du vill exponera:
+Du må legga til inbound rule i den app du vill exponera fra:
 ```
 - application: saas-proxy
   namespace: teamcrm
@@ -44,9 +44,10 @@ De eksterna klientene som ønsker anrope via proxyen må sende med tre headers:
 
 **Authorization** - azure token
 
-De bruker samme metode og uri som om de skulle anrope den interne appen, men ingressen til proxyn (dev: https://saas-proxy.ekstern.dev.nav.no, prod: https://saas-proxy.nav.no)
+De bruker samme metode og uri som om de skulle anrope en ingress till den interne appen, men ingressen til proxyn (dev: https://saas-proxy.ekstern.dev.nav.no, prod: https://saas-proxy.nav.no)
 
 Eks:
+
 
 ```
 https://sf-brukernotifikasjon-v2.dev.intern.nav.no/do/a/call?param=1
@@ -55,3 +56,4 @@ blir
 ```
 https://saas-proxy.ekstern.dev.nav.no/do/a/call?param=1
 ```
+NB Appen trenger ikke ha en ingress for å være tilgjengelig via proxy

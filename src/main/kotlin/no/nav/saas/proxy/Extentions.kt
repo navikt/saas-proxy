@@ -1,6 +1,5 @@
 package no.nav.saas.proxy
 
-import java.lang.IllegalArgumentException
 import no.nav.security.token.support.core.http.HttpRequest
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -10,13 +9,6 @@ fun String.evaluateAsRule(method: Method, path: String): Boolean {
     val methodPart = Method.valueOf(split[0])
     val pathPart = split[1]
     return method == methodPart && Regex(pathPart).matches(path)
-}
-
-fun Request.requireHeader(header: String): String {
-    this.header(header)?.let {
-        return it
-    }
-    throw IllegalArgumentException("Proxy: Illegal argument")
 }
 
 fun Request.toNavRequest(): HttpRequest {
