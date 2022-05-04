@@ -31,14 +31,10 @@ const val API_URI_VAR = "rest"
 const val API_INTERNAL_TEST_URI = "/internal/test/{$API_URI_VAR:.*}"
 const val API_URI = "/{$API_URI_VAR:.*}"
 
-const val TARGET_INGRESS = "target-ingress"
+const val TARGET_APP = "target-app"
 const val TARGET_CLIENT_ID = "target-client-id"
 const val AUTHORIZATION = "Authorization"
 const val HOST = "host"
-const val X_FORWARDED_HOST = "x-forwarded-host"
-const val X_FORWARDED_PROTO = "x-forwarded-proto"
-const val X_FORWARDED_SCHEME = "x-forwarded-scheme"
-const val X_SCHEME = "x-scheme"
 
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
 
@@ -79,16 +75,16 @@ object Application {
             Metrics.testApiCalls.labels(path).inc()
             log.info { "Test url called with path $path" }
             val method = req.method
-            val targetIngress = req.requireHeader(TARGET_INGRESS)
+            val targetApp = req.requireHeader(TARGET_APP)
 
-            val team = rules.filter { it.value.keys.contains(targetIngress) }.map { it.key }.firstOrNull()
+            val team = rules.filter { it.value.keys.contains(targetApp) }.map { it.key }.firstOrNull()
 
             if (team == null) {
-                Response(NON_AUTHORITATIVE_INFORMATION).body("Ingress not found in rules. Not approved")
+                Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
             } else {
                 var approved = false
                 var report = "Report:\n"
-                Application.rules[team]?.let { it[targetIngress] }?.filter {
+                Application.rules[team]?.let { it[targetApp] }?.filter {
                     report += "Evaluating $it on method ${req.method}, path /$path "
                     it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
                 }?.firstOrNull()?.let {
@@ -102,18 +98,18 @@ object Application {
             val path = req.path(API_URI_VAR) ?: ""
             Metrics.apiCalls.labels(path).inc()
 
-            val targetIngress = req.requireHeader(TARGET_INGRESS)
+            val targetApp = req.requireHeader(TARGET_APP)
             val targetClientId = req.requireHeader(TARGET_CLIENT_ID)
 
             File("/tmp/latestcall").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
 
-            val team = rules.filter { it.value.keys.contains(targetIngress) }.map { it.key }.firstOrNull()
+            val team = rules.filter { it.value.keys.contains(targetApp) }.map { it.key }.firstOrNull()
 
             val approvedByRules =
                 if (team == null) {
                     false
                 } else {
-                    Application.rules[team]?.let { it[targetIngress] }?.filter {
+                    Application.rules[team]?.let { it[targetApp] }?.filter {
                         it.evaluateAsRule(req.method, "/$path")
                     }?.firstOrNull()?.let {
                         true
@@ -125,11 +121,11 @@ object Application {
             } else if (!TokenValidation.containsValidToken(req, targetClientId)) {
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
-                val blockFromForwarding = listOf(TARGET_INGRESS, TARGET_CLIENT_ID, HOST, X_FORWARDED_HOST, X_FORWARDED_SCHEME, X_FORWARDED_PROTO, X_SCHEME)
+                val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
                 val forwardHeaders = req.headers.filter { !blockFromForwarding.contains(it.first) && !it.first.startsWith("x-") }.toList()
-                File("/tmp/forwarded").writeText(forwardHeaders.toString())
-                val redirect = Request(req.method, "$targetIngress${req.uri}").body(req.body).headers(forwardHeaders)
-                log.info { "Forwarded call to ${req.method} $targetIngress${req.uri}" }
+                val internUrl = "http://$targetApp.$team.svc.cluster.local${req.uri}"
+                val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
+                log.info { "Forwarded call to $internUrl" }
                 client(redirect)
             }
         }

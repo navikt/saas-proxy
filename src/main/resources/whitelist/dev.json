@@ -1,21 +1,14 @@
 {
-  "teamnks": {
-    "https://sf-brukernotifikasjon-v2.dev.intern.nav.no": [
-      "POST /innboks",
-      "POST /done"
-    ],
-    "http://veilarbapi.pto.svc.cluster.local": [
-      "GET /v1/oppfolging/periode",
-      "GET /v1/oppfolging/info"
-    ],
-    "https://veilarbapi.dev.intern.nav.no": [
+  "pto": {
+    "veilarbapi": [
       "GET /v1/oppfolging/periode",
       "GET /v1/oppfolging/info"
     ]
   },
-  "teamcrm": {
-    "https://communitylogout.dev.intern.nav.no": [
-      "GET /logout"
+  "teamnks": {
+    "sf-brukernotifikasjon": [
+      "POST /innboks",
+      "POST /done"
     ]
   }
 }

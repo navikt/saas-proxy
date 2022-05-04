@@ -1,12 +1,14 @@
 {
-  "teamnks": {
-    "https://sf-brukernotifikasjon.intern.nav.no": [
-      "POST /innboks",
-      "POST /done"
-    ],
-    "http://veilarbapi.pto.svc.nais.local": [
+  "pto": {
+    "veilarbapi": [
       "GET /v1/oppfolging/periode",
       "GET /v1/oppfolging/info"
+    ]
+  },
+  "teamnks": {
+    "sf-brukernotifikasjon": [
+      "POST /innboks",
+      "POST /done"
     ]
   }
 }

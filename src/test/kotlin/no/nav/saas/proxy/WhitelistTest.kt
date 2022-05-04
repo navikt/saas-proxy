@@ -21,10 +21,10 @@ public class WhitelistTest {
     fun test_that_parsing_dev_whitelist_contains_known_rule() {
         devRules.let {
             val knownTeam = "teamnks"
-            val knownIngress = "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"
+            val knownApp = "sf-brukernotifikasjon"
             assertTrue(it.containsKey(knownTeam))
-            assertTrue(it[knownTeam]!!.containsKey(knownIngress))
-            assertTrue(it[knownTeam]!![knownIngress]!!.contains("POST /done"))
+            assertTrue(it[knownTeam]!!.containsKey(knownApp))
+            assertTrue(it[knownTeam]!![knownApp]!!.contains("POST /done"))
         }
     }
 
@@ -32,10 +32,10 @@ public class WhitelistTest {
     fun test_that_parsing_prod_whitelist_contains_known_rule() {
         prodRules.let {
             val knownTeam = "teamnks"
-            val knownIngress = "https://sf-brukernotifikasjon.intern.nav.no"
+            val knownApp = "sf-brukernotifikasjon"
             assertTrue(it.containsKey(knownTeam))
-            assertTrue(it[knownTeam]!!.containsKey(knownIngress))
-            assertTrue(it[knownTeam]!![knownIngress]!!.contains("POST /done"))
+            assertTrue(it[knownTeam]!!.containsKey(knownApp))
+            assertTrue(it[knownTeam]!![knownApp]!!.contains("POST /done"))
         }
     }
 
@@ -52,10 +52,10 @@ public class WhitelistTest {
     }
 
     @Test
-    fun test_that_that_each_ingress_entry_is_unique() {
+    fun test_that_that_each_app_entry_is_unique() {
         rulesSet.forEach {
-            val listOfIngresses = it.values.flatMap { it.keys }
-            assertEquals(listOfIngresses.size, listOfIngresses.toSet().size)
+            val listOfApps = it.values.flatMap { it.keys }
+            assertEquals(listOfApps.size, listOfApps.toSet().size)
         }
     }
 

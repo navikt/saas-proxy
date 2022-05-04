@@ -47,6 +47,8 @@ spec:
       rules:
         - application: veilarbapi
           namespace: pto
+        - application: sf-brukernotifikasjon
+          namespace: teamnks
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
