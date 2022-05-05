@@ -105,7 +105,9 @@ object Application {
 
             if (targetApp == null || targetClientId == null) {
                 log.info { "Proxy: Bad request - missing header" }
-                Response(BAD_REQUEST).body("Proxy: Bad request")
+                File("/tmp/missingheader").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
+
+                Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
                 File("/tmp/latestcall").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
 
