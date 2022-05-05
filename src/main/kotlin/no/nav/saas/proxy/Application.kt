@@ -104,6 +104,7 @@ object Application {
             val targetClientId = req.header(TARGET_CLIENT_ID)
 
             if (targetApp == null || targetClientId == null) {
+                log.info { "Proxy: Bad request - missing header" }
                 Response(BAD_REQUEST).body("Proxy: Bad request")
             } else {
                 File("/tmp/latestcall").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
@@ -122,8 +123,10 @@ object Application {
                     }
 
                 if (!approvedByRules) {
+                    log.info { "Proxy: Bad request - not whitelisted" }
                     Response(BAD_REQUEST).body("Proxy: Bad request")
                 } else if (!TokenValidation.containsValidToken(req, targetClientId)) {
+                    log.info { "Proxy: Not authorized" }
                     Response(UNAUTHORIZED).body("Proxy: Not authorized")
                 } else {
                     val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
