@@ -35,6 +35,7 @@ const val TARGET_APP = "target-app"
 const val TARGET_CLIENT_ID = "target-client-id"
 const val AUTHORIZATION = "Authorization"
 const val HOST = "host"
+const val X_CLOUD_TRACE_CONTEXT = "x-cloud-trace-context"
 
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
 
@@ -133,8 +134,8 @@ object Application {
                 } else {
                     val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
                     val forwardHeaders =
-                        req.headers.filter { !blockFromForwarding.contains(it.first) && !it.first.startsWith("x-") }
-                            .toList()
+                        req.headers.filter { !blockFromForwarding.contains(it.first) &&
+                                !it.first.startsWith("x-") || it.first == X_CLOUD_TRACE_CONTEXT }.toList()
                     val internUrl = "http://$targetApp.$team.svc.cluster.local${req.uri}"
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
