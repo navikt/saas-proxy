@@ -9,27 +9,27 @@ spec:
   image: {{ image }}
   port: 8080
   replicas:
-    min: 2
+    min: 3
     max: 5
   liveness:
     path: /internal/isAlive
     initialDelay: 5
     periodSeconds: 5
-    failureThreshold: 60
+    failureThreshold: 30
   readiness:
     path: /internal/isReady
     initialDelay: 5
     periodSeconds: 5
-    failureThreshold: 60
+    failureThreshold: 30
   prometheus:
     enabled: true
     path: /internal/metrics
   resources:
     limits:
-      cpu: 1000m
+      cpu: 2000m
       memory: 1024Mi
     requests:
-      cpu: 100m
+      cpu: 200m
       memory: 512Mi
   ingresses:
     - "https://saas-proxy.nav.no"
