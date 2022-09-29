@@ -9,6 +9,10 @@
     "sf-brukernotifikasjon": [
       "POST /innboks",
       "POST /done"
+    ],
+    "sf-saf_q2": [
+      "GET /rest/hentdokument/*",
+      "POST /graphql"
     ]
   }
 }

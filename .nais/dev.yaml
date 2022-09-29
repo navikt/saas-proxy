@@ -50,6 +50,8 @@ spec:
           namespace: pto
         - application: sf-brukernotifikasjon
           namespace: teamnks
+        - application: saf
+          namespace: teamnks
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
