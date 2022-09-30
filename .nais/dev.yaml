@@ -55,3 +55,4 @@ spec:
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
+      
