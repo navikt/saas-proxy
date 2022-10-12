@@ -10,5 +10,11 @@
       "POST /innboks",
       "POST /done"
     ]
+  },
+  "team-rocket": {
+    "digdir-krr-proxy": [
+      "POST /rest/v1/personer",
+      "GET /rest/v1/person"
+    ]
   }
 }
