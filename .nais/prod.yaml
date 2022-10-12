@@ -49,6 +49,8 @@ spec:
           namespace: pto
         - application: sf-brukernotifikasjon
           namespace: teamnks
+        - application: digdir-krr-proxy
+          namespace: team-rocket
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
