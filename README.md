@@ -7,7 +7,7 @@ Du må legga til inbound rule i den app du vill exponera fra:
 - application: saas-proxy
   namespace: teamcrm
 ```
-Samt outbound rule i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml)::
+Samt outbound rule her i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml)::
 ```
 - application: <app>
   namespace: <namespace>
