@@ -139,10 +139,7 @@ object Application {
                     val internUrl = "http://$targetApp.$team.svc.cluster.local${req.uri}"
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
-                    client(redirect).let {
-                        log.info { "Response as string: $it, only bodyString: ${it.bodyString()}, headers: ${it.headers} " }
-                        it
-                    }
+                    client(redirect)
                 }
             }
         }
