@@ -3,6 +3,8 @@ package no.nav.saas.proxy
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.File
 import java.io.StringWriter
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import mu.KotlinLogging
 import no.nav.saas.proxy.token.TokenValidation
 import org.http4k.client.ApacheClient
@@ -139,7 +141,11 @@ object Application {
                     val internUrl = "http://$targetApp.$team.svc.cluster.local${req.uri}"
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
-                    client(redirect)
+                    val r = client(redirect)
+                    if (targetApp == "digdir-krr-proxy") {
+                        File("/tmp/digdirresponse").appendText("Timestamp:${DateTimeFormatter.ISO_INSTANT.format(Instant.now())} - $r\n\n")
+                    }
+                    r
                 }
             }
         }
