@@ -16,5 +16,10 @@
       "POST /rest/v1/personer",
       "GET /rest/v1/person"
     ]
+  },
+  "okonomi": {
+    "sokos-kontoregister-person": [
+      "POST /api/system/v1/hent-aktiv-konto",
+    ]
   }
 }
