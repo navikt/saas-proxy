@@ -19,7 +19,7 @@
   },
   "okonomi": {
     "sokos-kontoregister-person": [
-      "POST /api/system/v1/hent-aktiv-konto",
+      "POST /api/system/v1/hent-aktiv-konto"
     ]
   }
 }
