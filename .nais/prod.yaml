@@ -51,6 +51,8 @@ spec:
           namespace: teamnks
         - application: digdir-krr-proxy
           namespace: team-rocket
+        - application: sokos-kontoregister-person
+          namespace: okonomi
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
