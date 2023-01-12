@@ -54,6 +54,8 @@ spec:
           namespace: team-rocket
         - application: sokos-kontoregister-person
           namespace: okonomi
+        - application: nom-api
+          namespace: nom
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
