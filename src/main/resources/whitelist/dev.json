@@ -21,5 +21,10 @@
     "sokos-kontoregister-person": [
       "POST /api/system/v1/hent-aktiv-konto"
     ]
+  },
+  "nom": {
+    "nom-api": [
+      "POST /graphql"
+    ]
   }
 }
