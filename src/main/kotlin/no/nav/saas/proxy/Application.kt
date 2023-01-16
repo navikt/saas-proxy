@@ -5,6 +5,9 @@ import java.io.File
 import java.io.StringWriter
 import mu.KotlinLogging
 import no.nav.saas.proxy.token.TokenValidation
+import org.apache.http.client.config.CookieSpecs
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.impl.client.HttpClients
 import org.http4k.client.ApacheClient
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
@@ -44,7 +47,17 @@ object Application {
 
     val rules = Rules.parse(System.getenv(env_WHITELIST_FILE))
 
-    val client = ApacheClient()
+    val httpClient = HttpClients.custom()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setConnectTimeout(5000)
+                .setSocketTimeout(5000)
+                .setConnectionRequestTimeout(5000)
+            .setRedirectsEnabled(false)
+            .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+            .build()).build()
+
+    val client = ApacheClient(httpClient)
 
     fun start() {
         log.info { "Starting" }
@@ -136,7 +149,7 @@ object Application {
                     val forwardHeaders =
                         req.headers.filter { !blockFromForwarding.contains(it.first) &&
                                 !it.first.startsWith("x-") || it.first == X_CLOUD_TRACE_CONTEXT }.toList()
-                    val internUrl = "http://$targetApp.$team.svc.cluster.local${req.uri}"
+                    val internUrl = "http://$targetApp.$team${req.uri}" // svc.cluster.local
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
                     val time = System.currentTimeMillis()
