@@ -7,7 +7,6 @@ buildscript {
     ext.log4j_version = '1.7.25'
     ext.logstash_encoder_version = '6.3'
     ext.prometheus_version = '0.8.0'
-    ext.kotest_version = '4.0.2'
     ext.kotlin_serialization = '0.14.0'
 }
 
