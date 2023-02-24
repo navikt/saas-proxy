@@ -149,7 +149,7 @@ object Application {
                     val forwardHeaders =
                         req.headers.filter { !blockFromForwarding.contains(it.first) &&
                                 !it.first.startsWith("x-") || it.first == X_CLOUD_TRACE_CONTEXT }.toList()
-                    val internUrl = "http://$targetApp.$team${req.uri}" // svc.cluster.local
+                    val internUrl = "http://$targetApp.$team${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
                     val time = System.currentTimeMillis()
