@@ -26,5 +26,10 @@
     "nom-api": [
       "POST /graphql"
     ]
+  },
+  "teamcrm": {
+    "sf-pdfgen": [
+      "POST /.*"
+    ]
   }
 }

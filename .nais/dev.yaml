@@ -57,6 +57,8 @@ spec:
           namespace: okonomi
         - application: nom-api
           namespace: nom
+        - application: sf-pdfgen
+          namespace: teamcrm
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
