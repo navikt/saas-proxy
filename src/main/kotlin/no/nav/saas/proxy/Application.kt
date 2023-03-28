@@ -55,7 +55,7 @@ object Application {
                 .setConnectionRequestTimeout(5000)
             .setRedirectsEnabled(false)
             .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .build()).build()
+            .build()).setMaxConnPerRoute(10).setMaxConnTotal(50).build()
 
     val client = ApacheClient(httpClient)
 
