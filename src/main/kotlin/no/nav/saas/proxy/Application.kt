@@ -119,11 +119,11 @@ object Application {
 
             if (targetApp == null || targetClientId == null) {
                 log.info { "Proxy: Bad request - missing header" }
-                File("/tmp/missingheader").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
+                File("/tmp/missingheader").writeText(req.toMessage())
 
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
-                File("/tmp/latestcall").writeText("Call:\nPath: $path\nMethod: ${req.method}\n Uri: ${req.uri}\nBody: ${req.body}\nHeaders: $${req.headers}")
+                File("/tmp/latestcall").writeText(req.toMessage())
 
                 val team = rules.filter { it.value.keys.contains(targetApp) }.map { it.key }.firstOrNull()
 
