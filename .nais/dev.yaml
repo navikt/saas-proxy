@@ -5,6 +5,8 @@ metadata:
   namespace: teamcrm
   labels:
     team: teamcrm
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
 spec:
   image: {{ image }}
   port: 8080
@@ -21,6 +23,10 @@ spec:
     initialDelay: 5
     periodSeconds: 5
     failureThreshold: 30
+  preStopHook:
+    exec:
+      command: [ "/bin/bash", "/pre-stop.sh" ]
+  terminationGracePeriodSeconds: 60
   prometheus:
     enabled: true
     path: /internal/metrics
