@@ -50,12 +50,12 @@ object Application {
     val httpClient = HttpClients.custom()
         .setDefaultRequestConfig(
             RequestConfig.custom()
-                .setConnectTimeout(5000)
-                .setSocketTimeout(5000)
-                .setConnectionRequestTimeout(5000)
+                .setConnectTimeout(60000)
+                .setSocketTimeout(60000)
+                .setConnectionRequestTimeout(60000)
             .setRedirectsEnabled(false)
             .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .build()).setMaxConnPerRoute(10).setMaxConnTotal(50).build()
+            .build()).setMaxConnPerRoute(25).setMaxConnTotal(50).build()
 
     val client = ApacheClient(httpClient)
 
@@ -155,7 +155,7 @@ object Application {
                     val time = System.currentTimeMillis()
                     val result = client(redirect)
                     if (result.status.code == 504) {
-                        log.info { "Status Client Timeout after ${System.currentTimeMillis() - time} millis" }
+                        log.info { "Status Client Timeout after ${System.currentTimeMillis() - time} millis, $internUrl" }
                     }
                     result
                 }
