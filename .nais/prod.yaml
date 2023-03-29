@@ -5,6 +5,8 @@ metadata:
   namespace: teamcrm
   labels:
     team: teamcrm
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
 spec:
   image: {{ image }}
   port: 8080
