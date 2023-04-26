@@ -32,7 +32,6 @@ Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"patter
       "GET /api/.*"
     ]
   }
-
 ```
 
 ### Test aktive hvitlisteregler
