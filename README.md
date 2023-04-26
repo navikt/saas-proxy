@@ -35,7 +35,7 @@ Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"patter
 ```
 
 ### Test aktive hvitlisteregler
-Du kan teste om ett anrop er bestått eller ikke mot aktive regler hvis du går imot (eks med postman eller curl)
+Du kan teste om ett anrop er bestått eller ikke mot aktive regler hvis du går imot
 
 https://saas-proxy.dev.intern.nav.no/internal/test/<uri-du-vil-testa>
 
