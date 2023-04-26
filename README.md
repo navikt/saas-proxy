@@ -2,7 +2,7 @@
 API for saas for å nå interna nav-apier i google cloud.
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
 
-Det må leggas til inbound rule i den app som ska exponeras:
+Det må leggas til inbound rules i den app som ska exponeras:
 ```
 - application: saas-proxy
   namespace: teamcrm
