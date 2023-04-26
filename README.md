@@ -6,6 +6,9 @@ Du må legga til inbound rule i den app du vill exponera fra:
 ```
 - application: saas-proxy
   namespace: teamcrm
+- application: salesforce
+  namespace: teamcrm
+  cluster: [dev-external|prod-external]
 ```
 Samt outbound rule her i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml)::
 ```
