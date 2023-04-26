@@ -2,7 +2,7 @@
 API for saas for å nå interna nav-apier i google cloud.
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
 
-Du må legga til inbound rule i den app du vill exponera fra:
+Det må leggas til inbound rule i den app som ska exponeras:
 ```
 - application: saas-proxy
   namespace: teamcrm
@@ -10,11 +10,13 @@ Du må legga til inbound rule i den app du vill exponera fra:
   namespace: teamcrm
   cluster: [dev-external|prod-external]
 ```
-Samt outbound rule her i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml)::
+Samt outbound rule her i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
 ```
 - application: <app>
   namespace: <namespace>
 ```
+Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til salesforce.
+Se nais doc [Access policies](https://doc.nais.io/nais-application/access-policy/) samt [Pre-authorization](https://doc.nais.io/security/auth/azure-ad/access-policy/#pre-authorization)
 
 Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert miljø. Se
 [dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
