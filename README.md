@@ -23,9 +23,14 @@ og
 
 Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path, f.eks:
 ```
-"GET /getcall",
-"POST /done",
-"GET /api/.*"
+"teamnamespace": {
+    "app": [
+      "GET /getcall",
+      "POST /done",
+      "GET /api/.*"
+    ]
+  }
+
 ```
 
 ### Test aktive hvitlisteregler
