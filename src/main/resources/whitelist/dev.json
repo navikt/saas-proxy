@@ -32,7 +32,7 @@
       "POST /.*"
     ]
   },
-  "team-dialog": {
+  "fager": {
     "notifikasjon-produsent-api": [
       "POST /api/graphql"
     ]

@@ -65,6 +65,8 @@ spec:
           namespace: nom
         - application: sf-pdfgen
           namespace: teamcrm
+        - application: notifikasjon-produsent-api
+          namespace: fager
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
