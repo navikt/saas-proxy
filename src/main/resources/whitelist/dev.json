@@ -31,5 +31,10 @@
     "sf-pdfgen": [
       "POST /.*"
     ]
+  },
+  "team-dialog": {
+    "notifikasjon-produsent-api": [
+      "POST /api/graphql"
+    ]
   }
 }
