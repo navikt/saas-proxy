@@ -154,9 +154,7 @@ object Application {
                     log.info { "Forwarded call to $internUrl" }
                     val time = System.currentTimeMillis()
                     val result = client(redirect)
-                    if (result.status.code == 504) {
-                        log.info { "Status Client Timeout after ${System.currentTimeMillis() - time} millis, $internUrl" }
-                    }
+                    File("/tmp/latestresponse").writeText(result.toMessage())
                     result
                 }
             }
