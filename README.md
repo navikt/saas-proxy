@@ -1,6 +1,7 @@
 # saas-proxy
 API for saas for å nå interna nav-apier i google cloud.
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
+Den videresender forespørselen til destinasjonsappen via kortversjonen av tjenesteoppdagelsesurlen, se i nais doc [her]()
 
 Det må leggas til inbound rules i den app som ska exponeras:
 ```
@@ -41,7 +42,7 @@ https://saas-proxy.dev.intern.nav.no/internal/test/<uri-du-vil-testa>
 
 https://saas-proxy.intern.nav.no/internal/test/<uri-du-vil-testa>
 
-med header **target-app** med appen du ønsker nå.
+med header **target-app** (o optional ***target-namespace***) med appen du ønsker nå.
 Ex:
 ```
 curl https://saas-proxy.dev.intern.nav.no/internal/test/v1/oppfolging/periode -H "target-app:veilarbapi"
@@ -57,10 +58,11 @@ De eksterna klientene som ønsker anrope via proxyen må sende med tre headers:
 
 **target-app** - den app de ønsker nå (ex. sf-brukernotifikasjon)
 
-**target-client-id** - azure client id før appen 
+**target-client-id** - azure client id før appen
 
 **Authorization** - azure token
 
+***target-namespace (optional)*** - eksplisitt namespace i tilfelle det er to apper i hvitelisten med identiske navn under forskjellige namespace
 De bruker samme metode og uri som om de skulle anrope en ingress till den interne appen, men ingressen til proxyn (dev: https://saas-proxy.ekstern.dev.nav.no, prod: https://saas-proxy.nav.no)
 
 Eks:

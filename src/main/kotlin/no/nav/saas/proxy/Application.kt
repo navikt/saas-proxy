@@ -36,6 +36,7 @@ const val API_URI = "/{$API_URI_VAR:.*}"
 
 const val TARGET_APP = "target-app"
 const val TARGET_CLIENT_ID = "target-client-id"
+const val TARGET_NAMESPACE = "target-namespace"
 const val AUTHORIZATION = "Authorization"
 const val HOST = "host"
 const val X_CLOUD_TRACE_CONTEXT = "x-cloud-trace-context"
@@ -45,7 +46,7 @@ const val env_WHITELIST_FILE = "WHITELIST_FILE"
 object Application {
     private val log = KotlinLogging.logger { }
 
-    val rules = Rules.parse(System.getenv(env_WHITELIST_FILE))
+    val ruleSet = Rules.parse(System.getenv(env_WHITELIST_FILE))
 
     val httpClient = HttpClients.custom()
         .setDefaultRequestConfig(
@@ -55,7 +56,7 @@ object Application {
                 .setConnectionRequestTimeout(60000)
             .setRedirectsEnabled(false)
             .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .build()).setMaxConnPerRoute(25).setMaxConnTotal(50).build()
+            .build()).setMaxConnPerRoute(20).setMaxConnTotal(30).build()
 
     val client = ApacheClient(httpClient)
 
@@ -85,26 +86,27 @@ object Application {
                 }
         },
         API_INTERNAL_TEST_URI bind { req: Request ->
+            req.headers
             val path = (req.path(API_URI_VAR) ?: "")
             Metrics.testApiCalls.labels(path).inc()
             log.info { "Test url called with path $path" }
             val method = req.method
             val targetApp = req.header(TARGET_APP)
+            val targetNamespace = req.header(TARGET_NAMESPACE)
             if (targetApp == null) {
                 Response(BAD_REQUEST).body("Proxy: Missing target-app header")
             } else {
-                val team = rules.filter { it.value.keys.contains(targetApp) }.map { it.key }.firstOrNull()
-                if (team == null) {
+                val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
+
+                val rules = Application.ruleSet.rulesOf(targetApp, namespace)
+                if (rules.isEmpty()) {
                     Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
                 } else {
-                    var approved = false
                     var report = "Report:\n"
-                    Application.rules[team]?.let { it[targetApp] }?.filter {
+                    val approved = rules.filter {
                         report += "Evaluating $it on method ${req.method}, path /$path "
                         it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
-                    }?.firstOrNull()?.let {
-                        approved = true
-                    }
+                    }.isNotEmpty()
                     report += if (approved) "Approved" else "Not approved"
                     Response(OK).body(report)
                 }
@@ -116,6 +118,7 @@ object Application {
 
             val targetApp = req.header(TARGET_APP)
             val targetClientId = req.header(TARGET_CLIENT_ID)
+            val targetNamespace = req.header(TARGET_NAMESPACE) // optional
 
             if (targetApp == null || targetClientId == null) {
                 log.info { "Proxy: Bad request - missing header" }
@@ -125,18 +128,10 @@ object Application {
             } else {
                 File("/tmp/latestcall").writeText(req.toMessage())
 
-                val team = rules.filter { it.value.keys.contains(targetApp) }.map { it.key }.firstOrNull()
-
-                val approvedByRules =
-                    if (team == null) {
-                        false
-                    } else {
-                        Application.rules[team]?.let { it[targetApp] }?.filter {
-                            it.evaluateAsRule(req.method, "/$path")
-                        }?.firstOrNull()?.let {
-                            true
-                        } ?: false
-                    }
+                val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
+                val approvedByRules = Application.ruleSet.rulesOf(targetApp, namespace)
+                    .filter { it.evaluateAsRule(req.method, "/$path") }
+                    .isNotEmpty()
 
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }
@@ -149,10 +144,9 @@ object Application {
                     val forwardHeaders =
                         req.headers.filter { !blockFromForwarding.contains(it.first) &&
                                 !it.first.startsWith("x-") || it.first == X_CLOUD_TRACE_CONTEXT }.toList()
-                    val internUrl = "http://$targetApp.$team${req.uri}" // svc.cluster.local skipped due to same cluster
+                    val internUrl = "http://$targetApp.$namespace${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
-                    val time = System.currentTimeMillis()
                     val result = client(redirect)
                     File("/tmp/latestresponse").writeText(result.toMessage())
                     result
