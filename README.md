@@ -1,7 +1,8 @@
 # saas-proxy
 API for saas for å nå interna nav-apier i google cloud.
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
-Den videresender forespørselen til destinasjonsappen via kortversjonen av tjenesteoppdagelsesurlen, se i nais doc [her]()
+
+Den videresender forespørselen til destinasjonsappen via kortversjonen av tjenesteoppdagelsesurlen, ref nais doc [her](https://doc.nais.io/clusters/service-discovery/?h=discovery#short-names)
 
 Det må leggas til inbound rules i den app som ska exponeras:
 ```
