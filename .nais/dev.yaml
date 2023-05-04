@@ -39,7 +39,7 @@ spec:
       memory: 512Mi
   ingresses:
     - "https://saas-proxy.ekstern.dev.nav.no"
-    - "https://saas-proxy.dev.intern.nav.no"
+    - "https://saas-proxy.intern.dev.nav.no"
   azure:
     application:
       enabled: true
