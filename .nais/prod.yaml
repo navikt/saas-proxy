@@ -12,7 +12,7 @@ spec:
   port: 8080
   replicas:
     min: 3
-    max: 5
+    max: 6
   liveness:
     path: /internal/isAlive
     initialDelay: 5
@@ -32,10 +32,9 @@ spec:
     path: /internal/metrics
   resources:
     limits:
-      cpu: 2000m
-      memory: 1024Mi
+      memory: 1Gi
     requests:
-      cpu: 200m
+      cpu: 10m
       memory: 512Mi
   ingresses:
     - "https://saas-proxy.nav.no"
