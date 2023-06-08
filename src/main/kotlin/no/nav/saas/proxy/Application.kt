@@ -126,8 +126,6 @@ object Application {
 
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
-                File("/tmp/latestcall").writeText(req.toMessage())
-
                 val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
                 val approvedByRules = Application.ruleSet.rulesOf(targetApp, namespace)
                     .filter { it.evaluateAsRule(req.method, "/$path") }
@@ -147,9 +145,8 @@ object Application {
                     val internUrl = "http://$targetApp.$namespace${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
-                    val result = client(redirect)
-                    File("/tmp/latestresponse").writeText(result.toMessage())
-                    result
+
+                    client(redirect)
                 }
             }
         }
