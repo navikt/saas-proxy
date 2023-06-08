@@ -64,6 +64,7 @@ De eksterna klientene som ønsker anrope via proxyen må sende med tre headers:
 **Authorization** - azure token
 
 ***target-namespace (optional)*** - eksplisitt namespace i tilfelle det er to apper i hvitelisten med identiske navn under forskjellige namespace
+
 De bruker samme metode og uri som om de skulle anrope en ingress till den interne appen, men ingressen til proxyn (dev: https://saas-proxy.ekstern.dev.nav.no, prod: https://saas-proxy.nav.no)
 
 Eks:
