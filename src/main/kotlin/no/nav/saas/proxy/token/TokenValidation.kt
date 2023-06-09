@@ -1,6 +1,5 @@
 package no.nav.saas.proxy.token
 
-import java.net.URL
 import mu.KotlinLogging
 import no.nav.saas.proxy.env_WHITELIST_FILE
 import no.nav.saas.proxy.toNavRequest
@@ -8,6 +7,7 @@ import no.nav.security.token.support.core.configuration.IssuerProperties
 import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
 import no.nav.security.token.support.core.validation.JwtTokenValidationHandler
 import org.http4k.core.Request
+import java.net.URL
 
 const val env_AZURE_APP_WELL_KNOWN_URL = "AZURE_APP_WELL_KNOWN_URL"
 const val env_AZURE_APP_CLIENT_ID = "AZURE_APP_CLIENT_ID"
@@ -21,12 +21,16 @@ object TokenValidation {
     val validators: MutableMap<String, JwtTokenValidationHandler?> = mutableMapOf()
 
     private fun addValidator(clientId: String): JwtTokenValidationHandler {
-        val validationHandler = JwtTokenValidationHandler(MultiIssuerConfiguration(
-            mapOf("azure" to IssuerProperties(
-                    URL(System.getenv(env_AZURE_APP_WELL_KNOWN_URL)),
-                    listOf(clientId))
+        val validationHandler = JwtTokenValidationHandler(
+            MultiIssuerConfiguration(
+                mapOf(
+                    "azure" to IssuerProperties(
+                        URL(System.getenv(env_AZURE_APP_WELL_KNOWN_URL)),
+                        listOf(clientId)
+                    )
+                )
             )
-        ))
+        )
         validators[clientId] = validationHandler
         return validationHandler
     }

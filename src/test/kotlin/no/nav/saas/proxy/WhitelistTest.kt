@@ -1,5 +1,4 @@
 
-import java.lang.IllegalStateException
 import no.nav.saas.proxy.Rules
 import no.nav.saas.proxy.evaluateAsRule
 import no.nav.saas.proxy.namespaceOfApp
@@ -9,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.lang.IllegalStateException
 
 const val WHITELIST_DEV = "/whitelist/dev.json"
 const val WHITELIST_PROD = "/whitelist/prod.json"

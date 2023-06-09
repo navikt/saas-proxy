@@ -1,8 +1,6 @@
 package no.nav.saas.proxy
 
 import io.prometheus.client.exporter.common.TextFormat
-import java.io.File
-import java.io.StringWriter
 import mu.KotlinLogging
 import no.nav.saas.proxy.token.TokenValidation
 import org.apache.http.client.config.CookieSpecs
@@ -24,6 +22,8 @@ import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
+import java.io.File
+import java.io.StringWriter
 
 const val NAIS_DEFAULT_PORT = 8080
 const val NAIS_ISALIVE = "/internal/isAlive"
@@ -54,9 +54,10 @@ object Application {
                 .setConnectTimeout(60000)
                 .setSocketTimeout(60000)
                 .setConnectionRequestTimeout(60000)
-            .setRedirectsEnabled(false)
-            .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .build()).setMaxConnPerRoute(20).setMaxConnTotal(30).build()
+                .setRedirectsEnabled(false)
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .build()
+        ).setMaxConnPerRoute(20).setMaxConnTotal(30).build()
 
     val client = ApacheClient(httpClient)
 
@@ -140,8 +141,10 @@ object Application {
                 } else {
                     val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
                     val forwardHeaders =
-                        req.headers.filter { !blockFromForwarding.contains(it.first) &&
-                                !it.first.startsWith("x-") || it.first == X_CLOUD_TRACE_CONTEXT }.toList()
+                        req.headers.filter {
+                            !blockFromForwarding.contains(it.first) &&
+                                !it.first.startsWith("x-") || it.first == X_CLOUD_TRACE_CONTEXT
+                        }.toList()
                     val internUrl = "http://$targetApp.$namespace${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
