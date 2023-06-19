@@ -26,5 +26,10 @@
     "sf-pdfgen": [
       "POST /.*"
     ]
+  },
+  "fager": {
+    "notifikasjon-produsent-api": [
+      "POST /api/graphql"
+    ]
   }
 }
