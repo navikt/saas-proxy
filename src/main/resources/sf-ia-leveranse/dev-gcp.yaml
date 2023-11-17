@@ -1,0 +1,61 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: {{ DEPLOY_APP }}
+  namespace: team-dialog
+  labels:
+    team: team-dialog
+spec:
+  image: {{ image }}
+  port: 8080
+  replicas:
+    min: 1
+    max: 1
+  liveness:
+    path: /isAlive
+    initialDelay: 5
+    periodSeconds: 5
+    failureThreshold: 30
+  readiness:
+    path: /isReady
+    initialDelay: 5
+    periodSeconds: 5
+    failureThreshold: 30
+  prometheus:
+    enabled: true
+    path: /metrics
+  resources:
+    limits:
+      memory: 4096Mi
+    requests:
+      cpu: 10m
+      memory: 2048Mi
+  accessPolicy:
+    outbound:
+      external:
+        - host: test.salesforce.com
+        - host: navdialog--preprod.my.salesforce.com
+        - host: navdialog--uat.my.salesforce.com
+  envFrom:
+    - secret: sf-dialog
+  filesFrom:
+    - secret: sf-dialog
+  kafka:
+    pool: nav-dev # enum of nav-dev, nav-prod
+  env:
+    - name: POSTER_SETTINGS # DEFAULT, FROM_BEGINNING, NO_POST, SAMPLE, RUN_ONCE, ENCODE_KEY, AVRO_KEY_VALUE, AVRO_VALUE
+      value: FROM_BEGINNING, NO_POST, SAMPLE
+    - name: KAFKA_POLL_DURATION
+      value: '10000'
+    - name: KAFKA_CLIENTID
+      value: sf-ia-leveranse
+    - name: KAFKA_TOPIC
+      value: pia.ia-sak-leveranse-v1
+    - name: MS_BETWEEN_WORK
+      value: '600000'
+    - name: SF_TOKENHOST
+      value: https://test.salesforce.com
+    - name: SF_VERSION
+      value: 'v48.0'
+    - name: DEPLOY_APP
+      value: {{ DEPLOY_APP }}

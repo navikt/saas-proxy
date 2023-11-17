@@ -28,6 +28,10 @@
     ]
   },
   "teamcrm": {
+    "sf-arkiv-proxy": [
+      "POST /.*",
+      "GET /.*"
+    ],
     "sf-pdfgen": [
       "POST /.*"
     ]
