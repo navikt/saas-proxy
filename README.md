@@ -46,7 +46,7 @@ https://saas-proxy.intern.nav.no/internal/test/<uri-du-vil-testa>
 med header **target-app** (o optional ***target-namespace***) med appen du ønsker nå.
 Ex:
 ```
-curl https://saas-proxy.dev.intern.nav.no/internal/test/v1/oppfolging/periode -H "target-app:veilarbapi"
+curl https://saas-proxy.intern.dev.nav.no/internal/test/v1/oppfolging/periode -H "target-app:veilarbapi"
 Report:
 Evaluating GET /v1/oppfolging/periode on method GET, path /v1/oppfolging/periode true
 Evaluating GET /v1/oppfolging/info on method GET, path /v1/oppfolging/periode false
