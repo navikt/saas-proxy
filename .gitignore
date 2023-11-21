@@ -16,3 +16,10 @@ target/
 out/
 logbody*
 Scratch*
+
+
+# misc
+.*.sw?
+*.vim
+TAGS
+tags

@@ -32,6 +32,10 @@
       "POST /.*",
       "GET /.*"
     ],
+    "sf-websak-proxy": [
+      "POST /.*",
+      "GET /.*"
+    ],
     "sf-pdfgen": [
       "POST /.*"
     ]

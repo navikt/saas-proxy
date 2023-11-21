@@ -68,6 +68,8 @@ spec:
           namespace: fager
         - application: sf-arkiv-proxy
           namespace: teamcrm
+        - application: sf-websak-proxy
+          namespace: teamcrm
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
