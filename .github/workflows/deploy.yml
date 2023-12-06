@@ -62,6 +62,10 @@ jobs:
           key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-wrapper-
+      - name: Setup Gradle to generate and submit dependency graphs
+        uses: gradle/gradle-build-action@v2
+        with:
+          dependency-graph: generate-and-submit
       - name: Build JAR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
