@@ -47,7 +47,6 @@
   },
   "teampam": {
     "pam-cv-api-gcp": [
-      "GET /rest/v2/arbeidssoker",
       "GET /pam-cv-api/rest/v2/arbeidssoker"
     ]
   }
