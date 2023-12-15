@@ -69,6 +69,8 @@ spec:
           namespace: teamcrm
         - application: sf-websak-proxy
           namespace: teamcrm
+        - application: pam-cv-api-gcp
+          namespace: teampam
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'

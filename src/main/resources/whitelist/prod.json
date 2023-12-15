@@ -44,5 +44,10 @@
     "notifikasjon-produsent-api": [
       "POST /api/graphql"
     ]
+  },
+  "teampam": {
+    "pam-cv-api-gcp": [
+      "GET /pam-cv-api/rest/v2/arbeidssoker"
+    ]
   }
 }
