@@ -4,6 +4,12 @@ Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
 
 Den videresender forespørselen til destinasjonsappen via kortversjonen av tjenesteoppdagelsesurlen, ref nais doc [her](https://doc.nais.io/clusters/service-discovery/?h=discovery#short-names)
 
+> [!TIP]
+> ### Sjekkliste for eksponering av nye endepunkter.
+> 1. Inbound rules til ny app oppdateras av appeier med Salesforce og saas-proxy
+> 2. Outbound rules til ny app oppdateras i denne Saas-proxyen
+> 3. Hvitelisten oppdateras.
+
 Det må leggas til inbound rules i den app som ska exponeras:
 ```
 - application: saas-proxy
