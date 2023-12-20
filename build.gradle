@@ -20,7 +20,7 @@ plugins {
 }
 
 group 'no.nav.saas.proxy'
-version '0.1'
+version '0.1.1'
 
 jar {
     manifest {
