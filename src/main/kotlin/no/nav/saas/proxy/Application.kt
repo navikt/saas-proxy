@@ -144,7 +144,7 @@ object Application {
                         }.toList()
                     val internUrl = "http://$targetApp.$namespace${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
-                    log.info { "kubeForwarded call to $internUrl" }
+                    log.info { "Forwarded call to $internUrl" }
 
                     client(redirect)
                 }
