@@ -78,7 +78,7 @@ object Application {
                 }.toString()
             }
                 .onFailure {
-                    log.error { "/prometheus failed writing metrics - ${it.localizedMessage}" }
+                    log.error { "/prometheus failed writing metrics  - ${it.localizedMessage}" }
                 }
                 .getOrDefault("").let {
                     if (it.isNotEmpty()) Response(Status.OK).body(it) else Response(Status.NO_CONTENT)
