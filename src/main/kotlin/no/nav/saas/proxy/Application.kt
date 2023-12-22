@@ -19,8 +19,8 @@ import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
+import org.http4k.server.ApacheServer
 import org.http4k.server.Http4kServer
-import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
 import java.io.StringWriter
@@ -65,7 +65,7 @@ object Application {
         log.info { "Finished!" }
     }
 
-    fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
+    fun apiServer(port: Int): Http4kServer = api().asServer(ApacheServer(port))
 
     fun api(): HttpHandler = routes(
         NAIS_ISALIVE bind Method.GET to { Response(Status.OK) },
@@ -144,7 +144,7 @@ object Application {
                         }.toList()
                     val internUrl = "http://$targetApp.$namespace${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
-                    log.info { "Forwarded call to $internUrl" }
+                    log.info { "kubeForwarded call to $internUrl" }
 
                     client(redirect)
                 }
