@@ -49,5 +49,10 @@
     "pam-cv-api-gcp": [
       "GET /pam-cv-api/rest/v2/arbeidssoker"
     ]
+  },
+  "paw": {
+    "paw-arbeidssokerregisteret-api-soek": [
+      "POST /api/v1/veileder/arbeidssoekerperioder"
+    ]
   }
 }
