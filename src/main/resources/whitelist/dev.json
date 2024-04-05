@@ -51,7 +51,7 @@
     ]
   },
   "paw": {
-    "paw-arbeidssokerregisteret-api-soek": [
+    "paw-arbeidssoekerregisteret-api-oppslag": [
       "POST /api/v1/veileder/arbeidssoekerperioder"
     ]
   }
