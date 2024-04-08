@@ -74,6 +74,8 @@ spec:
           namespace: teampam
         - application: paw-arbeidssoekerregisteret-api-oppslag
           namespace: paw
+        - application: itestapp
+          namespace: teamcrm
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/dev.json'
