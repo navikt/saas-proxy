@@ -47,6 +47,9 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10'
 
     implementation "org.http4k:http4k-client-apache:3.251.0"
+
+    //Unsolved issue where identical requests get bad gateway when using
+    //ApacheServer (issue probably )
     implementation "org.http4k:http4k-server-netty:3.251.0"
 
     implementation "io.github.microutils:kotlin-logging:1.7.9"
@@ -57,8 +60,9 @@ dependencies {
     implementation "io.prometheus:simpleclient_hotspot:0.8.1"
 
     implementation "net.minidev:json-smart:2.4.9" //Desired transient json-smart to token-validation above
-    implementation "org.apache.commons:commons-compress:1.24.0" //transient http4k-apache
+    implementation "org.apache.commons:commons-compress:1.26.0" //transient http4k-apache
     implementation "org.apache.httpcomponents:httpclient:4.5.13" //Desired transient httpclient to http4k-apache
+    implementation "io.netty:netty-codec-http:4.1.108.Final"
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
