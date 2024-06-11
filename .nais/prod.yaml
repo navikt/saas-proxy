@@ -71,6 +71,8 @@ spec:
           namespace: teamcrm
         - application: pam-cv-api-gcp
           namespace: teampam
+        - application: paw-arbeidssoekerregisteret-api-oppslag
+          namespace: paw
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
