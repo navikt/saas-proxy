@@ -13,7 +13,7 @@ import java.lang.IllegalStateException
 const val WHITELIST_DEV = "/whitelist/dev.json"
 const val WHITELIST_PROD = "/whitelist/prod.json"
 
-public class WhitelistTest {
+class WhitelistTest {
     val devRuleSet = Rules.parse(WHITELIST_DEV)
     val prodRuleSet = Rules.parse(WHITELIST_PROD)
 

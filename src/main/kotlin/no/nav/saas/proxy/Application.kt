@@ -37,6 +37,7 @@ const val API_URI = "/{$API_URI_VAR:.*}"
 const val TARGET_APP = "target-app"
 const val TARGET_CLIENT_ID = "target-client-id"
 const val TARGET_NAMESPACE = "target-namespace"
+const val TARGET_INGRESS = "target-ingress"
 const val HOST = "host"
 
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
@@ -118,6 +119,7 @@ object Application {
             val targetApp = req.header(TARGET_APP)
             val targetClientId = req.header(TARGET_CLIENT_ID)
             val targetNamespace = req.header(TARGET_NAMESPACE) // optional
+            val targetIngress = req.header(TARGET_INGRESS) // used for apps on fss, pub.nais.io ingresses
 
             if (targetApp == null || targetClientId == null) {
                 log.info { "Proxy: Bad request - missing header" }
@@ -126,7 +128,7 @@ object Application {
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
                 val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
-                val approvedByRules = Application.ruleSet.rulesOf(targetApp, namespace)
+                val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
 
@@ -142,7 +144,9 @@ object Application {
                         req.headers.filter {
                             !blockFromForwarding.contains(it.first)
                         }.toList()
-                    val internUrl = "http://$targetApp.$namespace${req.uri}" // svc.cluster.local skipped due to same cluster
+
+                    val host = targetIngress ?: "http://$targetApp.$namespace"
+                    val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
 
