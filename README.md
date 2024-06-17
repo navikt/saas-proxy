@@ -20,7 +20,7 @@ Samt outbound rule her i [dev.yml](https://github.com/navikt/saas-proxy/blob/mas
 - application: <app>
   namespace: <namespace>
 ```
-Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til salesforce.
+Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til proxyn.
 Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Pre-authorization](https://doc.nais.io/security/auth/azure-ad/access-policy/#pre-authorization)
 
 Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert miljø. Se
