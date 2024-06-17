@@ -6,7 +6,7 @@ Den videresender forespørselen til destinasjonsappen via kortversjonen av tjene
 
 > [!TIP]
 > ### Sjekkliste for eksponering av nye endepunkter.
-> 1. Inbound rules til ny app oppdateras av appeier med Salesforce og saas-proxy
+> 1. Inbound rules til ny app oppdateras av appeier saas-proxy
 > 2. Outbound rules til ny app oppdateras i denne Saas-proxyen
 > 3. Hvitelisten oppdateras.
 
