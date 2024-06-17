@@ -14,9 +14,6 @@ Det må leggas til inbound rules i den app som ska exponeras:
 ```
 - application: saas-proxy
   namespace: teamcrm
-- application: salesforce
-  namespace: teamcrm
-  cluster: [dev-external|prod-external]
 ```
 Samt outbound rule her i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
 ```
