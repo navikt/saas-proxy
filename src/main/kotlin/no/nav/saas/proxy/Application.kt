@@ -132,10 +132,11 @@ object Application {
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
 
+                val optionalToken = TokenValidation.containsValidToken(req, targetClientId)
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }
                     Response(BAD_REQUEST).body("Proxy: Bad request")
-                } else if (!TokenValidation.containsValidToken(req, targetClientId)) {
+                } else if (!optionalToken.isPresent) {
                     log.info { "Proxy: Not authorized" }
                     Response(UNAUTHORIZED).body("Proxy: Not authorized")
                 } else {
@@ -151,9 +152,10 @@ object Application {
                     log.info { "Forwarded call to $internUrl" }
 
                     try {
-
-                        val result = TokenExchangeHandler.exchange(TokenValidation.firstValidToken(req).get(), "dev-gcp.$namespace.$targetApp")
-
+                        val result = TokenExchangeHandler.exchange(
+                            optionalToken.get(),
+                            "dev-gcp.$namespace.$targetApp"
+                        )
                         File("/tmp/exchangeresult").writeText(result.tokenAsString)
                     } catch (e: Throwable) {
                         log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }

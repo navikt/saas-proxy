@@ -1,8 +1,6 @@
 package no.nav.saas.proxy.token
 
 import mu.KotlinLogging
-import no.nav.saas.proxy.env
-import no.nav.saas.proxy.env_AZURE_APP_CLIENT_ID
 import no.nav.saas.proxy.env_AZURE_APP_WELL_KNOWN_URL
 import no.nav.saas.proxy.env_WHITELIST_FILE
 import no.nav.saas.proxy.toNavRequest
@@ -41,17 +39,16 @@ object TokenValidation {
         return validators.get(clientId) ?: addValidator(clientId)
     }
 
-    fun firstValidToken(request: Request): Optional<JwtToken> =
-        validatorFor(env(env_AZURE_APP_CLIENT_ID)).getValidatedTokens(request.toNavRequest()).firstValidToken
+    // fun firstValidToken(request: Request): Optional<JwtToken> =
+    //    validatorFor(env(env_AZURE_APP_CLIENT_ID)).getValidatedTokens(request.toNavRequest()).firstValidToken
 
-    fun containsValidToken(request: Request, clientId: String): Boolean {
-        if (isDev && clientId == "skip") return true
-        val firstValidToken: Optional<JwtToken> = validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
+    fun containsValidToken(request: Request, clientId: String): Optional<JwtToken> {
+        // if (isDev && clientId == "skip") return true
         // For separation of OBO token and machine token:
         // if (firstValidToken.isPresent) {
         // log.info { "Contains name claim: ${(firstValidToken.get().jwtTokenClaims.get("name") != null)}" }
         // }
-        return firstValidToken.isPresent
+        return validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
     }
 
     val isDev = (System.getenv(env_WHITELIST_FILE) == "/whitelist/dev.json")
