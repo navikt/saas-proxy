@@ -50,7 +50,7 @@ object TokenExchangeHandler {
 
     // target alias example: cluster.namespace.app
     fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
-        if (isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
+        if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
         log.info { "Exchange obo token $targetAlias" }
 
         val key = jwtIn.tokenAsString
