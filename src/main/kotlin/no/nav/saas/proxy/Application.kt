@@ -42,11 +42,14 @@ const val TARGET_INGRESS = "target-ingress"
 const val HOST = "host"
 
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
+const val env_INGRESS_FILE = "INGRESS_FILE"
 
 object Application {
     private val log = KotlinLogging.logger { }
 
     val ruleSet = Rules.parse(System.getenv(env_WHITELIST_FILE))
+
+    val ingressSet = Ingresses.parse(System.getenv(env_INGRESS_FILE))
 
     val httpClient = HttpClients.custom()
         .setDefaultRequestConfig(
@@ -62,7 +65,7 @@ object Application {
     val client = ApacheClient(httpClient)
 
     fun start() {
-        log.info { "Starting" }
+        log.info { "Starting - test ingress ${ingressSet.ingressOf("sf-arkiv", "teamcrm")}" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
     }

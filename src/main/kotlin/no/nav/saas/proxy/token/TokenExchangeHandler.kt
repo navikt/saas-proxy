@@ -13,6 +13,7 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.body.toBody
 import org.json.JSONObject
+import java.io.File
 import java.time.Instant
 
 object TokenExchangeHandler {
@@ -50,7 +51,7 @@ object TokenExchangeHandler {
     // target alias example: cluster.namespace.app
     fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
         if (isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
-        log.info { "Exchange obo token" }
+        log.info { "Exchange obo token $targetAlias" }
 
         val key = jwtIn.tokenAsString
         OBOcache[key]?.let { cachedToken ->
@@ -76,6 +77,8 @@ object TokenExchangeHandler {
         lateinit var res: Response
         // tokenFetchStats.elapsedTimeOboExchangeRequest = measureTimeMillis {
         res = client(req)
+
+        File("/tmp/exchangeresponse").writeText(res.toMessage())
         // }
         val jwt = JwtToken(JSONObject(res.bodyString()).get("access_token").toString())
         OBOcache[key] = jwt
@@ -83,7 +86,7 @@ object TokenExchangeHandler {
     }
 
     fun acquireServiceToken(targetAlias: String): JwtToken {
-        log.info { "Acquire service token" }
+        log.info { "Acquire service token $targetAlias" }
         serviceToken[targetAlias]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
                 return cachedToken

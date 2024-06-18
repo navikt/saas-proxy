@@ -18,7 +18,11 @@ fun RuleSet.namespaceOfApp(app: String): String? {
 }
 
 fun RuleSet.rulesOf(app: String, namespace: String): List<Rule> {
-    return this[namespace]?.let { it[app]?.let { it } } ?: listOf()
+    return this[namespace]?.let { it[app] } ?: listOf()
+}
+
+fun IngressSet.ingressOf(app: String, namespace: String): String? {
+    return this[namespace]?.let { it[app] }
 }
 
 fun Request.toNavRequest(): HttpRequest {

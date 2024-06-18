@@ -80,3 +80,5 @@ spec:
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
+    - name: INGRESS_FILE
+      value: '/ingresses/prod.json'
