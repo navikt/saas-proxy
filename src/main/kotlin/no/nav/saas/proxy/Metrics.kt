@@ -12,6 +12,8 @@ object Metrics {
 
     val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "ingress")
 
+    val oboCacheSize: Gauge = registerGauge("obo_cache_size")
+
     fun registerGauge(name: String): Gauge {
         return Gauge.build().name(name).help(name).register()
     }

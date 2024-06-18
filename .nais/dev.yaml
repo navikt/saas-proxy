@@ -44,6 +44,10 @@ spec:
       enabled: true
       allowAllUsers: true
       tenant: trygdeetaten.no
+      claims:
+        extra:
+          - azp_name
+          - NAVident
   accessPolicy:
     inbound:
       rules:

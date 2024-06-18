@@ -43,6 +43,10 @@ spec:
     application:
       enabled: true
       allowAllUsers: true
+      claims:
+        extra:
+          - azp_name
+          - NAVident
   accessPolicy:
     inbound:
       rules:

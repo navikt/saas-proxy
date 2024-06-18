@@ -2,6 +2,7 @@ package no.nav.saas.proxy
 
 import io.prometheus.client.exporter.common.TextFormat
 import mu.KotlinLogging
+import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
@@ -119,7 +120,6 @@ object Application {
             val targetApp = req.header(TARGET_APP)
             val targetClientId = req.header(TARGET_CLIENT_ID)
             val targetNamespace = req.header(TARGET_NAMESPACE) // optional
-            val targetIngress = req.header(TARGET_INGRESS) // used for apps on fss, pub.nais.io ingresses
 
             if (targetApp == null || targetClientId == null) {
                 log.info { "Proxy: Bad request - missing header" }
@@ -145,10 +145,19 @@ object Application {
                             !blockFromForwarding.contains(it.first)
                         }.toList()
 
-                    val host = targetIngress ?: "http://$targetApp.$namespace"
+                    val host = "http://$targetApp.$namespace"
                     val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }
+
+                    try {
+
+                        val result = TokenExchangeHandler.exchange(TokenValidation.firstValidToken(req).get(), "dev-gcp.$namespace.$targetApp")
+
+                        File("/tmp/exchangeresult").writeText(result.tokenAsString)
+                    } catch (e: Throwable) {
+                        log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }
+                    }
 
                     client(redirect)
                 }
