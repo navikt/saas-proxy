@@ -101,12 +101,14 @@ object Application {
                 Response(BAD_REQUEST).body("Proxy: Missing target-app header")
             } else {
                 val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
+                val ingress = ingressSet.ingressOf(targetApp, namespace)
 
                 val rules = Application.ruleSet.rulesOf(targetApp, namespace)
                 if (rules.isEmpty()) {
                     Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
                 } else {
                     var report = "Report:\n"
+                    report += if (ingress != null) "Targets ingress $ingress\n" else "Targets app in gcp\n"
                     val approved = rules.filter {
                         report += "Evaluating $it on method ${req.method}, path /$path "
                         it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
@@ -131,6 +133,7 @@ object Application {
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
                 val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
+                val ingress = ingressSet.ingressOf(targetApp, namespace)
                 val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
@@ -149,7 +152,7 @@ object Application {
                             !blockFromForwarding.contains(it.first)
                         }.toList()
 
-                    val host = "http://$targetApp.$namespace"
+                    val host = ingress ?: "http://$targetApp.$namespace"
                     val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl" }

@@ -78,6 +78,7 @@ object TokenExchangeHandler {
         // tokenFetchStats.elapsedTimeOboExchangeRequest = measureTimeMillis {
         res = client(req)
 
+        File("/tmp/exchangerequest").writeText(req.toMessage())
         File("/tmp/exchangeresponse").writeText(res.toMessage())
         // }
         val jwt = JwtToken(JSONObject(res.bodyString()).get("access_token").toString())
