@@ -144,6 +144,7 @@ object Application {
                     Response(BAD_REQUEST).body("Proxy: Bad request")
                 } else if (!optionalToken.isPresent) {
                     log.info { "Proxy: Not authorized" }
+                    File("/tmp/noauth").writeText(req.toMessage())
                     Response(UNAUTHORIZED).body("Proxy: Not authorized")
                 } else {
                     val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)

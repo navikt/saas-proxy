@@ -70,6 +70,7 @@ object TokenExchangeHandler {
             .body(
                 listOf(
                     "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                    // urn:ietf:params:oauth:grant-type:token-exchange
                     "assertion" to jwtIn.tokenAsString,
                     "client_id" to clientId,
                     "scope" to "api://$targetAlias/.default",
@@ -110,7 +111,7 @@ object TokenExchangeHandler {
                     "client_secret" to clientSecret,
                     "subject_token" to jwtIn.tokenAsString,
                     "subject_token_type" to "urn:ietf:params:oauth:token-type:access_token",
-                    "scope" to "openid"
+                    "scope" to "api://dev-gcp.teamcrm.saas-proxy/.default"
                 ).toBody()
             )
 
