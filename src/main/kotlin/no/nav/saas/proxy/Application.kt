@@ -129,7 +129,6 @@ object Application {
             if (targetApp == null || targetClientId == null) {
                 log.info { "Proxy: Bad request - missing header" }
                 File("/tmp/missingheader").writeText(req.toMessage())
-
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
                 val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
@@ -138,7 +137,10 @@ object Application {
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
 
-                val optionalToken = TokenValidation.containsValidToken(req, targetClientId)
+                var optionalToken = TokenValidation.containsValidToken(req, targetClientId)
+
+                if (!optionalToken.isPresent) optionalToken = TokenValidation.containsValidToken(req, System.getenv("AZURE_APP_CLIENT_ID"))
+
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }
                     Response(BAD_REQUEST).body("Proxy: Bad request")
