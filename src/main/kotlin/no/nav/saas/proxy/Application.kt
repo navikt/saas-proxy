@@ -137,9 +137,7 @@ object Application {
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
 
-                var optionalToken = TokenValidation.containsValidToken(req, targetClientId)
-
-                if (!optionalToken.isPresent) optionalToken = TokenValidation.containsValidToken(req, System.getenv("AZURE_APP_CLIENT_ID"))
+                val optionalToken = TokenValidation.containsValidToken(req, targetClientId)
 
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }
