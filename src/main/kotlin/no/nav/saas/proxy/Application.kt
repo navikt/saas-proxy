@@ -47,6 +47,8 @@ const val env_INGRESS_FILE = "INGRESS_FILE"
 object Application {
     private val log = KotlinLogging.logger { }
 
+    val clientIdProxy = System.getenv("AZURE_APP_CLIENT_ID")
+
     val ruleSet = Rules.parse(System.getenv(env_WHITELIST_FILE))
 
     val ingressSet = Ingresses.parse(System.getenv(env_INGRESS_FILE))
@@ -159,11 +161,17 @@ object Application {
                     log.info { "Forwarded call to $internUrl" }
 
                     try {
-                        val result = TokenExchangeHandler.loginToProxy(
-                            optionalToken.get(),
-                            "dev-gcp.$namespace.$targetApp"
-                        )
-                        File("/tmp/loginresulttoken").writeText(result.tokenAsString)
+                        val targetingProxy = optionalToken.get().jwtTokenClaims.get("aud") == clientIdProxy
+
+                        log.info { "targetingProxy $targetingProxy" }
+
+                        if (targetingProxy) {
+                            val result = TokenExchangeHandler.exchange(
+                                optionalToken.get(),
+                                "dev-gcp.$namespace.$targetApp"
+                            )
+                            File("/tmp/loginresulttoken").writeText(result.tokenAsString)
+                        }
                     } catch (e: Throwable) {
                         log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }
                     }
