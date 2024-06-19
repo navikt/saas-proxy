@@ -158,11 +158,11 @@ object Application {
                     log.info { "Forwarded call to $internUrl" }
 
                     try {
-                        val result = TokenExchangeHandler.exchange(
+                        val result = TokenExchangeHandler.loginToProxy(
                             optionalToken.get(),
                             "dev-gcp.$namespace.$targetApp"
                         )
-                        File("/tmp/exchangeresult").writeText(result.tokenAsString)
+                        File("/tmp/loginresulttoken").writeText(result.tokenAsString)
                     } catch (e: Throwable) {
                         log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }
                     }
