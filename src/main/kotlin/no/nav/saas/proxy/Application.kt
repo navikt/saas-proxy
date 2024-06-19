@@ -67,7 +67,8 @@ object Application {
     val client = ApacheClient(httpClient)
 
     fun start() {
-        log.info { "Starting - test ingress ${ingressSet.ingressOf("sf-arkiv", "teamcrm")}" }
+        // test ingress ${ingressSet.ingressOf("sf-arkiv", "teamcrm")}"
+        log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
     }
@@ -161,17 +162,19 @@ object Application {
                     log.info { "Forwarded call to $internUrl" }
 
                     try {
+
                         val targetingProxy = optionalToken.get().jwtTokenClaims.get("aud") == clientIdProxy
 
                         log.info { "targetingProxy $targetingProxy" }
 
-                        if (targetingProxy) {
-                            val result = TokenExchangeHandler.exchange(
-                                optionalToken.get(),
-                                "dev-gcp.$namespace.$targetApp"
-                            )
-                            File("/tmp/loginresulttoken").writeText(result.tokenAsString)
-                        }
+                        File("/tmp/tokenfirst").writeText(optionalToken.get().tokenAsString)
+                        // if (targetingProxy) {
+                        val result = TokenExchangeHandler.exchange(
+                            optionalToken.get(),
+                            "dev-gcp.$namespace.$targetApp"
+                        )
+                        File("/tmp/loginresulttoken").writeText(result.tokenAsString)
+                        // }
                     } catch (e: Throwable) {
                         log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }
                     }
