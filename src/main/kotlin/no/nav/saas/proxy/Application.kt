@@ -163,9 +163,10 @@ object Application {
 
                     try {
 
-                        val targetingProxy = optionalToken.get().jwtTokenClaims.get("aud") == clientIdProxy
+                        val targetingProxy = optionalToken.get().jwtTokenClaims.getStringClaim("aud") == clientIdProxy
 
                         log.info { "targetingProxy $targetingProxy" }
+                        File("/tmp/targetingProxydebug").writeText("${optionalToken.get().jwtTokenClaims.getStringClaim("aud")} = $clientIdProxy")
 
                         File("/tmp/tokenfirst").writeText(optionalToken.get().tokenAsString)
                         // if (targetingProxy) {
