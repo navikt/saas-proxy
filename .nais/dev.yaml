@@ -78,7 +78,7 @@ spec:
         - application: paw-arbeidssoekerregisteret-api-oppslag
           namespace: paw
       external:
-        - host: "https://sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
+        - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
