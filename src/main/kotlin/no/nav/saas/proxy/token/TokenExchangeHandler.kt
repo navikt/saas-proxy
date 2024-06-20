@@ -91,42 +91,6 @@ object TokenExchangeHandler {
         return jwt
     }
 
-    fun loginToProxy(jwtIn: JwtToken, targetAlias: String): JwtToken {
-        log.info { "Use obo token with login to proxy $targetAlias" }
-
-        val key = jwtIn.tokenAsString
-        OBOSFcache[key]?.let { cachedToken ->
-            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-                return cachedToken
-            }
-        }
-        Metrics.oboCacheSize.set(OBOcache.size.toDouble())
-
-        val req = Request(Method.POST, azureTokenEndPoint)
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(
-                listOf(
-                    "grant_type" to "urn:ietf:params:oauth:grant-type:token-exchange",
-                    "client_id" to clientId,
-                    "client_secret" to clientSecret,
-                    "subject_token" to jwtIn.tokenAsString,
-                    "subject_token_type" to "urn:ietf:params:oauth:token-type:access_token",
-                    "scope" to "api://dev-gcp.teamcrm.saas-proxy/.default"
-                ).toBody()
-            )
-
-        lateinit var res: Response
-        // tokenFetchStats.elapsedTimeOboExchangeRequest = measureTimeMillis {
-        res = client(req)
-
-        File("/tmp/loginrequest").writeText(req.toMessage())
-        File("/tmp/loginresponse").writeText(res.toMessage())
-        // }
-        val jwt = JwtToken(JSONObject(res.bodyString()).get("access_token").toString())
-        OBOcache[key] = jwt
-        return jwt
-    }
-
     fun acquireServiceToken(targetAlias: String): JwtToken {
         log.info { "Acquire service token $targetAlias" }
         serviceToken[targetAlias]?.let { cachedToken ->

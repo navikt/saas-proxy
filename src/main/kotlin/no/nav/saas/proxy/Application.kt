@@ -152,34 +152,35 @@ object Application {
                     Response(UNAUTHORIZED).body("Proxy: Not authorized")
                 } else {
                     val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
-                    val forwardHeaders =
+
+                    var exchangeToken = false
+                    try {
+                        exchangeToken = optionalToken.get().audAsString() == clientIdProxy
+                    } catch (e: Exception) {
+                        log.error { "Failed aud lookup!" }
+                    }
+
+                    val forwardHeaders = if (exchangeToken) {
+                        req.headers.filter {
+                            !(blockFromForwarding.contains(it.first) || it.first.lowercase() == "authorization")
+                        }.toList() + listOf(
+                            "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
+                                optionalToken.get(),
+                                "dev-gcp.$namespace.$targetApp"
+                            ).tokenAsString}"
+                        )
+                    } else {
                         req.headers.filter {
                             !blockFromForwarding.contains(it.first)
                         }.toList()
+                    }
 
                     val host = ingress ?: "http://$targetApp.$namespace"
                     val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
-                    log.info { "Forwarded call to $internUrl" }
+                    log.info { "Forwarded call to $internUrl (token exchange $exchangeToken)" }
 
-                    try {
-
-                        val targetingProxy = optionalToken.get().audAsString() == clientIdProxy
-
-                        log.info { "targetingProxy $targetingProxy" }
-                        File("/tmp/targetingProxydebug").writeText("${optionalToken.get().audAsString()} = $clientIdProxy")
-
-                        File("/tmp/tokenfirst").writeText(optionalToken.get().tokenAsString)
-                        if (targetingProxy) {
-                            val result = TokenExchangeHandler.exchange(
-                                optionalToken.get(),
-                                "dev-gcp.$namespace.$targetApp"
-                            )
-                            File("/tmp/loginresulttoken").writeText(result.tokenAsString)
-                        }
-                    } catch (e: Throwable) {
-                        log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }
-                    }
+                    File("/tmp/latestRedirect").writeText(redirect.toMessage())
 
                     client(redirect)
                 }
