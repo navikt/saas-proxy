@@ -28,11 +28,7 @@
     ]
   },
   "teamcrm": {
-    "sf-arkiv-proxy": [
-      "POST /.*",
-      "GET /.*"
-    ],
-    "sf-websak-proxy": [
+    "sf-arkiv": [
       "POST /.*",
       "GET /.*"
     ],
