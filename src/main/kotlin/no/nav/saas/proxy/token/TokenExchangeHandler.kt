@@ -56,13 +56,13 @@ object TokenExchangeHandler {
     fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
         log.info { "Exchange obo token $targetAlias" }
-
         val key = jwtIn.tokenAsString
         OBOcache[key]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
                 return cachedToken
             }
         }
+        log.info { "Fetch Exchange obo token $targetAlias" }
         Metrics.oboCacheSize.set(OBOcache.size.toDouble())
 
         val req = Request(Method.POST, azureTokenEndPoint)
@@ -70,7 +70,6 @@ object TokenExchangeHandler {
             .body(
                 listOf(
                     "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                    // urn:ietf:params:oauth:grant-type:token-exchange
                     "assertion" to jwtIn.tokenAsString,
                     "client_id" to clientId,
                     "scope" to "api://$targetAlias/.default",
@@ -98,6 +97,7 @@ object TokenExchangeHandler {
                 return cachedToken
             }
         }
+        log.info { "Fetch Acquire service token $targetAlias" }
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(
