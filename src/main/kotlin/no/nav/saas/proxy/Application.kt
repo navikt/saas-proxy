@@ -4,6 +4,7 @@ import io.prometheus.client.exporter.common.TextFormat
 import mu.KotlinLogging
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
+import no.nav.security.token.support.core.jwt.JwtToken
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.HttpClients
@@ -163,19 +164,19 @@ object Application {
 
                     try {
 
-                        val targetingProxy = optionalToken.get().jwtTokenClaims.get("aud").toString() == clientIdProxy
+                        val targetingProxy = optionalToken.get().audAsString() == clientIdProxy
 
                         log.info { "targetingProxy $targetingProxy" }
-                        File("/tmp/targetingProxydebug").writeText("${optionalToken.get().jwtTokenClaims.get("aud")} = $clientIdProxy")
+                        File("/tmp/targetingProxydebug").writeText("${optionalToken.get().audAsString()} = $clientIdProxy")
 
                         File("/tmp/tokenfirst").writeText(optionalToken.get().tokenAsString)
-                        // if (targetingProxy) {
-                        val result = TokenExchangeHandler.exchange(
-                            optionalToken.get(),
-                            "dev-gcp.$namespace.$targetApp"
-                        )
-                        File("/tmp/loginresulttoken").writeText(result.tokenAsString)
-                        // }
+                        if (targetingProxy) {
+                            val result = TokenExchangeHandler.exchange(
+                                optionalToken.get(),
+                                "dev-gcp.$namespace.$targetApp"
+                            )
+                            File("/tmp/loginresulttoken").writeText(result.tokenAsString)
+                        }
                     } catch (e: Throwable) {
                         log.error { "Failed exchange attempt ${e.message}\n${e.printStackTrace()}" }
                     }
@@ -186,3 +187,5 @@ object Application {
         }
     )
 }
+
+fun JwtToken.audAsString() = this.jwtTokenClaims.get("aud").toString().let { it.substring(1, it.length - 1) }
