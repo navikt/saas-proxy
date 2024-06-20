@@ -68,7 +68,6 @@ object Application {
     val client = ApacheClient(httpClient)
 
     fun start() {
-        // test ingress ${ingressSet.ingressOf("sf-arkiv", "teamcrm")}"
         log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
@@ -166,7 +165,7 @@ object Application {
                         }.toList() + listOf(
                             "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
                                 optionalToken.get(),
-                                "dev-gcp.$namespace.$targetApp"
+                                "${targetCluster(ingress)}.$namespace.$targetApp"
                             ).tokenAsString}"
                         )
                     } else {
@@ -178,7 +177,7 @@ object Application {
                     val host = ingress ?: "http://$targetApp.$namespace"
                     val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
-                    log.info { "Forwarded call to $internUrl (token exchange $exchangeToken)" }
+                    log.info { "Forwarded call to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
 
                     File("/tmp/latestRedirect").writeText(redirect.toMessage())
 
@@ -190,3 +189,10 @@ object Application {
 }
 
 fun JwtToken.audAsString() = this.jwtTokenClaims.get("aud").toString().let { it.substring(1, it.length - 1) }
+
+fun targetCluster(specifiedIngress: String?): String {
+    val currentCluster = System.getenv("NAIS_CLUSTER_NAME")
+    return specifiedIngress?.let {
+        currentCluster.replace("gcp", "fss")
+    } ?: currentCluster
+}
