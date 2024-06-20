@@ -70,7 +70,15 @@ object Application {
     fun start() {
         log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
+        testCall()
         log.info { "Finished!" }
+    }
+
+    fun testCall() {
+        val req = Request(Method.GET, "https://sf-arkiv-dokumentasjon.dev-fss-pub.nais.io/authping")
+
+        val res = client(req)
+        File("/tmp/testcallresponse").writeText(res.toMessage())
     }
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
