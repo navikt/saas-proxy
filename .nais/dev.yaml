@@ -66,9 +66,6 @@ spec:
           namespace: okonomi
         - application: nom-api
           namespace: nom
-        - application: sf-arkiv
-          namespace: teamcrm
-          cluster: dev-fss
         - application: sf-pdfgen
           namespace: teamcrm
         - application: notifikasjon-produsent-api
@@ -77,8 +74,6 @@ spec:
           namespace: teampam
         - application: paw-arbeidssoekerregisteret-api-oppslag
           namespace: paw
-#      external:
-#        - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
