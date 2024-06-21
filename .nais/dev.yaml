@@ -66,9 +66,6 @@ spec:
           namespace: okonomi
         - application: nom-api
           namespace: nom
-        - application: sf-arkiv
-          namespace: teamcrm
-          cluster: dev-fss
         - application: sf-pdfgen
           namespace: teamcrm
         - application: notifikasjon-produsent-api
