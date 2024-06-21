@@ -1,5 +1,9 @@
 {
   "teamcrm": {
-    "sf-arkiv": "https://sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
+    "sf-arkiv": "https://sf-arkiv-dokumentasjon.dev-fss-pub.nais.io",
+    "sf-websak": "https://sf-websak.dev-fss-pub.nais.io"
+  },
+  "teamnks": {
+    "sf-nks-brukervarsel-proxy": "https://sf-brukervarsel-proxy.dev-fss-pub.nais.io"
   }
 }
