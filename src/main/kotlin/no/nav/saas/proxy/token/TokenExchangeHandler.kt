@@ -14,7 +14,9 @@ import org.http4k.core.Response
 import org.http4k.core.body.toBody
 import org.json.JSONObject
 import java.io.File
+import java.lang.Exception
 import java.time.Instant
+import javax.naming.AuthenticationException
 
 object TokenExchangeHandler {
     /**
@@ -30,39 +32,25 @@ object TokenExchangeHandler {
 
     private val clientId: String = env(env_AZURE_APP_CLIENT_ID)
     private val clientSecret: String = env(env_AZURE_APP_CLIENT_SECRET)
-    private val sfClientId: String = env("sf_client_id")
-    private val sfClientSecret: String = env("sf_client_secret")
 
     private val azureTokenEndPoint: String = env(env_AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)
 
     private var serviceToken: MutableMap<String, JwtToken> = mutableMapOf() // alias, token out
-    private var OBOSFcache: MutableMap<String, JwtToken> = mutableMapOf() // token in (alias + user), token out
     private var OBOcache: MutableMap<String, JwtToken> = mutableMapOf() // token in (alias + user), token out
-
-    private var droppedCacheElements = 0L
-
-    fun refreshCache() {
-        OBOcache = OBOcache.filterValues {
-            val stillEligable = it.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()
-            if (!stillEligable) droppedCacheElements++
-            stillEligable
-        }.toMutableMap()
-        log.info { "Dropped cache elements during lifetime $droppedCacheElements" }
-    }
 
     fun isOBOToken(jwt: JwtToken) = jwt.jwtTokenClaims.get("NAVident") != null
 
     // target alias example: cluster.namespace.app
     fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
-        log.info { "Exchange obo token $targetAlias" }
         val key = jwtIn.tokenAsString
         OBOcache[key]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
+                log.info { "Cached exchange obo token $targetAlias" }
                 return cachedToken
             }
         }
-        log.info { "Fetch Exchange obo token $targetAlias" }
+        log.info { "Exchange obo token $targetAlias" }
         Metrics.oboCacheSize.set(OBOcache.size.toDouble())
 
         val req = Request(Method.POST, azureTokenEndPoint)
@@ -77,27 +65,24 @@ object TokenExchangeHandler {
                     "requested_token_use" to "on_behalf_of"
                 ).toBody()
             )
-
-        lateinit var res: Response
-        // tokenFetchStats.elapsedTimeOboExchangeRequest = measureTimeMillis {
-        res = client(req)
+        val res = client(req)
 
         File("/tmp/exchangerequest").writeText(req.toMessage())
         File("/tmp/exchangeresponse").writeText(res.toMessage())
-        // }
-        val jwt = JwtToken(JSONObject(res.bodyString()).get("access_token").toString())
+
+        val jwt = res.extractAccessToken(targetAlias)
         OBOcache[key] = jwt
         return jwt
     }
 
     fun acquireServiceToken(targetAlias: String): JwtToken {
-        log.info { "Acquire service token $targetAlias" }
         serviceToken[targetAlias]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
+                log.info { "Cached service obo token $targetAlias" }
                 return cachedToken
             }
         }
-        log.info { "Fetch Acquire service token $targetAlias" }
+        log.info { "Acquire service token $targetAlias" }
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(
@@ -108,10 +93,18 @@ object TokenExchangeHandler {
                     "grant_type" to "client_credentials"
                 ).toBody()
             )
-        lateinit var res: Response
-        res = client(req)
-        val jwt = JwtToken(JSONObject(res.bodyString()).get("access_token").toString())
+
+        val res = client(req)
+        val jwt = res.extractAccessToken(targetAlias)
         serviceToken[targetAlias] = jwt
         return jwt
+    }
+}
+
+fun Response.extractAccessToken(alias: String): JwtToken {
+    try {
+        return JwtToken(JSONObject(this.bodyString()).get("access_token").toString())
+    } catch (e: Exception) {
+        throw AuthenticationException("Failed to fetch access token for $alias")
     }
 }
