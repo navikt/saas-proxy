@@ -39,7 +39,6 @@ const val API_URI = "/{$API_URI_VAR:.*}"
 const val TARGET_APP = "target-app"
 const val TARGET_CLIENT_ID = "target-client-id"
 const val TARGET_NAMESPACE = "target-namespace"
-const val TARGET_INGRESS = "target-ingress"
 const val HOST = "host"
 
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
@@ -137,7 +136,7 @@ object Application {
             val targetClientId = req.header(TARGET_CLIENT_ID)
             val targetNamespace = req.header(TARGET_NAMESPACE) // optional
 
-            if (targetApp == null || targetClientId == null) {
+            if (targetApp == null) {
                 log.info { "Proxy: Bad request - missing header" }
                 File("/tmp/missingheader").writeText(req.toMessage())
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
@@ -148,7 +147,7 @@ object Application {
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
 
-                val optionalToken = TokenValidation.containsValidToken(req, targetClientId)
+                val optionalToken = TokenValidation.containsValidToken(req, targetClientId ?: clientIdProxy)
 
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }
