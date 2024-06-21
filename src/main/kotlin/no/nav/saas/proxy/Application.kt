@@ -189,7 +189,9 @@ object Application {
 
                     File("/tmp/latestRedirect").writeText(redirect.toMessage())
 
-                    client(redirect)
+                    val response = client(redirect)
+                    File("/tmp/latestResponse").writeText(response.toMessage())
+                    response
                 }
             }
         }
