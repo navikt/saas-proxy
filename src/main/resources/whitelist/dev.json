@@ -9,6 +9,10 @@
     "sf-brukernotifikasjon": [
       "POST /innboks",
       "POST /done"
+    ],
+    "sf-nks-brukervarsel-proxy": [
+      "POST /.*",
+      "GET /.*"
     ]
   },
   "team-rocket": {
@@ -29,6 +33,10 @@
   },
   "teamcrm": {
     "sf-arkiv": [
+      "POST /.*",
+      "GET /.*"
+    ],
+    "sf-websak": [
       "POST /.*",
       "GET /.*"
     ],

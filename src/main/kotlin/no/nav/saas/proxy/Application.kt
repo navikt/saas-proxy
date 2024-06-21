@@ -137,7 +137,7 @@ object Application {
             val targetNamespace = req.header(TARGET_NAMESPACE) // optional
 
             if (targetApp == null) {
-                log.info { "Proxy: Bad request - missing header" }
+                log.info { "Proxy: Bad request - missing targetApp header" }
                 File("/tmp/missingheader").writeText(req.toMessage())
                 Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
             } else {
@@ -151,7 +151,7 @@ object Application {
 
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }
-                    Response(BAD_REQUEST).body("Proxy: Bad request")
+                    Response(BAD_REQUEST).body("Proxy: Bad request - not whitelisted path")
                 } else if (!optionalToken.isPresent) {
                     log.info { "Proxy: Not authorized" }
                     File("/tmp/noauth").writeText(req.toMessage())
