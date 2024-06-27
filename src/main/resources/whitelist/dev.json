@@ -58,5 +58,11 @@
     "paw-arbeidssoekerregisteret-api-oppslag": [
       "POST /api/v1/veileder/arbeidssoekerperioder"
     ]
+  },
+  "teamdokumenthandtering": {
+    "saf-q1": [
+      "GET /saf/rest/hentdokument/*",
+      "POST /saf/graphql"
+    ]
   }
 }
