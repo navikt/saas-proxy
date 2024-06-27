@@ -147,7 +147,7 @@ object Application {
                     .filter { it.evaluateAsRule(req.method, "/$path") }
                     .isNotEmpty()
 
-                val optionalToken = TokenValidation.containsValidToken(req, targetClientId ?: clientIdProxy)
+                val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: clientIdProxy)
 
                 if (!approvedByRules) {
                     log.info { "Proxy: Bad request - not whitelisted" }

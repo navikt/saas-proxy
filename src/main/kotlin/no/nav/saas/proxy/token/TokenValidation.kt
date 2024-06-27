@@ -12,8 +12,6 @@ import org.http4k.core.Request
 import java.net.URL
 import java.util.Optional
 
-const val claim_NAME = "name"
-
 object TokenValidation {
 
     private val log = KotlinLogging.logger { }
@@ -44,14 +42,8 @@ object TokenValidation {
     // fun firstValidToken(request: Request): Optional<JwtToken> =
     //    validatorFor(env(env_AZURE_APP_CLIENT_ID)).getValidatedTokens(request.toNavRequest()).firstValidToken
 
-    fun containsValidToken(request: Request, clientId: String): Optional<JwtToken> {
-        // if (isDev && clientId == "skip") return true
-        // For separation of OBO token and machine token:
-        // if (firstValidToken.isPresent) {
-        // log.info { "Contains name claim: ${(firstValidToken.get().jwtTokenClaims.get("name") != null)}" }
-        // }
-        return validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
-    }
+    fun firstValidToken(request: Request, clientId: String): Optional<JwtToken> =
+        validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
 
     val isDev = (System.getenv(env_WHITELIST_FILE) == "/whitelist/dev.json")
 }
