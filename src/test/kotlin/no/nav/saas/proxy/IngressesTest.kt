@@ -39,7 +39,7 @@ class IngressesTest {
         ingressesSet.forEach { ingressSet ->
             ingressSet.values.forEach { app ->
                 app.values.forEach { ingress ->
-                    Assertions.assertTrue( ingress.startsWith("https://"))
+                    Assertions.assertTrue(ingress.startsWith("https://"))
                 }
             }
         }
