@@ -72,10 +72,6 @@ spec:
           namespace: teamcrm
         - application: notifikasjon-produsent-api
           namespace: fager
-        - application: sf-arkiv-proxy
-          namespace: teamcrm
-        - application: sf-websak-proxy
-          namespace: teamcrm
         - application: pam-cv-api-gcp
           namespace: teampam
         - application: paw-arbeidssoekerregisteret-api-oppslag
