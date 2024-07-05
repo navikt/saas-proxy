@@ -8,7 +8,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
 spec:
-  image: '{{ image }}'
+  image: "{{ image }}"
   port: 8080
   replicas:
     min: 1
@@ -25,7 +25,7 @@ spec:
     failureThreshold: 30
   preStopHook:
     exec:
-      command: [ "/bin/bash", "/pre-stop.sh" ]
+      command: ["/bin/bash", "/pre-stop.sh"]
   terminationGracePeriodSeconds: 60
   prometheus:
     enabled: true
@@ -80,10 +80,15 @@ spec:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
         - host: "sf-brukervarsel-proxy.dev-fss-pub.nais.io"
+        - host: "saf.dev-fss-pub.nais.io"
+        - host: "oppgave-q1.dev-fss-pub.nais.io"
+        - host: "dokarkiv.dev-fss-pub.nais.io"
+        - host: "regoppslag.dev-fss-pub.nais.io"
+        - host: "arena-api-q2.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
     - name: WHITELIST_FILE
-      value: '/whitelist/dev.json'
+      value: "/whitelist/dev.json"
     - name: INGRESS_FILE
-      value: '/ingresses/dev.json'
+      value: "/ingresses/dev.json"

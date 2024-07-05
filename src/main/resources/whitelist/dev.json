@@ -58,5 +58,34 @@
     "paw-arbeidssoekerregisteret-api-oppslag": [
       "POST /api/v1/veileder/arbeidssoekerperioder"
     ]
+  },
+  "teamdokumenthandtering": {
+    "saf-q1": [
+      "GET /saf/rest/hentdokument/*",
+      "POST /saf/graphql"
+    ],
+    "dokarkiv-q1": [
+      "POST /rest/journalpostapi/v1/journalpost",
+      "PATCH /rest/journalpostapi/v1/journalpost/.*/ferdigstill"
+    ],
+    "regoppslag": [
+      "POST /rest/postadresse"
+    ]
+  },
+  "oppgavehandtering": {
+    "oppgave-q1": [
+      "GET /api/v1/oppgaver",
+      "GET /api/v1/oppgaver/.*/oppfolging",
+      "GET /api/v1/kodeverk/oppgavetype/.*",
+      "GET /api/v1/oppgaver/.*",
+      "GET /api/v1/kodeverk"
+    ]
+  },
+  "teamarenanais": {
+    "arena-api-q2": [
+      "GET /api/v1/beregningsgrunnlag/transaksjoner",
+      "GET /api/v1/maalgrupper",
+      "GET /api/v1/meldehistorikk"
+    ]
   }
 }
