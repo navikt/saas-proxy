@@ -60,7 +60,7 @@ object TokenExchangeHandler {
                     "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
                     "assertion" to jwtIn.tokenAsString,
                     "client_id" to clientId,
-                    "scope" to "api://$targetAlias/.default",
+                    "scope" to "api://$targetAlias/defaultaccess,
                     "client_secret" to clientSecret,
                     "requested_token_use" to "on_behalf_of"
                 ).toBody()
