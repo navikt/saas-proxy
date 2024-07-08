@@ -5,5 +5,16 @@
   },
   "teamnks": {
     "sf-nks-brukervarsel-proxy": "https://sf-brukervarsel-proxy.dev-fss-pub.nais.io"
+  },
+  "teamdokumenthandtering": {
+    "saf-q1": "https://saf.dev-fss-pub.nais.io",
+    "dokarkiv-q1": "https://dokarkiv.dev-fss-pub.nais.io",
+    "regoppslag": "https://regoppslag.dev-fss-pub.nais.io"
+  },
+  "oppgavehandtering": {
+    "oppgave-q1": "https://oppgave-q1.dev-fss-pub.nais.io"
+  },
+  "teamarenanais": {
+    "arena-api-q2": "https://arena-api-q2.dev-fss-pub.nais.io"
   }
 }
