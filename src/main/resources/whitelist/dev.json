@@ -61,7 +61,7 @@
   },
   "teamdokumenthandtering": {
     "saf-q1": [
-      "GET /rest/hentdokument/*",
+      "GET /rest/hentdokument/.*",
       "POST /graphql"
     ],
     "dokarkiv-q1": [
