@@ -75,9 +75,13 @@ object Application {
 
     fun testCall() {
         val req = Request(Method.GET, "https://sf-arkiv-dokumentasjon.dev-fss-pub.nais.io/authping")
-
-        val res = client(req)
-        File("/tmp/testcallresponse").writeText(res.toMessage())
+        // the following fails regularly, so print a bit more concise logs
+        try {
+            val res = client(req)
+            File("/tmp/testcallresponse").writeText(res.toMessage())
+        } catch (e: Exception) {
+            log.error("Failed the test call:", e)
+        }
     }
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
