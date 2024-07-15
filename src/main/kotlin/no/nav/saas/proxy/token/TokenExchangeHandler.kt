@@ -60,7 +60,7 @@ object TokenExchangeHandler {
                     "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
                     "assertion" to jwtIn.tokenAsString,
                     "client_id" to clientId,
-                    "scope" to "api://$targetAlias/.default",
+                    "scope" to "api://$targetAlias/defaultaccess",
                     "client_secret" to clientSecret,
                     "requested_token_use" to "on_behalf_of"
                 ).toBody()
@@ -105,6 +105,15 @@ fun Response.extractAccessToken(alias: String): JwtToken {
     try {
         return JwtToken(JSONObject(this.bodyString()).get("access_token").toString())
     } catch (e: Exception) {
-        throw AuthenticationException("Failed to fetch access token for $alias")
+        try {
+            File("/tmp/failedStatusWhenExtracting").writeText(
+                "Received $status when attempting token exctraction from $alias"
+            )
+            File("/tmp/failedExtractBody").writeText(this.bodyString())
+            File("/tmp/failedExtractJson").writeText("${JSONObject(this.bodyString())}")
+            throw AuthenticationException("Failed to fetch access token for $alias")
+        } catch (e: Exception) {
+            throw AuthenticationException("Failed to extract JSON for $alias")
+        }
     }
 }

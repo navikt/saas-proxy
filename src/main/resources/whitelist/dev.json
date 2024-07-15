@@ -61,7 +61,7 @@
   },
   "teamdokumenthandtering": {
     "saf-q1": [
-      "GET /rest/hentdokument/*",
+      "GET /rest/hentdokument/.*",
       "POST /graphql"
     ],
     "dokarkiv-q1": [
@@ -78,7 +78,9 @@
       "GET /api/v1/oppgaver/.*/oppfolging",
       "GET /api/v1/kodeverk/oppgavetype/.*",
       "GET /api/v1/oppgaver/.*",
-      "GET /api/v1/kodeverk"
+      "GET /api/v1/kodeverk",
+      "PATCH /api/v1/oppgaver/.*",
+      "POST /api/v1/oppgaver"
     ]
   },
   "teamarenanais": {
