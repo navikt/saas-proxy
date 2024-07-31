@@ -69,7 +69,6 @@ object Application {
     fun start() {
         log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
-        testCall()
         log.info { "Finished!" }
     }
 
@@ -193,6 +192,14 @@ object Application {
                     File("/tmp/latestRedirect").writeText(redirect.toMessage())
 
                     val response = client(redirect)
+
+                    try {
+                        val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
+                        Metrics.forwardedCallsInc(targetApp = targetApp, path = path, ingress = ingress ?: "", tokenType = tokenType, status = response.status.code.toString())
+                    } catch (e: Exception) {
+                        log.error { "Could not register forwarded call metric" }
+                    }
+
                     File("/tmp/latestResponse").writeText(response.toMessage())
                     response
                 }
