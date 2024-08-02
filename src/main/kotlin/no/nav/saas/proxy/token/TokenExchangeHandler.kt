@@ -15,7 +15,6 @@ import org.http4k.core.body.toBody
 import org.json.JSONObject
 import java.io.File
 import java.lang.Exception
-import java.time.Instant
 import javax.naming.AuthenticationException
 
 object TokenExchangeHandler {
@@ -44,12 +43,15 @@ object TokenExchangeHandler {
     fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
         val key = jwtIn.tokenAsString
+        // TODO ignoring cache for now
+        /*
         OBOcache[key]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
                 log.info { "Cached exchange obo token $targetAlias" }
                 return cachedToken
             }
         }
+        */
         log.info { "Exchange obo token $targetAlias" }
         Metrics.oboCacheSize.set(OBOcache.size.toDouble())
 
@@ -76,12 +78,15 @@ object TokenExchangeHandler {
     }
 
     fun acquireServiceToken(targetAlias: String): JwtToken {
+        // TODO ignoring cache for now
+        /*
         serviceToken[targetAlias]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
                 log.info { "Cached service obo token $targetAlias" }
                 return cachedToken
             }
         }
+         */
         log.info { "Acquire service token $targetAlias" }
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
