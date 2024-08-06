@@ -58,5 +58,11 @@
     "paw-arbeidssoekerregisteret-api-oppslag": [
       "POST /api/v1/veileder/arbeidssoekerperioder"
     ]
+  },
+  "tpts": {
+    "tiltakspenger-datadeling": [
+      "POST /vedtak/perioder",
+      "POST /vedtak/detaljer"
+    ]
   }
 }
