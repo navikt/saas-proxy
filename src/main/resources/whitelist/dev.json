@@ -89,5 +89,11 @@
       "GET /api/v1/maalgrupper",
       "GET /api/v1/meldehistorikk"
     ]
+  },
+  "tpts": {
+    "tiltakspenger-datadeling": [
+      "POST /vedtak/perioder",
+      "POST /vedtak/detaljer"
+    ]
   }
 }
