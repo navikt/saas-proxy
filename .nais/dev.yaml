@@ -87,6 +87,12 @@ spec:
         - host: "dokarkiv.dev-fss-pub.nais.io"
         - host: "regoppslag.dev-fss-pub.nais.io"
         - host: "arena-api-q2.dev-fss-pub.nais.io"
+        - host: "repr-fullmakt.dev-fss-pub.nais.io"
+        - host: "sokos-skattekort-person.dev-fss-pub.nais.io"
+        - host: "sokos-utbetaldata.dev-fss-pub.nais.io"
+        - host: "pensjon-pen-q1.dev-fss-pub.nais.io"
+        - host: "norg2.dev-fss-pub.nais.io"
+
   envFrom:
     - secret: salesforce-entra
   env:
