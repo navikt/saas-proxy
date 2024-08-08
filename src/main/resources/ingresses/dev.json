@@ -24,10 +24,13 @@
   "repr": {
     "repr-fullmakt": "https://repr-fullmakt.dev-fss-pub.nais.io"
   },
-  "pensjon-q1": {
-    "pensjon-pen-q1": "https://pensjon-pen-q1.dev-fss-pub.nais.io"
+  "pensjon-q2": {
+    "pensjon-pen-q2": "https://pensjon-pen-q2.dev-fss-pub.nais.io"
   },
   "org": {
     "norg2": "https://norg2.dev-fss-pub.nais.io"
+  },
+  "teamdigisos": {
+    "sosialhjelp-modia-api": "https://sosialhjelp-modia-api.intern.dev.nav.no/sosialhjelp/modia-api"
   }
 }

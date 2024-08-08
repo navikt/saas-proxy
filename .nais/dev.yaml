@@ -90,8 +90,9 @@ spec:
         - host: "repr-fullmakt.dev-fss-pub.nais.io"
         - host: "sokos-skattekort-person.dev-fss-pub.nais.io"
         - host: "sokos-utbetaldata.dev-fss-pub.nais.io"
-        - host: "pensjon-pen-q1.dev-fss-pub.nais.io"
+        - host: "pensjon-pen-q2.dev-fss-pub.nais.io"
         - host: "norg2.dev-fss-pub.nais.io"
+        - host: "sosialhjelp-modia-api.intern.dev.nav.no/sosialhjelp/modia-api"
 
   envFrom:
     - secret: salesforce-entra
