@@ -16,5 +16,21 @@
   },
   "teamarenanais": {
     "arena-api-q2": "https://arena-api-q2.dev-fss-pub.nais.io"
+  },
+  "okonomi": {
+    "sokos-skattekort-person": "https://sokos-skattekort-person.dev-fss-pub.nais.io",
+    "sokos-utbetaldata": "https://sokos-utbetaldata.dev-fss-pub.nais.io"
+  },
+  "repr": {
+    "repr-fullmakt": "https://repr-fullmakt.dev-fss-pub.nais.io"
+  },
+  "pensjon-q2": {
+    "pensjon-pen-q2": "https://pensjon-pen-q2.dev-fss-pub.nais.io"
+  },
+  "org": {
+    "norg2": "https://norg2.dev-fss-pub.nais.io"
+  },
+  "teamdigisos": {
+    "sosialhjelp-modia-api": "https://sosialhjelp-modia-api.intern.dev.nav.no/sosialhjelp/modia-api"
   }
 }

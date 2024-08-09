@@ -24,6 +24,12 @@
   "okonomi": {
     "sokos-kontoregister-person": [
       "POST /api/system/v1/hent-aktiv-konto"
+    ],
+    "sokos-skattekort-person": [
+      "POST /api/v1/hent-skattekort"
+    ],
+    "sokos-utbetaldata": [
+      "POST /utbetaldata/api/v2/hent-utbetalingsinformasjon/intern"
     ]
   },
   "nom": {
@@ -94,6 +100,38 @@
     "tiltakspenger-datadeling": [
       "POST /vedtak/perioder",
       "POST /vedtak/detaljer"
+    ]
+  },
+  "repr": {
+    "repr-fullmakt": [
+      "GET /fullmaktsgiver",
+      "GET /fullmaktsgiver-historikk"
+    ]
+  },
+  "pensjon-q2": {
+    "pensjon-pen-q2": [
+      "GET /api/sak/.*/etteroppgjorshistorikk",
+      "GET /api/inntektsgrenserUT",
+      "GET /api/leveattest",
+      "GET /api/sak",
+      "GET /api/uforehistorikk",
+      "GET /api/sak/.*/vedtak",
+      "GET /api/vedtakssammendrag"
+    ]
+  },
+  "org": {
+    "norg2": [
+      "GET /norg2/api/v1/kodeverk/.*",
+      "GET /norg2/api/v1/enhet",
+      "GET /norg2/api/v1/enhet/navkontor/.*",
+      "GET /norg2/api/v1/enhet/.*/kontaktinformasjon",
+      "GET https://saas-to-nav-api.nav.no/norg2/api/v1/enhet/kontaktinformasjon/organisering/.*",
+      "POST /norg2/api/v1/arbeidsfordeling/enheter/bestmatch"
+    ]
+  },
+  "teamdigisos": {
+    "sosialhjelp-modia-api": [
+      "GET /api/fodselsnummer"
     ]
   }
 }
