@@ -200,7 +200,7 @@ object Application {
                         log.error { "Could not register forwarded call metric" }
                     }
 
-                    File("/tmp/latestResponse").writeText(response.toMessage())
+                    File("/tmp/latestResponse-$targetApp-${response.status.code}").writeText(response.toMessage())
                     response
                 }
             }
