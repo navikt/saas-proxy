@@ -26,6 +26,8 @@ import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
 import java.io.StringWriter
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 const val NAIS_DEFAULT_PORT = 8080
 const val NAIS_ISALIVE = "/internal/isAlive"
@@ -189,8 +191,6 @@ object Application {
                     val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
                     log.info { "Forwarded call to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
 
-                    File("/tmp/latestRedirect").writeText(redirect.toMessage())
-
                     val response = client(redirect)
 
                     try {
@@ -200,7 +200,11 @@ object Application {
                         log.error { "Could not register forwarded call metric" }
                     }
 
-                    File("/tmp/latestResponse-$targetApp-${response.status.code}").writeText(response.toMessage())
+                    File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
+                        LocalDateTime.now().format(
+                            DateTimeFormatter.ISO_DATE_TIME
+                        ) + "\n\n" + redirect.toMessage() + "\n\n" + response.toMessage()
+                    )
                     response
                 }
             }
