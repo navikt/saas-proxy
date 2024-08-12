@@ -108,8 +108,8 @@
       "GET /fullmaktsgiver-historikk"
     ]
   },
-  "pensjon-q2": {
-    "pensjon-pen-q2": [
+  "pensjon-saksbehandling": {
+    "pen-nks-service": [
       "GET /api/sak/.*/etteroppgjorshistorikk",
       "GET /api/inntektsgrenserUT",
       "GET /api/leveattest",
