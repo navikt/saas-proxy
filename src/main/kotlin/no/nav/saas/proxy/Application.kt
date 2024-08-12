@@ -200,11 +200,16 @@ object Application {
                         log.error { "Could not register forwarded call metric" }
                     }
 
-                    File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
-                        LocalDateTime.now().format(
-                            DateTimeFormatter.ISO_DATE_TIME
-                        ) + "\n\n" + redirect.toMessage() + "\n\n" + response.toMessage()
-                    )
+                    try {
+                        File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
+                            LocalDateTime.now().format(
+                                DateTimeFormatter.ISO_DATE_TIME
+                            ) + "\n\n" + redirect.toMessage() + "\n\n" + response.toMessage()
+                        )
+                    } catch (e: Exception) {
+                        File("/tmp/FAILEDStoreForwardedCall").writeText("$targetApp")
+                        log.error { "Failed to store forwarded call" }
+                    }
                     response
                 }
             }

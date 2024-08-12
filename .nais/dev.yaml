@@ -15,14 +15,8 @@ spec:
     max: 1
   liveness:
     path: /internal/isAlive
-    initialDelay: 5
-    periodSeconds: 5
-    failureThreshold: 30
   readiness:
     path: /internal/isReady
-    initialDelay: 5
-    periodSeconds: 5
-    failureThreshold: 30
   preStopHook:
     exec:
       command: ["/bin/bash", "/pre-stop.sh"]
@@ -32,7 +26,7 @@ spec:
     path: /internal/metrics
   resources:
     limits:
-      memory: 1Gi
+      memory: 2Gi
     requests:
       cpu: 10m
       memory: 512Mi
@@ -93,7 +87,6 @@ spec:
         - host: "pensjon-pen-q2.dev-fss-pub.nais.io"
         - host: "norg2.dev-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.dev-fss-pub.nais.io"
-
   envFrom:
     - secret: salesforce-entra
   env:
