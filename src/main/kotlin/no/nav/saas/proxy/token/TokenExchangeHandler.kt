@@ -26,7 +26,7 @@ object TokenExchangeHandler {
      * Exchanges an azure on-behalf-of-token with audience to this app for one with audience to salesforce. Caches the result
      */
 
-    private val log = KotlinLogging.logger { }
+    val log = KotlinLogging.logger { }
 
     private val client = Application.client
 
@@ -105,15 +105,11 @@ fun Response.extractAccessToken(alias: String): JwtToken {
     try {
         return JwtToken(JSONObject(this.bodyString()).get("access_token").toString())
     } catch (e: Exception) {
-        try {
-            File("/tmp/failedStatusWhenExtracting").writeText(
-                "Received $status when attempting token exctraction from $alias"
-            )
-            File("/tmp/failedExtractBody").writeText(this.bodyString())
-            File("/tmp/failedExtractJson").writeText("${JSONObject(this.bodyString())}")
-            throw AuthenticationException("Failed to fetch access token for $alias")
-        } catch (e: Exception) {
-            throw AuthenticationException("Failed to extract JSON for $alias")
-        }
+        File("/tmp/failedStatusWhenExtracting").writeText(
+            "Received $status when attempting token extraction from $alias"
+        )
+        File("/tmp/failedExtractBody").writeText(this.bodyString())
+        TokenExchangeHandler.log.error { "Failed to fetch access token for $alias - ${this.bodyString()}" }
+        throw AuthenticationException("Failed to fetch access token for $alias")
     }
 }
