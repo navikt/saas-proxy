@@ -125,7 +125,7 @@
       "GET /norg2/api/v1/enhet",
       "GET /norg2/api/v1/enhet/navkontor/.*",
       "GET /norg2/api/v1/enhet/.*/kontaktinformasjon",
-      "GET https://saas-to-nav-api.nav.no/norg2/api/v1/enhet/kontaktinformasjon/organisering/.*",
+      "GET /norg2/api/v1/enhet/kontaktinformasjon/organisering/.*",
       "POST /norg2/api/v1/arbeidsfordeling/enheter/bestmatch"
     ]
   },
