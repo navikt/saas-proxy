@@ -84,6 +84,7 @@ spec:
         - host: "repr-fullmakt.dev-fss-pub.nais.io"
         - host: "sokos-skattekort-person.dev-fss-pub.nais.io"
         - host: "sokos-utbetaldata.dev-fss-pub.nais.io"
+        - host: "pen-nks-service.dev-fss-pub.nais.io"
         - host: "norg2.dev-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.dev-fss-pub.nais.io"
   envFrom:
