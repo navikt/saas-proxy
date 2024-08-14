@@ -72,8 +72,6 @@ spec:
           namespace: paw
         - application: tiltakspenger-datadeling
           namespace: tpts
-        - application: pen-nks-service
-          namespace: pensjon-saksbehandling
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
