@@ -70,7 +70,7 @@ Samt outbound external her i [.nais/dev.yml](https://github.com/navikt/saas-prox
 - host: <ingress.to.endpoint-pub.nais.io>
 ```
 
-Du legger til ingressen du vil gjøre tilgjengelig i ingresslisten før hvert miljø. Se
+Du legger også til ingressen du vil gjøre tilgjengelig i ingresslisten før hvert miljø. Se
 [ingresses/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/ingresses/dev.json)
 og
 [ingresses/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/ingresses/prod.json)
