@@ -6,34 +6,41 @@ Den videresender forespørselen enten til pub.nais.io ingress eller til destinas
 
 > [!TIP]
 > ### Sjekkliste for eksponering av nye endepunkter.
-> 1. Inbound rules til ny app oppdateras av appeier saas-proxy
-> 2. Outbound rules/external til ny app/ingress oppdateras i denne Saas-proxyen
+> #### Hvis app er i GCP
+> 1. Inbound rules til ny app oppdateras av appeier med saas-proxy
+> 2. Outbound rules til ny app oppdateras i denne Saas-proxyen
 > 3. Hvitelisten oppdateras.
+> #### Hvis app er i FSS
+> 1. Inbound rules til ny app oppdateras av appeier med saas-proxy
+> 2. Outbound external til pub.nais.io ingress oppdateras i denne Saas-proxyen
+> 3. Ingresslisten oppdateras
+> 4. Hvitelisten oppdateras.
 
-Det må leggas til inbound rules i den app som ska exponeras:
+
+<details>
+<summary><b>Konfigurasjon hvis appen som skal eksponeres er i GCP</b></summary>
+  
+Det må leggas til inbound rules i den app som ska exponeras av appeier:
 ```
 - application: saas-proxy
   namespace: teamcrm
-  cluster: <dev/prod>-gcp # Endast nødvendig mot pub.nais.io ingress
+  cluster: <dev/prod>-gcp
 ```
-Samt outbound rule (om app) eller outbound external (om ingress) her i [dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
+
+Samt outbound rule her i [.nais/dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [.nais/prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
 ```
 # App i gcp:
 - application: <app>
   namespace: <namespace>
 ```
 
-```
-# pub.nais.io ingress:
-- host: <ingress.to.endpoint-pub.nais.io>
-```
 Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til proxyn.
 Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Pre-authorization](https://doc.nais.io/security/auth/azure-ad/access-policy/#pre-authorization)
 
 Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert miljø. Se
-[dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
+[whitelist/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
 og
-[prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
+[whitelist/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/prod.json)
 
 Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path, f.eks:
 ```
@@ -45,8 +52,51 @@ Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"patter
   ]
 }
 ```
+</details>
 
-### Test aktive hvitlisteregler
+<details>
+<summary><b>Konfigurasjon hvis appen som skal eksponeres er i FSS med en pub.nais.io ingress</b></summary>
+
+  
+Det må leggas til inbound rules i den app som ska exponeras av appeier:
+```
+- application: saas-proxy
+  namespace: teamcrm
+  cluster: <dev/prod>-gcp
+```
+
+Samt outbound external her i [.nais/dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [.nais/prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
+```
+- host: <ingress.to.endpoint-pub.nais.io>
+```
+
+Du legger til ingressen du vil gjøre tilgjengelig i ingresslisten før hvert miljø. Se
+[ingresses/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/ingresses/dev.json)
+og
+[ingresses/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/ingresses/prod.json)
+
+Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til proxyn.
+Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Pre-authorization](https://doc.nais.io/security/auth/azure-ad/access-policy/#pre-authorization)
+
+Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert miljø. Se
+[whitelist/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
+og
+[whitelist/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/prod.json)
+
+Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path, f.eks:
+```
+"teamnamespace": {
+  "app": [
+    "GET /getcall",
+    "POST /done",
+    "GET /api/.*"
+  ]
+}
+```
+</details>
+
+<details>
+<summary><b>Teste aktive hvitlisteregler</b></summary>
 Du kan teste om ett anrop er bestått eller ikke mot aktive regler hvis du går imot
 
 https://saas-proxy.dev.intern.nav.no/internal/test/<uri-du-vil-testa>
@@ -63,7 +113,10 @@ Evaluating GET /v1/oppfolging/info on method GET, path /v1/oppfolging/periode fa
 Approved
 ```
 
-### Bruk av proxyn
+</details>
+
+<details>
+<summary><b>Bruk av proxyn</b></summary>
 
 De eksterna klientene som ønsker anrope via proxyen må sende med tre headers:
 
@@ -85,3 +138,5 @@ blir
 https://saas-proxy.ekstern.dev.nav.no/do/a/call?param=1
 ```
 NB En app i gcp trenger ikke ha en ingress for å være tilgjengelig via proxy
+
+</details>
