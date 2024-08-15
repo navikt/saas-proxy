@@ -7,11 +7,11 @@ Den videresender forespørselen enten til pub.nais.io ingress eller til destinas
 > [!TIP]
 > ### Sjekkliste for eksponering av nye endepunkter.
 > #### Hvis app er i GCP
-> 1. Inbound rules til ny app oppdateras av appeier med saas-proxy
+> 1. Inbound rules i ny app oppdateras av appeier med saas-proxy
 > 2. Outbound rules til ny app oppdateras i denne Saas-proxyen
 > 3. Hvitelisten oppdateras.
 > #### Hvis app er i FSS
-> 1. Inbound rules til ny app oppdateras av appeier med saas-proxy
+> 1. Inbound rules i ny app oppdateras av appeier med saas-proxy
 > 2. Outbound external til pub.nais.io ingress oppdateras i denne Saas-proxyen
 > 3. Ingresslisten oppdateras
 > 4. Hvitelisten oppdateras.
