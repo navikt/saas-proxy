@@ -125,7 +125,6 @@
       "GET /norg2/api/v1/enhet",
       "GET /norg2/api/v1/enhet/navkontor/.*",
       "GET /norg2/api/v1/enhet/.*/kontaktinformasjon",
-      "GET /norg2/api/v1/enhet/kontaktinformasjon/organisering/.*",
       "POST /norg2/api/v1/arbeidsfordeling/enheter/bestmatch"
     ]
   },
