@@ -139,7 +139,7 @@ object Application {
     val testcall = { request: Request ->
         val authorizationHeader = request.header("Authorization")
 
-        val newRequest = Request(Method.GET, "https://arena-api-q2.dev-fss-pub.nais.io/api/v1/beregningsgrunnlag/transaksjoner")
+        val newRequest = Request(Method.GET, "/api/v1/beregningsgrunnlag/transaksjoner")
             .query("tom", "2024-08-16")
             .query("fom", "2024-05-16")
             .header("Authorization", authorizationHeader)
