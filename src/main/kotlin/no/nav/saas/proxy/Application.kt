@@ -29,6 +29,7 @@ import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
+import testcall
 import java.io.File
 import java.io.StringWriter
 import java.time.LocalDateTime
@@ -136,24 +137,24 @@ object Application {
         API_URI bind redirect
     )
 
-    val testcall = { request: Request ->
-        val authorizationHeader = request.header("Authorization")
-
-        val newRequest = Request(Method.GET, "/api/v1/beregningsgrunnlag/transaksjoner")
-            .query("tom", "2024-08-16")
-            .query("fom", "2024-05-16")
-            .header("Authorization", authorizationHeader)
-            .header("target-app", "arena-api-q2")
-            .header("target-namespace", "teamarenanais")
-            .header("testcall", "true")
-
-        try {
-            redirect.invoke(newRequest)
-        } catch (e: Exception) {
-            log.error { "In test redirect: $e" }
-            Response(Status.SEE_OTHER).body("Exception in test redirect")
-        }
-    }
+//    val testcall = { request: Request ->
+//        val authorizationHeader = request.header("Authorization")
+//
+//        val newRequest = Request(Method.GET, "/api/v1/beregningsgrunnlag/transaksjoner")
+//            .query("tom", "2024-08-16")
+//            .query("fom", "2024-05-16")
+//            .header("Authorization", authorizationHeader)
+//            .header("target-app", "arena-api-q2")
+//            .header("target-namespace", "teamarenanais")
+//            .header("testcall", "true")
+//
+//        try {
+//            redirect.invoke(newRequest)
+//        } catch (e: Exception) {
+//            log.error { "In test redirect: $e" }
+//            Response(Status.SEE_OTHER).body("Exception in test redirect")
+//        }
+//    }
 
     val redirect = { req: Request ->
         val path = req.path(API_URI_VAR) ?: ""
