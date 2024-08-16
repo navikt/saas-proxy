@@ -103,7 +103,7 @@ object Application {
             val viewData = ViewData(username = TokenValidation.nameClaim(it), expireTime = TokenValidation.expireTime(it))
             Response(Status.OK).body(Gson().toJson(viewData))
         },
-        "/internal/testcall" authbind Method.GET to { Response(Status.OK) },
+        "/internal/testcall" authbind Method.GET to testcall,
         API_INTERNAL_TEST_URI bind { req: Request ->
             req.headers
             val path = (req.path(API_URI_VAR) ?: "")
@@ -133,88 +133,105 @@ object Application {
                 }
             }
         },
-        API_URI bind { req: Request ->
-            val path = req.path(API_URI_VAR) ?: ""
-            Metrics.apiCalls.labels(path).inc()
+        API_URI bind redirect
+    )
 
-            val targetApp = req.header(TARGET_APP)
-            val targetClientId = req.header(TARGET_CLIENT_ID)
-            val targetNamespace = req.header(TARGET_NAMESPACE) // optional
+    val testcall = { request: Request ->
+        val authorizationHeader = request.header("Authorization")
 
-            if (targetApp == null) {
-                log.info { "Proxy: Bad request - missing targetApp header" }
-                File("/tmp/missingheader").writeText(req.toMessage())
-                Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
+        val newRequest = Request(Method.GET, "https://arena-api-q2.dev-fss-pub.nais.io/api/v1/beregningsgrunnlag/transaksjoner")
+            .query("tom", "2024-08-16")
+            .query("fom", "2024-05-16")
+            .header("Authorization", authorizationHeader)
+            .header("target-app", "arena-api-q2")
+            .header("target-namespace", "teamarenanais")
+            .header("testcall", "true")
+
+        redirect.invoke(newRequest)
+    }
+
+    val redirect = { req: Request ->
+        val path = req.path(API_URI_VAR) ?: ""
+        Metrics.apiCalls.labels(path).inc()
+
+        val targetApp = req.header(TARGET_APP)
+        val targetClientId = req.header(TARGET_CLIENT_ID)
+        val targetNamespace = req.header(TARGET_NAMESPACE) // optional
+        val testcall = req.header("testcall")
+
+        if (targetApp == null) {
+            log.info { "Proxy: Bad request - missing targetApp header" }
+            File("/tmp/missingheader").writeText(req.toMessage())
+            Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
+        } else {
+            val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
+            val ingress = ingressSet.ingressOf(targetApp, namespace)
+            val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
+                .filter { it.evaluateAsRule(req.method, "/$path") }
+                .isNotEmpty()
+
+            val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: clientIdProxy)
+
+            if (!approvedByRules) {
+                log.info { "Proxy: Bad request - not whitelisted" }
+                Response(BAD_REQUEST).body("Proxy: Bad request - not whitelisted path")
+            } else if (!optionalToken.isPresent) {
+                log.info { "Proxy: Not authorized" }
+                File("/tmp/noauth-$targetApp").writeText(req.toMessage())
+                Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
-                val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
-                val ingress = ingressSet.ingressOf(targetApp, namespace)
-                val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
-                    .filter { it.evaluateAsRule(req.method, "/$path") }
-                    .isNotEmpty()
+                val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
 
-                val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: clientIdProxy)
-
-                if (!approvedByRules) {
-                    log.info { "Proxy: Bad request - not whitelisted" }
-                    Response(BAD_REQUEST).body("Proxy: Bad request - not whitelisted path")
-                } else if (!optionalToken.isPresent) {
-                    log.info { "Proxy: Not authorized" }
-                    File("/tmp/noauth-$targetApp").writeText(req.toMessage())
-                    Response(UNAUTHORIZED).body("Proxy: Not authorized")
-                } else {
-                    val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
-
-                    var exchangeToken = false
-                    try {
-                        exchangeToken = optionalToken.get().audAsString() == clientIdProxy
-                    } catch (e: Exception) {
-                        log.error { "Failed aud lookup!" }
-                    }
-
-                    val forwardHeaders = if (exchangeToken) {
-                        req.headers.filter {
-                            !(blockFromForwarding.contains(it.first) || it.first.lowercase() == "authorization")
-                        }.toList() + listOf(
-                            "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
-                                optionalToken.get(),
-                                "${targetCluster(ingress)}.$namespace.$targetApp"
-                            ).tokenAsString}"
-                        )
-                    } else {
-                        req.headers.filter {
-                            !blockFromForwarding.contains(it.first)
-                        }.toList()
-                    }
-
-                    val host = ingress ?: "http://$targetApp.$namespace"
-                    val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
-                    val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
-                    log.info { "Forwarded call to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
-
-                    val response = client(redirect)
-
-                    try {
-                        val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
-                        Metrics.forwardedCallsInc(targetApp = targetApp, path = path, ingress = ingress ?: "", tokenType = tokenType, status = response.status.code.toString())
-                    } catch (e: Exception) {
-                        log.error { "Could not register forwarded call metric" }
-                    }
-
-                    try {
-                        File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
-                            LocalDateTime.now().format(
-                                DateTimeFormatter.ISO_DATE_TIME
-                            ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
-                        )
-                    } catch (e: Exception) {
-                        File("/tmp/FAILEDStoreForwardedCall").writeText("$targetApp")
-                        log.error { "Failed to store forwarded call" }
-                    }
-                    response
+                var exchangeToken = false
+                try {
+                    exchangeToken = optionalToken.get().audAsString() == clientIdProxy
+                } catch (e: Exception) {
+                    log.error { "Failed aud lookup!" }
                 }
+
+                val forwardHeaders = if (exchangeToken) {
+                    req.headers.filter {
+                        !(blockFromForwarding.contains(it.first) || it.first.lowercase() == "authorization")
+                    }.toList() + listOf(
+                        "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
+                            optionalToken.get(),
+                            "${targetCluster(ingress)}.$namespace.$targetApp"
+                        ).tokenAsString}"
+                    )
+                } else {
+                    req.headers.filter {
+                        !blockFromForwarding.contains(it.first)
+                    }.toList()
+                }
+
+                val host = ingress ?: "http://$targetApp.$namespace"
+                val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
+                val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
+                log.info { "Forwarded call to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
+
+                val response = client(redirect)
+
+                try {
+                    val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
+                    Metrics.forwardedCallsInc(targetApp = targetApp, path = path, ingress = ingress ?: "", tokenType = tokenType, status = response.status.code.toString())
+                } catch (e: Exception) {
+                    log.error { "Could not register forwarded call metric" }
+                }
+
+                try {
+                    File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
+                        LocalDateTime.now().format(
+                            DateTimeFormatter.ISO_DATE_TIME
+                        ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
+                    )
+                } catch (e: Exception) {
+                    File("/tmp/FAILEDStoreForwardedCall").writeText("$targetApp")
+                    log.error { "Failed to store forwarded call" }
+                }
+                response
             }
         }
-    )
+    }
 
     /**
      * authbind: a variant of bind that takes care of authentication with use of tokenValidator
