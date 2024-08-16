@@ -204,7 +204,7 @@ object Application {
                         File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
                             LocalDateTime.now().format(
                                 DateTimeFormatter.ISO_DATE_TIME
-                            ) + "\n\n" + redirect.toMessage() + "\n\n" + response.toMessage()
+                            ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
                         )
                     } catch (e: Exception) {
                         File("/tmp/FAILEDStoreForwardedCall").writeText("$targetApp")
