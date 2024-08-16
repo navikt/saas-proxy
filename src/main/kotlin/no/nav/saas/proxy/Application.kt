@@ -147,7 +147,12 @@ object Application {
             .header("target-namespace", "teamarenanais")
             .header("testcall", "true")
 
-        redirect.invoke(newRequest)
+        try {
+            redirect.invoke(newRequest)
+        } catch (e: Exception) {
+            log.error { "In test redirect: $e" }
+            Response(Status.SEE_OTHER).body("Exception in test redirect")
+        }
     }
 
     val redirect = { req: Request ->
@@ -207,9 +212,10 @@ object Application {
                 val host = ingress ?: "http://$targetApp.$namespace"
                 val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                 val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
-                log.info { "Forwarded call to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
 
                 val response = client(redirect)
+
+                log.info { "Forwarded call (${response.status}) to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
 
                 try {
                     val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
