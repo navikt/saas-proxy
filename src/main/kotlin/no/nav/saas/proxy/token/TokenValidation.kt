@@ -45,5 +45,25 @@ object TokenValidation {
     fun firstValidToken(request: Request, clientId: String): Optional<JwtToken> =
         validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
 
+    fun nameClaim(request: Request): String = this.firstValidToken(request, clientIdProxy).get().nameClaim()
+
+    fun expireTime(request: Request): Long = this.firstValidToken(request, clientIdProxy).get().expireTime()
+
     val isDev = (System.getenv(env_WHITELIST_FILE) == "/whitelist/dev.json")
+}
+
+fun JwtToken.nameClaim(): String {
+    return try {
+        this.jwtTokenClaims.getStringClaim("name")
+    } catch (e: Exception) {
+        ""
+    }
+}
+
+fun JwtToken.expireTime(): Long {
+    return try {
+        this.jwtTokenClaims.expirationTime.toInstant().toEpochMilli()
+    } catch (e: Exception) {
+        -1L
+    }
 }

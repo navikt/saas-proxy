@@ -42,6 +42,8 @@ spec:
         extra:
           - azp_name
           - NAVident
+    sidecar:
+      enabled: true
   accessPolicy:
     inbound:
       rules:
