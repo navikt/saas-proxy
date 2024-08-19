@@ -65,7 +65,6 @@ object TokenExchangeHandler {
                     "requested_token_use" to "on_behalf_of",
                     "claims" to """{
                         "access_token": {
-                            "xms_cc": {"values": ["groups"]},
                             "groups": {
                                 "essential": true
                             }
