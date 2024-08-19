@@ -137,25 +137,6 @@ object Application {
         API_URI bind redirect
     )
 
-//    val testcall = { request: Request ->
-//        val authorizationHeader = request.header("Authorization")
-//
-//        val newRequest = Request(Method.GET, "/api/v1/beregningsgrunnlag/transaksjoner")
-//            .query("tom", "2024-08-16")
-//            .query("fom", "2024-05-16")
-//            .header("Authorization", authorizationHeader)
-//            .header("target-app", "arena-api-q2")
-//            .header("target-namespace", "teamarenanais")
-//            .header("testcall", "true")
-//
-//        try {
-//            redirect.invoke(newRequest)
-//        } catch (e: Exception) {
-//            log.error { "In test redirect: $e" }
-//            Response(Status.SEE_OTHER).body("Exception in test redirect")
-//        }
-//    }
-
     val redirect = { req: Request ->
         val path = req.path(API_URI_VAR) ?: ""
         Metrics.apiCalls.labels(path).inc()
@@ -226,7 +207,7 @@ object Application {
                 }
 
                 try {
-                    File("/tmp/latestForwarded-$targetApp-${response.status.code}").writeText(
+                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${response.status.code}").writeText(
                         LocalDateTime.now().format(
                             DateTimeFormatter.ISO_DATE_TIME
                         ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()

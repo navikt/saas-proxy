@@ -43,7 +43,7 @@ object TokenExchangeHandler {
     // target alias example: cluster.namespace.app
     fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
-        val key = jwtIn.tokenAsString
+        val key = targetAlias + jwtIn.tokenAsString
         OBOcache[key]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
                 log.info { "Cached exchange obo token $targetAlias" }
