@@ -41,8 +41,8 @@ object TokenExchangeHandler {
     fun isOBOToken(jwt: JwtToken) = jwt.jwtTokenClaims.get("NAVident") != null
 
     // target alias example: cluster.namespace.app
-    fun exchange(jwtIn: JwtToken, targetAlias: String): JwtToken {
-        if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias)
+    fun exchange(jwtIn: JwtToken, targetAlias: String, scope: String): JwtToken {
+        if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias, scope)
         val key = targetAlias + jwtIn.tokenAsString
         OBOcache[key]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
@@ -52,10 +52,6 @@ object TokenExchangeHandler {
         }
         log.info { "Exchange obo token $targetAlias" }
         Metrics.oboCacheSize.set(OBOcache.size.toDouble())
-
-        var scope = "defaultaccess"
-
-        if (targetAlias == "arena-api-q2") scope = "consumer-beregningsgrunnlag" // TODO Test
 
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -86,7 +82,7 @@ object TokenExchangeHandler {
         return jwt
     }
 
-    fun acquireServiceToken(targetAlias: String): JwtToken {
+    fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
         serviceToken[targetAlias]?.let { cachedToken ->
             if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
                 log.info { "Cached service obo token $targetAlias" }
@@ -99,7 +95,7 @@ object TokenExchangeHandler {
             .body(
                 listOf(
                     "client_id" to clientId,
-                    "scope" to "api://$targetAlias/.default",
+                    "scope" to "api://$targetAlias/$scope", // .default
                     "client_secret" to clientSecret,
                     "grant_type" to "client_credentials"
                 ).toBody()

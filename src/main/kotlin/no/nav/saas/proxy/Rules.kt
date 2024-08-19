@@ -2,7 +2,7 @@ package no.nav.saas.proxy
 
 import com.google.gson.Gson
 
-typealias RuleSet = Map<String, Map<String, List<String>>>
+typealias RuleSet = Map<String, Map<String, List<String>>> // Map of namespaces, with map of apps, with list of patterns
 typealias Rule = String
 
 object Rules {

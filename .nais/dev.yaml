@@ -43,7 +43,7 @@ spec:
           - azp_name
           - NAVident
     sidecar:
-      enabled: false
+      enabled: false # Currently cannot use - causes 404 when app tries calling dev-fss-pub.nais.io ingresses
   accessPolicy:
     inbound:
       rules:

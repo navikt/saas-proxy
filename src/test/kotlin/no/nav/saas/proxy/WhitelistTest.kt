@@ -1,9 +1,11 @@
 
 import no.nav.saas.proxy.Rules
 import no.nav.saas.proxy.evaluateAsRule
+import no.nav.saas.proxy.findScope
 import no.nav.saas.proxy.namespaceOfApp
 import no.nav.saas.proxy.rulesOf
 import org.http4k.core.Method
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -89,5 +91,11 @@ class WhitelistTest {
         assertTrue("GET /path/.*/ending".evaluateAsRule(Method.GET, "/path/something/in/the/middle/ending"))
         assertTrue("GET /api/.*".evaluateAsRule(Method.GET, "/api/something/in/the/end"))
         assertFalse("GET /api/.*".evaluateAsRule(Method.GET, "/something/in/the/end"))
+    }
+
+    @Test
+    fun test_scope() {
+        assertEquals("defaultaccess", listOf("POST /done").findScope())
+        assertEquals("consumer-beregningsgrunnlag", listOf("POST /done scope:consumer-beregningsgrunnlag").findScope())
     }
 }

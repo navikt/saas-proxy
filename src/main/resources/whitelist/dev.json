@@ -91,9 +91,9 @@
   },
   "teamarenanais": {
     "arena-api-q2": [
-      "GET /api/v1/beregningsgrunnlag/transaksjoner",
-      "GET /api/v1/maalgrupper",
-      "GET /api/v1/meldehistorikk"
+      "GET /api/v1/beregningsgrunnlag/transaksjoner scope:consumer-beregningsgrunnlag",
+      "GET /api/v1/maalgrupper scope:consumer-beregningsgrunnlag",
+      "GET /api/v1/meldehistorikk scope:consumer-meldehistorikk"
     ]
   },
   "tpts": {

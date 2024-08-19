@@ -144,7 +144,6 @@ object Application {
         val targetApp = req.header(TARGET_APP)
         val targetClientId = req.header(TARGET_CLIENT_ID)
         val targetNamespace = req.header(TARGET_NAMESPACE) // optional
-        val testcall = req.header("testcall")
 
         if (targetApp == null) {
             log.info { "Proxy: Bad request - missing targetApp header" }
@@ -155,11 +154,10 @@ object Application {
             val ingress = ingressSet.ingressOf(targetApp, namespace)
             val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                 .filter { it.evaluateAsRule(req.method, "/$path") }
-                .isNotEmpty()
 
             val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: clientIdProxy)
 
-            if (!approvedByRules) {
+            if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
                 Response(BAD_REQUEST).body("Proxy: Bad request - not whitelisted path")
             } else if (!optionalToken.isPresent) {
@@ -169,12 +167,7 @@ object Application {
             } else {
                 val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
 
-                var exchangeToken = false
-                try {
-                    exchangeToken = optionalToken.get().audAsString() == clientIdProxy
-                } catch (e: Exception) {
-                    log.error { "Failed aud lookup!" }
-                }
+                val exchangeToken = optionalToken.get().audAsString() == clientIdProxy
 
                 val forwardHeaders = if (exchangeToken) {
                     req.headers.filter {
@@ -182,7 +175,8 @@ object Application {
                     }.toList() + listOf(
                         "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
                             optionalToken.get(),
-                            "${targetCluster(ingress)}.$namespace.$targetApp"
+                            "${targetCluster(ingress)}.$namespace.$targetApp",
+                            approvedByRules.findScope()
                         ).tokenAsString}"
                     )
                 } else {
@@ -207,7 +201,7 @@ object Application {
                 }
 
                 try {
-                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${response.status.code}").writeText(
+                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}-${response.status.code}").writeText(
                         LocalDateTime.now().format(
                             DateTimeFormatter.ISO_DATE_TIME
                         ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()

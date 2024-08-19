@@ -36,3 +36,13 @@ fun Request.toNavRequest(): HttpRequest {
         }
     }
 }
+
+fun List<Rule>.findScope(): String =
+    this.map {
+        val split = it.split(" ")
+        if (split.size > 2) {
+            split[2].removePrefix("scope:")
+        } else {
+            ""
+        }
+    }.firstOrNull { it.isNotEmpty() } ?: "defaultaccess"
