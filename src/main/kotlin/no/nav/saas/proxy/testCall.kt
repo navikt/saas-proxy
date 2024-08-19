@@ -22,25 +22,7 @@ import java.time.format.DateTimeFormatter
 private val log = KotlinLogging.logger { }
 val testcall = { req: Request ->
 
-    /*
-    val newRequest = Request(Method.GET, "/api/v1/beregningsgrunnlag/transaksjoner")
-        .query("tom", "2024-08-16")
-        .query("fom", "2024-05-16")
-        .header("Authorization",authorizationHeader)
-        .header("target-app", "arena-api-q2")
-        .header("target-namespace", "teamarenanais")
-        .header("testcall", "true")
-
-    try {
-        Application.redirect.invoke(newRequest)
-    } catch (e: Exception) {
-        log.error { "In test redirect: $e" }
-        Response(Status.SEE_OTHER).body("Exception in test redirect")
-    }
-
-     */
-
-    val path = "api/v1/beregningsgrunnlag/transaksjoner?tom=2024-08-16&fom=2024-05-16"
+    val path = "/api/v1/beregningsgrunnlag/transaksjoner?tom=2024-08-16&fom=2024-05-16"
     Metrics.apiCalls.labels(path).inc()
 
     val targetApp = "arena-api-q2"
@@ -50,7 +32,7 @@ val testcall = { req: Request ->
     val namespace = targetNamespace
     val ingress = Application.ingressSet.ingressOf(targetApp, namespace)
     val approvedByRules = Application.ruleSet.rulesOf(targetApp, namespace)
-        .filter { it.evaluateAsRule(req.method, "/$path") }
+        .filter { it.evaluateAsRule(req.method, path) }
         .isNotEmpty()
 
     val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: Application.clientIdProxy)
