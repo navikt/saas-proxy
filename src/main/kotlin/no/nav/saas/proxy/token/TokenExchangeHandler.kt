@@ -53,6 +53,10 @@ object TokenExchangeHandler {
         log.info { "Exchange obo token $targetAlias" }
         Metrics.oboCacheSize.set(OBOcache.size.toDouble())
 
+        var scope = "defaultaccess"
+
+        if (targetAlias == "arena-api-q2") scope = "consumer-beregningsgrunnlag" // TODO Test
+
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(
@@ -60,7 +64,7 @@ object TokenExchangeHandler {
                     "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
                     "assertion" to jwtIn.tokenAsString,
                     "client_id" to clientId,
-                    "scope" to "api://$targetAlias/defaultaccess",
+                    "scope" to "api://$targetAlias/$scope",
                     "client_secret" to clientSecret,
                     "requested_token_use" to "on_behalf_of",
                     "claims" to """{
