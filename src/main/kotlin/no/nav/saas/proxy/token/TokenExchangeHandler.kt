@@ -62,7 +62,15 @@ object TokenExchangeHandler {
                     "client_id" to clientId,
                     "scope" to "api://$targetAlias/defaultaccess",
                     "client_secret" to clientSecret,
-                    "requested_token_use" to "on_behalf_of"
+                    "requested_token_use" to "on_behalf_of",
+                    "claims" to """{
+                        "access_token": {
+                            "xms_cc": {"values": ["groups"]},
+                            "groups": {
+                                "essential": true
+                            }
+                         }
+                    }"""
                 ).toBody()
             )
         val res = client(req)
