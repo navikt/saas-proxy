@@ -42,13 +42,14 @@ Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert
 og
 [whitelist/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/prod.json)
 
-Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path, f.eks:
+Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path og ev. scope, f.eks:
 ```
 "teamnamespace": {
   "app": [
     "GET /getcall",
     "POST /done",
     "GET /api/.*"
+    "GET /scoped/api/.* scope:nameofscope"
   ]
 }
 ```
@@ -83,13 +84,14 @@ Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert
 og
 [whitelist/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/prod.json)
 
-Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path, f.eks:
+Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path og ev. scope, f.eks:
 ```
 "teamnamespace": {
   "app": [
     "GET /getcall",
     "POST /done",
     "GET /api/.*"
+    "GET /scoped/api/.* scope:nameofscope"
   ]
 }
 ```
