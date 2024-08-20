@@ -24,7 +24,6 @@ Det må leggas til inbound rules i den app som ska exponeras av appeier:
 ```
 - application: saas-proxy
   namespace: teamcrm
-  cluster: <dev/prod>-gcp
 ```
 
 Samt outbound rule her i [.nais/dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [.nais/prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
