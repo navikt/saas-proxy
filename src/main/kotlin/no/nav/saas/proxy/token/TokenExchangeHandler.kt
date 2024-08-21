@@ -67,6 +67,9 @@ object TokenExchangeHandler {
                         "access_token": {
                             "groups": {
                                 "essential": true
+                            },
+                            "roles": {
+                                "essential": true
                             }
                          }
                     }"""
