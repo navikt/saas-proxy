@@ -93,12 +93,13 @@ object TokenExchangeHandler {
             }
         }
         log.info { "Acquire service token $targetAlias" }
+        val m2mscope = if (scope == "defaultaccess") ".default" else scope
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(
                 listOf(
                     "client_id" to clientId,
-                    "scope" to "api://$targetAlias/$scope", // .default
+                    "scope" to "api://$targetAlias/$m2mscope",
                     "client_secret" to clientSecret,
                     "grant_type" to "client_credentials"
                 ).toBody()
