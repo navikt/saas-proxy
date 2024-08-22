@@ -24,6 +24,12 @@
   "okonomi": {
     "sokos-kontoregister-person": [
       "POST /api/system/v1/hent-aktiv-konto"
+    ],
+    "sokos-skattekort-person": [
+      "POST /api/v1/hent-skattekort"
+    ],
+    "sokos-utbetaldata": [
+      "POST /utbetaldata/api/v2/hent-utbetalingsinformasjon/intern"
     ]
   },
   "nom": {
@@ -59,10 +65,76 @@
       "POST /api/v1/veileder/arbeidssoekerperioder"
     ]
   },
+  "teamdokumenthandtering": {
+    "saf": [
+      "GET /rest/hentdokument/.*",
+      "POST /graphql"
+    ],
+    "dokarkiv": [
+      "POST /rest/journalpostapi/v1/journalpost",
+      "PATCH /rest/journalpostapi/v1/journalpost/.*/ferdigstill"
+    ],
+    "regoppslag": [
+      "POST /rest/postadresse"
+    ]
+  },
+  "oppgavehandtering": {
+    "oppgave": [
+      "GET /api/v1/oppgaver",
+      "GET /api/v1/oppgaver/.*/oppfolging",
+      "GET /api/v1/kodeverk/oppgavetype/.*",
+      "GET /api/v1/oppgaver/.*",
+      "GET /api/v1/kodeverk",
+      "PATCH /api/v1/oppgaver/.*",
+      "POST /api/v1/oppgaver"
+    ]
+  },
+  "teamarenanais": {
+    "arena-api-q2": [
+      "GET /api/v1/beregningsgrunnlag/transaksjoner scope:consumer-beregningsgrunnlag",
+      "GET /api/v1/maalgrupper scope:consumer-beregningsgrunnlag",
+      "GET /api/v1/meldehistorikk scope:consumer-meldehistorikk"
+    ]
+  },
   "tpts": {
     "tiltakspenger-datadeling": [
       "POST /vedtak/perioder",
       "POST /vedtak/detaljer"
+    ]
+  },
+  "repr": {
+    "repr-fullmakt": [
+      "GET /fullmaktsgiver",
+      "GET /fullmaktsgiver-historikk"
+    ]
+  },
+  "pensjon-saksbehandling": {
+    "pen-nks-service": [
+      "GET /api/sak/.*/etteroppgjorshistorikk",
+      "GET /api/inntektsgrenserUT",
+      "GET /api/leveattest",
+      "GET /api/sak",
+      "GET /api/uforehistorikk",
+      "GET /api/sak/.*/vedtak",
+      "GET /api/vedtakssammendrag"
+    ]
+  },
+  "org": {
+    "axys": [
+      "GET /axsys/api/v2/tilgang/.*"
+    ],
+    "norg2": [
+      "GET /norg2/api/v1/kodeverk/.*",
+      "GET /norg2/api/v1/enhet",
+      "GET /norg2/api/v1/enhet/navkontor/.*",
+      "GET /norg2/api/v1/enhet/.*/kontaktinformasjon",
+      "GET /norg2/api/v2/enhet/.*/kontaktinformasjon",
+      "POST /norg2/api/v1/arbeidsfordeling/enheter/bestmatch"
+    ]
+  },
+  "teamdigisos": {
+    "sosialhjelp-modia-api": [
+      "GET /api/fodselsnummer"
     ]
   }
 }
