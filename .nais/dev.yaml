@@ -90,6 +90,7 @@ spec:
         - host: "sokos-utbetaldata.dev-fss-pub.nais.io"
         - host: "norg2.dev-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.dev-fss-pub.nais.io"
+        - host: "axsys.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
