@@ -131,10 +131,5 @@
       "GET /norg2/api/v2/enhet/.*/kontaktinformasjon",
       "POST /norg2/api/v1/arbeidsfordeling/enheter/bestmatch"
     ]
-  },
-  "teamdigisos": {
-    "sosialhjelp-modia-api": [
-      "GET /api/fodselsnummer"
-    ]
   }
 }
