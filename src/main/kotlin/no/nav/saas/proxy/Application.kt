@@ -159,7 +159,7 @@ object Application {
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
-                Response(BAD_REQUEST).body("Proxy: Bad request - not whitelisted path")
+                Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (!optionalToken.isPresent) {
                 log.info { "Proxy: Not authorized" }
                 File("/tmp/noauth-$targetApp").writeText(req.toMessage())
