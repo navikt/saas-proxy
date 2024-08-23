@@ -5,5 +5,8 @@
   },
   "teamnks": {
     "sf-nks-brukervarsel-proxy": "https://sf-brukervarsel-proxy.prod-fss-pub.nais.io"
+  },
+  "org": {
+    "axsys": "https://axsys.dev-fss-pub.nais.io"
   }
 }

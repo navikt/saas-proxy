@@ -76,6 +76,7 @@ spec:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"
         - host: "sf-brukervarsel-proxy.prod-fss-pub.nais.io"
+        - host: "axsys.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'

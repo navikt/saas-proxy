@@ -64,5 +64,10 @@
       "POST /vedtak/perioder",
       "POST /vedtak/detaljer"
     ]
+  },
+  "org": {
+    "axsys": [
+      "GET /axsys/api/v2/tilgang/.*"
+    ]
   }
 }
