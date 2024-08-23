@@ -106,6 +106,7 @@ object TokenExchangeHandler {
             )
 
         val res = client(req)
+
         val jwt = res.extractAccessToken(targetAlias)
         serviceToken[targetAlias] = jwt
         return jwt
