@@ -5,5 +5,27 @@
   },
   "teamnks": {
     "sf-nks-brukervarsel-proxy": "https://sf-brukervarsel-proxy.prod-fss-pub.nais.io"
+  },
+  "teamdokumenthandtering": {
+    "saf": "https://saf.prod-fss-pub.nais.io",
+    "dokarkiv": "https://dokarkiv.prod-fss-pub.nais.io",
+    "regoppslag": "https://regoppslag.prod-fss-pub.nais.io"
+  },
+  "oppgavehandtering": {
+    "oppgave": "https://oppgave.prod-fss-pub.nais.io"
+  },
+  "teamarenanais": {
+    "arena-api": "https://arena-api.prod-fss-pub.nais.io"
+  },
+  "okonomi": {
+    "sokos-skattekort-person": "https://sokos-skattekort-person.prod-fss-pub.nais.io",
+    "sokos-utbetaldata": "https://sokos-utbetaldata.prod-fss-pub.nais.io"
+  },
+  "repr": {
+    "repr-fullmakt": "https://repr-fullmakt.prod-fss-pub.nais.io"
+  },
+  "org": {
+    "axys": "https://axsys.prod-fss-pub.nais.io",
+    "norg2": "https://norg2.prod-fss-pub.nais.io"
   }
 }
