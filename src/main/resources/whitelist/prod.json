@@ -67,7 +67,7 @@
   },
   "org": {
     "axsys": [
-      "GET /axsys/api/v2/tilgang/.*"
+      "GET /api/v2/tilgang/.*"
     ]
   }
 }
