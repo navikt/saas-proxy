@@ -72,10 +72,23 @@ spec:
           namespace: paw
         - application: tiltakspenger-datadeling
           namespace: tpts
+        - application: pen-nks-service
+          namespace: pensjon-saksbehandling
       external:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"
         - host: "sf-brukervarsel-proxy.prod-fss-pub.nais.io"
+        - host: "saf.prod-fss-pub.nais.io"
+        - host: "oppgave.prod-fss-pub.nais.io"
+        - host: "dokarkiv.prod-fss-pub.nais.io"
+        - host: "regoppslag.prod-fss-pub.nais.io"
+        - host: "arena-api.prod-fss-pub.nais.io"
+        - host: "repr-fullmakt.prod-fss-pub.nais.io"
+        - host: "sokos-skattekort-person.prod-fss-pub.nais.io"
+        - host: "sokos-utbetaldata.prod-fss-pub.nais.io"
+        - host: "norg2.prod-fss-pub.nais.io"
+        - host: "sosialhjelp-modia-api.prod-fss-pub.nais.io"
+        - host: "axsys.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
