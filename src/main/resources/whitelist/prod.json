@@ -90,7 +90,7 @@
     ]
   },
   "teamarenanais": {
-    "arena-api-q2": [
+    "arena-api": [
       "GET /api/v1/beregningsgrunnlag/transaksjoner scope:consumer-beregningsgrunnlag",
       "GET /api/v1/maalgrupper scope:consumer-beregningsgrunnlag",
       "GET /api/v1/meldehistorikk scope:consumer-meldehistorikk"
@@ -120,7 +120,7 @@
     ]
   },
   "org": {
-    "axys": [
+    "axsys": [
       "GET /api/v2/tilgang/.*"
     ],
     "norg2": [
@@ -130,6 +130,11 @@
       "GET /norg2/api/v1/enhet/.*/kontaktinformasjon",
       "GET /norg2/api/v2/enhet/.*/kontaktinformasjon",
       "POST /norg2/api/v1/arbeidsfordeling/enheter/bestmatch"
+    ]
+  },
+  "teamdigisos": {
+    "sosialhjelp-modia-api": [
+      "GET /api/fodselsnummer"
     ]
   }
 }
