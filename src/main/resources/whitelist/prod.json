@@ -121,7 +121,7 @@
   },
   "org": {
     "axys": [
-      "GET /axsys/api/v2/tilgang/.*"
+      "GET /api/v2/tilgang/.*"
     ],
     "norg2": [
       "GET /norg2/api/v1/kodeverk/.*",
