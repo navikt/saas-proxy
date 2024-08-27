@@ -104,8 +104,8 @@
   },
   "pdl": {
     "pdl-fullmakt": [
-      "GET /api/internbruker/fullmaktsgiver",
-      "GET /api/internbruker/fullmaktsgiver-historikk"
+      "POST /api/internbruker/fullmaktsgiver",
+      "POST /api/internbruker/fullmaktsgiver-historikk"
     ]
   },
   "pensjon-saksbehandling": {
