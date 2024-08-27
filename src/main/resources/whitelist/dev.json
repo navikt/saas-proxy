@@ -103,7 +103,7 @@
     ]
   },
   "repr": {
-    "repr-fullmakt": [
+    "pdl-fullmakt": [
       "GET /fullmaktsgiver",
       "GET /fullmaktsgiver-historikk"
     ]

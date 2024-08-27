@@ -22,7 +22,7 @@
     "sokos-utbetaldata": "https://sokos-utbetaldata.prod-fss-pub.nais.io"
   },
   "repr": {
-    "repr-fullmakt": "https://pdl-fullmakt.prod-fss-pub.nais.io"
+    "pdl-fullmakt": "https://pdl-fullmakt.prod-fss-pub.nais.io"
   },
   "org": {
     "axsys": "https://axsys.prod-fss-pub.nais.io",
