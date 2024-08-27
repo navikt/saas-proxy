@@ -21,7 +21,7 @@
     "sokos-skattekort-person": "https://sokos-skattekort-person.dev-fss-pub.nais.io",
     "sokos-utbetaldata": "https://sokos-utbetaldata.dev-fss-pub.nais.io"
   },
-  "repr": {
+  "pdl": {
     "pdl-fullmakt": "https://pdl-fullmakt.dev-fss-pub.nais.io"
   },
   "org": {
