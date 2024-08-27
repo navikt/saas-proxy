@@ -102,8 +102,8 @@
       "POST /vedtak/detaljer"
     ]
   },
-  "repr": {
-    "repr-fullmakt": [
+  "pdl": {
+    "pdl-fullmakt": [
       "GET /fullmaktsgiver",
       "GET /fullmaktsgiver-historikk"
     ]
