@@ -195,7 +195,7 @@ object Application {
                         ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
                     )
                 } catch (e: Exception) {
-                    File("/tmp/FAILEDStoreForwardedCall").writeText("$targetApp")
+                    File("/tmp/FailedStoreForwardedCall").writeText("$targetApp")
                     log.error { "Failed to store forwarded call" }
                 }
                 response
