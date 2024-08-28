@@ -77,9 +77,6 @@ object TokenExchangeHandler {
             )
         val res = client(req)
 
-        File("/tmp/exchangerequest").writeText(req.toMessage())
-        File("/tmp/exchangeresponse").writeText(res.toMessage())
-
         val jwt = res.extractAccessToken(targetAlias)
         OBOcache[key] = jwt
         return jwt

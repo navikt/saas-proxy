@@ -1,9 +1,4 @@
-
-import no.nav.saas.proxy.Rules
-import no.nav.saas.proxy.evaluateAsRule
-import no.nav.saas.proxy.findScope
-import no.nav.saas.proxy.namespaceOfApp
-import no.nav.saas.proxy.rulesOf
+package no.nav.saas.proxy
 import org.http4k.core.Method
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -16,13 +11,13 @@ const val WHITELIST_DEV = "/whitelist/dev.json"
 const val WHITELIST_PROD = "/whitelist/prod.json"
 
 class WhitelistTest {
-    val devRuleSet = Rules.parse(WHITELIST_DEV)
-    val prodRuleSet = Rules.parse(WHITELIST_PROD)
+    private val devRuleSet: RuleSet = Rules.parse(WHITELIST_DEV)
+    private val prodRuleSet: RuleSet = Rules.parse(WHITELIST_PROD)
 
-    val rulesSet = setOf(devRuleSet, prodRuleSet)
+    private val rulesSet = setOf(devRuleSet, prodRuleSet)
 
     @Test
-    fun test_that_parsing_dev_whitelist_contains_known_rule() {
+    fun `Test that parsing dev whitelist contains known rule`() {
         devRuleSet.let {
             val knownNamespace = "teamnks"
             val knownApp = "sf-brukernotifikasjon"
@@ -33,7 +28,7 @@ class WhitelistTest {
     }
 
     @Test
-    fun test_lookup_function_for_namespace_returns_existing_namespace_or_null() {
+    fun `Test lookup function for namespace returns existing namespace or null`() {
         val knownNamespace = "teamnks"
         val knownApp = "sf-brukernotifikasjon"
         assertTrue(devRuleSet.namespaceOfApp(knownApp) == knownNamespace)
@@ -41,7 +36,7 @@ class WhitelistTest {
     }
 
     @Test
-    fun test_lookup_function_for_rules_returns_list_of_rules_or_empty_list() {
+    fun `Test lookup function for rules returns list of rules or empty list`() {
         val knownNamespace = "teamnks"
         val knownApp = "sf-brukernotifikasjon"
         assertTrue(devRuleSet.rulesOf(knownApp, knownNamespace).isNotEmpty())
@@ -50,7 +45,7 @@ class WhitelistTest {
     }
 
     @Test
-    fun test_lookup_function_for_namespace_throws_exception_if_app_is_found_in_two_namespaces_in_ruleset() {
+    fun `Test lookup function for namespace throws exception if app is found in two namespaces in ruleset`() {
         val knownApp = "sf-brukernotifikasjon"
         val devRuleSetWithTwinAppInAnotherNamespace = devRuleSet + mapOf("Other namespace" to mapOf(knownApp to listOf("Other Rule")))
         assertThrows(IllegalStateException::class.java) {
@@ -59,7 +54,7 @@ class WhitelistTest {
     }
 
     @Test
-    fun test_that_parsing_prod_whitelist_contains_known_rule() {
+    fun `Test that parsing prod whitelist contains known rule`() {
         prodRuleSet.let {
             val knownNamespace = "teamnks"
             val knownApp = "sf-brukernotifikasjon"
@@ -70,19 +65,19 @@ class WhitelistTest {
     }
 
     @Test
-    fun test_that_evaluation_of_all_rules_do_not_throw_exception() {
+    fun `Test that evaluation of all rules do not throw exception`() {
         rulesSet.forEach { it.values.forEach { it.values.forEach { it.forEach { it.evaluateAsRule(Method.PURGE, "/not/present/path!!!!!") } } } }
     }
 
     @Test
-    fun test_that_unparsable_rule_method_throw_exception() {
+    fun `Test that unparsable rule method throw exception`() {
         assertThrows(IllegalArgumentException::class.java) {
             "GE /path".evaluateAsRule(Method.GET, "/path")
         }
     }
 
     @Test
-    fun test_that_different_paths_give_expected_result_from_evaluation_as_rule() {
+    fun `Test that different paths give expected result from evaluation as rule`() {
         assertTrue("POST /done".evaluateAsRule(Method.POST, "/done"))
         assertFalse("GET /done".evaluateAsRule(Method.POST, "/done"))
         assertFalse("GET /done".evaluateAsRule(Method.POST, "/don"))
@@ -94,7 +89,7 @@ class WhitelistTest {
     }
 
     @Test
-    fun test_scope() {
+    fun `Test scope configuration translates correctly with findScope function`() {
         assertEquals("defaultaccess", listOf("POST /done").findScope())
         assertEquals("consumer-beregningsgrunnlag", listOf("POST /done scope:consumer-beregningsgrunnlag").findScope())
     }

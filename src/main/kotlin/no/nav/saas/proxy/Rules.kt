@@ -6,6 +6,6 @@ typealias RuleSet = Map<String, Map<String, List<String>>> // Map of namespaces,
 typealias Rule = String
 
 object Rules {
-    fun parse(filePath: String) =
+    fun parse(filePath: String): RuleSet =
         Gson().fromJson<RuleSet>(Application::class.java.getResource(filePath).readText(), Map::class.java)
 }

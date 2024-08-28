@@ -13,7 +13,7 @@ class IngressesTest {
     val ingressesSet = setOf(devIngressesSet, prodIngressesSet)
 
     @Test
-    fun test_that_parsing_dev_ingresses_contains_known_ingress() {
+    fun `Test that parsing dev ingresses contains known ingress`() {
         devIngressesSet.let {
             val knownNamespace = "teamcrm"
             val knownApp = "sf-arkiv"
@@ -24,7 +24,7 @@ class IngressesTest {
     }
 
     @Test
-    fun test_that_parsing_prod_ingresses_contains_known_ingress() {
+    fun `Test that parsing prod ingresses contains known ingress`() {
         prodIngressesSet.let {
             val knownNamespace = "teamcrm"
             val knownApp = "sf-arkiv"
@@ -35,12 +35,21 @@ class IngressesTest {
     }
 
     @Test
-    fun test_that_all_ingresses_starts_with_https() {
+    fun `Test that all ingresses starts with https`() {
         ingressesSet.forEach { ingressSet ->
             ingressSet.values.forEach { app ->
                 app.values.forEach { ingress ->
                     Assertions.assertTrue(ingress.startsWith("https://"))
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `Make sure that no prod ingress point at dev-fss (typical copy paste mistake)`() {
+        prodIngressesSet.values.forEach { app ->
+            app.values.forEach { ingress ->
+                Assertions.assertFalse(ingress.contains("dev-fss"))
             }
         }
     }

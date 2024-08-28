@@ -1,6 +1,5 @@
 package no.nav.saas.proxy
 
-import com.google.gson.Gson
 import io.prometheus.client.exporter.common.TextFormat
 import mu.KotlinLogging
 import no.nav.saas.proxy.token.TokenExchangeHandler
@@ -19,17 +18,12 @@ import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NON_AUTHORITATIVE_INFORMATION
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
-import org.http4k.routing.PathMethod
-import org.http4k.routing.ResourceLoader
-import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
-import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
-import testcall
 import java.io.File
 import java.io.StringWriter
 import java.time.LocalDateTime
@@ -99,12 +93,6 @@ object Application {
                     if (it.isNotEmpty()) Response(Status.OK).body(it) else Response(Status.NO_CONTENT)
                 }
         },
-        "/internal/gui" bind static(ResourceLoader.Classpath("/gui")),
-        "/internal/authping" authbind Method.GET to {
-            val viewData = ViewData(username = TokenValidation.nameClaim(it), expireTime = TokenValidation.expireTime(it))
-            Response(Status.OK).body(Gson().toJson(viewData))
-        },
-        "/internal/testcall" authbind Method.GET to testcall,
         API_INTERNAL_TEST_URI bind { req: Request ->
             req.headers
             val path = (req.path(API_URI_VAR) ?: "")
@@ -214,27 +202,6 @@ object Application {
             }
         }
     }
-
-    /**
-     * authbind: a variant of bind that takes care of authentication with use of tokenValidator
-     */
-    infix fun String.authbind(method: Method) = AuthRouteBuilder(this, method)
-
-    data class AuthRouteBuilder(
-        val path: String,
-        val method: Method,
-    ) {
-        infix fun to(action: HttpHandler): RoutingHttpHandler =
-            PathMethod(path, method) to { request ->
-                Metrics.apiCalls.labels(path).inc()
-                val token = TokenValidation.firstValidToken(request, clientIdProxy)
-                if (token.isPresent) {
-                    action(request)
-                } else {
-                    Response(Status.UNAUTHORIZED)
-                }
-            }
-    }
 }
 
 fun JwtToken.audAsString() = this.jwtTokenClaims.get("aud").toString().let { it.substring(1, it.length - 1) }
@@ -245,8 +212,3 @@ fun targetCluster(specifiedIngress: String?): String {
         currentCluster.replace("gcp", "fss")
     } ?: currentCluster
 }
-
-private data class ViewData(
-    val username: String,
-    val expireTime: Long
-)
