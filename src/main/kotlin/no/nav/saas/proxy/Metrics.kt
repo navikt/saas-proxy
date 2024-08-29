@@ -16,10 +16,19 @@ object Metrics {
     val oboCacheSize: Gauge = registerGauge("obo_cache_size")
 
     private val forwardedCalls: Counter =
-        registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status")
+        registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status", "total_ms", "handling_ms", "redirect_ms")
 
-    fun forwardedCallsInc(targetApp: String, path: String, ingress: String, tokenType: String, status: String) =
-        forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
+    fun forwardedCallsInc(
+        targetApp: String,
+        path: String,
+        ingress: String,
+        tokenType: String,
+        status: String,
+        totalMs: String,
+        handlingMs: String,
+        redirectMs: String
+    ) =
+        forwardedCalls.labels(targetApp, path, ingress, tokenType, status, totalMs, handlingMs, redirectMs).inc()
 
     fun registerGauge(name: String): Gauge {
         return Gauge.build().name(name).help(name).register()

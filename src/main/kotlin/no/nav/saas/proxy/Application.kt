@@ -77,8 +77,8 @@ object Application {
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
     fun api(): HttpHandler = routes(
-        NAIS_ISALIVE bind Method.GET to { Response(Status.OK) },
-        NAIS_ISREADY bind Method.GET to { Response(Status.OK) },
+        NAIS_ISALIVE bind Method.GET to { Response(OK) },
+        NAIS_ISREADY bind Method.GET to { Response(OK) },
         NAIS_METRICS bind Method.GET to {
             runCatching {
                 StringWriter().let { str ->
@@ -90,7 +90,7 @@ object Application {
                     log.error { "/prometheus failed writing metrics  - ${it.localizedMessage}" }
                 }
                 .getOrDefault("").let {
-                    if (it.isNotEmpty()) Response(Status.OK).body(it) else Response(Status.NO_CONTENT)
+                    if (it.isNotEmpty()) Response(OK).body(it) else Response(Status.NO_CONTENT)
                 }
         },
         API_INTERNAL_TEST_URI bind { req: Request ->
@@ -107,7 +107,7 @@ object Application {
                 val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
                 val ingress = ingressSet.ingressOf(targetApp, namespace)
 
-                val rules = Application.ruleSet.rulesOf(targetApp, namespace)
+                val rules = ruleSet.rulesOf(targetApp, namespace)
                 if (rules.isEmpty()) {
                     Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
                 } else {
@@ -126,6 +126,7 @@ object Application {
     )
 
     val redirect = { req: Request ->
+        val millisAtStart = System.currentTimeMillis()
         val path = req.path(API_URI_VAR) ?: ""
         Metrics.apiCalls.labels(path).inc()
 
@@ -177,13 +178,28 @@ object Application {
                 val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                 val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
 
+                val millisBeforeRedirect = System.currentTimeMillis()
                 val response = client(redirect)
+                val millisAfterRedirect = System.currentTimeMillis()
 
-                log.info { "Forwarded call (${response.status}) to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)})" }
+                val redirectCallTime = millisAfterRedirect - millisBeforeRedirect
+                val totalCallTime = millisAfterRedirect - millisAtStart
+                val handlingTokenTime = totalCallTime - redirectCallTime
+
+                log.info { "Forwarded call (${response.status}) to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
 
                 try {
                     val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
-                    Metrics.forwardedCallsInc(targetApp = targetApp, path = path, ingress = ingress ?: "", tokenType = tokenType, status = response.status.code.toString())
+                    Metrics.forwardedCallsInc(
+                        targetApp = targetApp,
+                        path = path,
+                        ingress = ingress ?: "",
+                        tokenType = tokenType,
+                        status = response.status.code.toString(),
+                        totalMs = totalCallTime.toString(),
+                        handlingMs = handlingTokenTime.toString(),
+                        redirectMs = redirectCallTime.toString()
+                    )
                 } catch (e: Exception) {
                     log.error { "Could not register forwarded call metric" }
                 }
