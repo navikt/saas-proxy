@@ -196,9 +196,9 @@ object Application {
                         ingress = ingress ?: "",
                         tokenType = tokenType,
                         status = response.status.code.toString(),
-                        totalMs = totalCallTime.toString(),
-                        handlingMs = handlingTokenTime.toString(),
-                        redirectMs = redirectCallTime.toString()
+                        totalMs = totalCallTime,
+                        handlingMs = handlingTokenTime,
+                        redirectMs = redirectCallTime
                     )
                 } catch (e: Exception) {
                     log.error { "Could not register forwarded call metric" }
