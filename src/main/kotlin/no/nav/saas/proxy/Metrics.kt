@@ -19,11 +19,11 @@ object Metrics {
     private val forwardedCalls: Counter =
         registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status")
 
-    val totalMsHistogram = registerForwardedCallHistogram("duration_total_ms")
+    val totalMsHistogram = registerForwardedCallHistogram("total_ms")
 
-    val handlingMsHistogram = registerForwardedCallHistogram("duration_handling_ms")
+    val handlingMsHistogram = registerForwardedCallHistogram("handling_ms")
 
-    val redirectMsHistogram = registerForwardedCallHistogram("duration_redirect_ms")
+    val redirectMsHistogram = registerForwardedCallHistogram("redirect_ms")
 
     fun forwardedCallsInc(
         targetApp: String,
@@ -36,7 +36,7 @@ object Metrics {
         redirectMs: Long
     ) {
         forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
-        totalMsHistogram.labels(ingress, tokenType, status).observe(totalMs.toDouble())
+        totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
         handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
         redirectMsHistogram.labels(targetApp, tokenType, status).observe(redirectMs.toDouble())
     }
