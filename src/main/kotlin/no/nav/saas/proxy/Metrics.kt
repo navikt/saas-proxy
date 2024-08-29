@@ -36,7 +36,7 @@ object Metrics {
         redirectMs: Long
     ) {
         forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
-        totalMsHistogram.labels(targetApp, path, ingress, tokenType, status).observe(totalMs.toDouble())
+        totalMsHistogram.labels(ingress, tokenType, status).observe(totalMs.toDouble())
         handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
         redirectMsHistogram.labels(targetApp, tokenType, status).observe(redirectMs.toDouble())
     }
