@@ -37,13 +37,13 @@ object Metrics {
     ) {
         forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
         totalMsHistogram.labels(targetApp, path, ingress, tokenType, status).observe(totalMs.toDouble())
-        handlingMsHistogram.labels(targetApp, path, ingress, tokenType, status).observe(handlingMs.toDouble())
-        redirectMsHistogram.labels(targetApp, path, ingress, tokenType, status).observe(redirectMs.toDouble())
+        handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
+        redirectMsHistogram.labels(targetApp, tokenType, status).observe(redirectMs.toDouble())
     }
 
     fun registerForwardedCallHistogram(name: String): Histogram {
         return Histogram.build().name(name).help(name)
-            .labelNames("targetApp", "path", "ingress", "tokenType", "status")
+            .labelNames("targetApp", "tokenType", "status")
             .buckets(50.0, 100.0, 300.0, 500.0, 750.0, 1000.0, 2000.0, 4000.0, 8000.0)
             .register()
     }
