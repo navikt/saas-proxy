@@ -10,7 +10,7 @@ object Metrics {
 
     val cRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
 
-    val apiCalls: Gauge = registerLabelGauge("api_calls", "path")
+    val apiCalls: Gauge = registerLabelGauge("api_calls", "target_app", "path")
 
     val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "path")
 
@@ -56,6 +56,15 @@ object Metrics {
 
     fun registerLabelCounter(name: String, vararg labels: String) =
         Counter.build().name(name).help(name).labelNames(*labels).register()
+
+    /**
+     * Mask common path variables to avoid separate counts for paths with varying segments.
+     */
+    fun mask(path: String): String =
+        path.replace(Regex("/\\d+"), "/{id}")
+            .replace(Regex("/[A-Z]\\d{4,}"), "/{ident}")
+            .replace(Regex("/[^/]+\\.(xml|pdf)$"), "/{filename}")
+            .replace(Regex("/[A-Z]{3}(?=/|$)"), "/{code}")
 
     init {
         DefaultExports.initialize()

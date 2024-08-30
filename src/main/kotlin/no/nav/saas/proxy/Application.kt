@@ -128,11 +128,12 @@ object Application {
     val redirect = { req: Request ->
         val millisAtStart = System.currentTimeMillis()
         val path = req.path(API_URI_VAR) ?: ""
-        Metrics.apiCalls.labels(path).inc()
 
         val targetApp = req.header(TARGET_APP)
         val targetClientId = req.header(TARGET_CLIENT_ID)
         val targetNamespace = req.header(TARGET_NAMESPACE) // optional
+
+        Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
 
         if (targetApp == null) {
             log.info { "Proxy: Bad request - missing targetApp header" }
@@ -192,7 +193,7 @@ object Application {
                     val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
                     Metrics.forwardedCallsInc(
                         targetApp = targetApp,
-                        path = path,
+                        path = Metrics.mask(path),
                         ingress = ingress ?: "",
                         tokenType = tokenType,
                         status = response.status.code.toString(),
