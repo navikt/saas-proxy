@@ -12,6 +12,8 @@ object Metrics {
 
     val apiCalls: Gauge = registerLabelGauge("api_calls", "target_app", "path")
 
+    val tokenFetchFail: Counter = registerLabelCounter("token_fetch_fail", "target_alias", "token_type")
+
     val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "path")
 
     val oboCacheSize: Gauge = registerGauge("obo_cache_size")

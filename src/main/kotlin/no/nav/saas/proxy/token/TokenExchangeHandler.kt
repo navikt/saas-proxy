@@ -77,7 +77,7 @@ object TokenExchangeHandler {
             )
         val res = client(req)
 
-        val jwt = res.extractAccessToken(targetAlias)
+        val jwt = res.extractAccessToken(targetAlias, "obo")
         OBOcache[key] = jwt
         return jwt
     }
@@ -104,13 +104,13 @@ object TokenExchangeHandler {
 
         val res = client(req)
 
-        val jwt = res.extractAccessToken(targetAlias)
+        val jwt = res.extractAccessToken(targetAlias, "m2m")
         serviceToken[targetAlias] = jwt
         return jwt
     }
 }
 
-fun Response.extractAccessToken(alias: String): JwtToken {
+fun Response.extractAccessToken(alias: String, tokenType: String): JwtToken {
     try {
         return JwtToken(JSONObject(this.bodyString()).get("access_token").toString())
     } catch (e: Exception) {
@@ -118,7 +118,8 @@ fun Response.extractAccessToken(alias: String): JwtToken {
             "Received $status when attempting token extraction from $alias"
         )
         File("/tmp/failedExtractBody").writeText(this.bodyString())
-        TokenExchangeHandler.log.error { "Failed to fetch access token for $alias - ${this.bodyString()}" }
-        throw AuthenticationException("Failed to fetch access token for $alias")
+        Metrics.tokenFetchFail.labels(alias, tokenType).inc()
+        TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
+        throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")
     }
 }
