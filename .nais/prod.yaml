@@ -74,6 +74,8 @@ spec:
           namespace: tpts
         - application: pen-nks-service
           namespace: pensjon-saksbehandling
+        - application: norg2
+          namespace: org
       external:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"
@@ -86,7 +88,6 @@ spec:
         - host: "pdl-fullmakt.prod-fss-pub.nais.io"
         - host: "sokos-skattekort-person.prod-fss-pub.nais.io"
         - host: "sokos-utbetaldata.prod-fss-pub.nais.io"
-        - host: "norg2.prod-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.prod-fss-pub.nais.io"
         - host: "axsys.prod-fss-pub.nais.io"
   env:
