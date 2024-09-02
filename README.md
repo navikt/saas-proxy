@@ -34,7 +34,7 @@ Samt outbound rule her i [.nais/dev.yml](https://github.com/navikt/saas-proxy/bl
 ```
 
 Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til proxyn.
-Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Pre-authorization](https://doc.nais.io/security/auth/azure-ad/access-policy/#pre-authorization)
+Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Entra-ID](https://doc.nais.io/auth/entra-id/)
 
 Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert miljø. Se
 [whitelist/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
@@ -76,7 +76,7 @@ og
 [ingresses/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/ingresses/prod.json)
 
 Dette setter nettverkspolicyen slik at saas-proxyen kan kommunisere med appen, og forhåndsautoriserer azure-AD-klienten til proxyn.
-Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Pre-authorization](https://doc.nais.io/security/auth/azure-ad/access-policy/#pre-authorization)
+Se dokumentasjon for nais [Access policies](https://doc.nais.io/nais-application/access-policy/) og [Entra-ID](https://doc.nais.io/auth/entra-id/)
 
 Du legger til de endepunkter du vil gjøre tilgjengelig i hvitelisten før hvert miljø. Se
 [whitelist/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/whitelist/dev.json)
