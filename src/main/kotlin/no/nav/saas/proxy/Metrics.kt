@@ -46,7 +46,7 @@ object Metrics {
     fun registerForwardedCallHistogram(name: String): Histogram {
         return Histogram.build().name(name).help(name)
             .labelNames("targetApp", "tokenType", "status")
-            .buckets(50.0, 100.0, 300.0, 500.0, 750.0, 1000.0, 2000.0, 4000.0, 8000.0)
+            .buckets(50.0, 100.0, 200.0, 300.0, 400.0, 500.0, 1000.0, 2000.0, 4000.0)
             .register()
     }
 
