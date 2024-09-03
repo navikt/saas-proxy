@@ -102,12 +102,20 @@ object TokenExchangeHandler {
     }
 
     fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
-        serviceToken[targetAlias]?.let { cachedToken ->
-            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-                log.info { "Cached service obo token $targetAlias" }
-                return cachedToken
-            }
+        /** The redis way */
+        val cachedResult = Redis.commands.get(targetAlias)
+        if (cachedResult != null) {
+            log.info { "Cache hit m2m: Retrieved token result from cache." }
+            return JwtToken(cachedResult)
         }
+
+        /** The legacy way */
+//        serviceToken[targetAlias]?.let { cachedToken ->
+//            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
+//                log.info { "Cached service obo token $targetAlias" }
+//                return cachedToken
+//            }
+//        }
         log.info { "Acquire service token $targetAlias" }
         val m2mscope = if (scope == "defaultaccess") ".default" else scope
         val req = Request(Method.POST, azureTokenEndPoint)
@@ -123,8 +131,17 @@ object TokenExchangeHandler {
 
         val res = client(req)
 
-        val jwt = JwtToken(res.extractAccessToken(targetAlias, "m2m"))
-        serviceToken[targetAlias] = jwt
+        val jwtEncoded = res.extractAccessToken(targetAlias, "m2m")
+        val jwt = JwtToken(jwtEncoded)
+
+        /** The redis way */
+        val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
+        val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
+        log.info { "Cache miss m2m: Will store in cache $secondsToLiveInCache seconds" }
+        Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
+
+        /** The legacy way */
+        // serviceToken[targetAlias] = jwt
         return jwt
     }
 }
