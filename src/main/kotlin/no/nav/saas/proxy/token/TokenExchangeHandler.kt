@@ -15,6 +15,7 @@ import org.http4k.core.body.toBody
 import org.json.JSONObject
 import java.io.File
 import java.lang.Exception
+import java.time.Duration
 import java.time.Instant
 import javax.naming.AuthenticationException
 
@@ -44,12 +45,22 @@ object TokenExchangeHandler {
     fun exchange(jwtIn: JwtToken, targetAlias: String, scope: String): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias, scope)
         val key = targetAlias + jwtIn.tokenAsString
-        OBOcache[key]?.let { cachedToken ->
-            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-                log.info { "Cached exchange obo token $targetAlias" }
-                return cachedToken
-            }
+
+        /** The redis way */
+        val cachedResult = Redis.commands.get(key)
+        if (cachedResult != null) {
+            log.info { "Cache hit: Retrieved token result from cache." }
+            return JwtToken(cachedResult)
         }
+
+        /** The legacy way */
+//      OBOcache[key]?.let { cachedToken ->
+//          if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
+//              log.info { "Cached exchange obo token $targetAlias" }
+//              return cachedToken
+//          }
+//      }
+
         log.info { "Exchange obo token $targetAlias" }
         Metrics.oboCacheSize.set(OBOcache.size.toDouble())
 
@@ -77,8 +88,16 @@ object TokenExchangeHandler {
             )
         val res = client(req)
 
-        val jwt = res.extractAccessToken(targetAlias, "obo")
-        OBOcache[key] = jwt
+        val jwtEncoded = res.extractAccessToken(targetAlias, "obo")
+        val jwt = JwtToken(jwtEncoded)
+
+        /** The redis way */
+        val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
+        val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
+        log.info { "Cache miss: Will store in cache $secondsToLiveInCache seconds" }
+        Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
+        /** The legacy way */
+        // OBOcache[key] = jwt
         return jwt
     }
 
@@ -104,20 +123,20 @@ object TokenExchangeHandler {
 
         val res = client(req)
 
-        val jwt = res.extractAccessToken(targetAlias, "m2m")
+        val jwt = JwtToken(res.extractAccessToken(targetAlias, "m2m"))
         serviceToken[targetAlias] = jwt
         return jwt
     }
 }
 
-fun Response.extractAccessToken(alias: String, tokenType: String): JwtToken {
+fun Response.extractAccessToken(alias: String, tokenType: String): String {
     try {
-        return JwtToken(JSONObject(this.bodyString()).get("access_token").toString())
+        return JSONObject(this.bodyString()).get("access_token").toString()
     } catch (e: Exception) {
         File("/tmp/failedStatusWhenExtracting").writeText(
             "Received $status when attempting token extraction from $alias"
         )
-        File("/tmp/failedExtractBody").writeText(this.bodyString())
+        File("/tmp/failedExtractBody-$alias-$tokenType").writeText(this.bodyString())
         Metrics.tokenFetchFail.labels(alias, tokenType).inc()
         TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
         throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")
