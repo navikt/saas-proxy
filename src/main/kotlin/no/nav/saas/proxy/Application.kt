@@ -1,7 +1,10 @@
 package no.nav.saas.proxy
 
 import io.prometheus.client.exporter.common.TextFormat
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.saas.proxy.token.Redis
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
 import no.nav.security.token.support.core.jwt.JwtToken
@@ -71,7 +74,18 @@ object Application {
     fun start() {
         log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
-        log.info { "Finished!" }
+        log.info { "Entering cache query loop" }
+        cacheQueryLoop()
+    }
+
+    tailrec fun cacheQueryLoop() {
+        runBlocking { delay(900000) } // 15 min
+        try {
+            Metrics.cacheSize.set(Redis.commands.dbsize().toDouble())
+        } catch (e: Exception) {
+            log.warn { "Failed to query Redis dbSize" }
+        }
+        cacheQueryLoop()
     }
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))

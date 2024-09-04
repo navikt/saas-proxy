@@ -62,7 +62,7 @@ object TokenExchangeHandler {
 //      }
 
         log.info { "Exchange obo token $targetAlias" }
-        Metrics.oboCacheSize.set(OBOcache.size.toDouble())
+        // Metrics.oboCacheSize.set(OBOcache.size.toDouble())
 
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")

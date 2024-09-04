@@ -16,7 +16,7 @@ object Metrics {
 
     val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "path")
 
-    val oboCacheSize: Gauge = registerGauge("obo_cache_size")
+    val cacheSize: Gauge = registerGauge("cache_size")
 
     private val forwardedCalls: Counter =
         registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status")
