@@ -21,6 +21,9 @@ spec:
     exec:
       command: [ "/bin/bash", "/pre-stop.sh" ]
   terminationGracePeriodSeconds: 60
+  redis:
+    - instance: saasproxy # Determines env variable names
+      access: readwrite
   prometheus:
     enabled: true
     path: /internal/metrics
