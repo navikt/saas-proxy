@@ -15,7 +15,6 @@ import org.http4k.core.body.toBody
 import org.json.JSONObject
 import java.io.File
 import java.lang.Exception
-import java.time.Duration
 import java.time.Instant
 import javax.naming.AuthenticationException
 
@@ -47,19 +46,19 @@ object TokenExchangeHandler {
         val key = targetAlias + jwtIn.tokenAsString
 
         /** The redis way */
-        val cachedResult = Redis.commands.get(key)
-        if (cachedResult != null) {
-            log.info { "Cache hit: Retrieved token result from cache." }
-            return JwtToken(cachedResult)
-        }
+//        val cachedResult = Redis.commands.get(key)
+//        if (cachedResult != null) {
+//            log.info { "Cache hit: Retrieved token result from cache." }
+//            return JwtToken(cachedResult)
+//        }
 
         /** The legacy way */
-//      OBOcache[key]?.let { cachedToken ->
-//          if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-//              log.info { "Cached exchange obo token $targetAlias" }
-//              return cachedToken
-//          }
-//      }
+        OBOcache[key]?.let { cachedToken ->
+            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
+                log.info { "Cached exchange obo token $targetAlias" }
+                return cachedToken
+            }
+        }
 
         log.info { "Exchange obo token $targetAlias" }
         // Metrics.oboCacheSize.set(OBOcache.size.toDouble())
@@ -92,30 +91,30 @@ object TokenExchangeHandler {
         val jwt = JwtToken(jwtEncoded)
 
         /** The redis way */
-        val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
-        val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
-        log.info { "Cache miss: Will store in cache $secondsToLiveInCache seconds" }
-        Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
+//        val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
+//        val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
+//        log.info { "Cache miss: Will store in cache $secondsToLiveInCache seconds" }
+//        Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
         /** The legacy way */
-        // OBOcache[key] = jwt
+        OBOcache[key] = jwt
         return jwt
     }
 
     fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
         /** The redis way */
-        val cachedResult = Redis.commands.get(targetAlias)
-        if (cachedResult != null) {
-            log.info { "Cache hit m2m: Retrieved token result from cache." }
-            return JwtToken(cachedResult)
-        }
+//        val cachedResult = Redis.commands.get(targetAlias)
+//        if (cachedResult != null) {
+//            log.info { "Cache hit m2m: Retrieved token result from cache." }
+//            return JwtToken(cachedResult)
+//        }
 
         /** The legacy way */
-//        serviceToken[targetAlias]?.let { cachedToken ->
-//            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-//                log.info { "Cached service obo token $targetAlias" }
-//                return cachedToken
-//            }
-//        }
+        serviceToken[targetAlias]?.let { cachedToken ->
+            if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
+                log.info { "Cached service obo token $targetAlias" }
+                return cachedToken
+            }
+        }
         log.info { "Acquire service token $targetAlias" }
         val m2mscope = if (scope == "defaultaccess") ".default" else scope
         val req = Request(Method.POST, azureTokenEndPoint)
@@ -135,13 +134,13 @@ object TokenExchangeHandler {
         val jwt = JwtToken(jwtEncoded)
 
         /** The redis way */
-        val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
-        val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
-        log.info { "Cache miss m2m: Will store in cache $secondsToLiveInCache seconds" }
-        Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
+//        val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
+//        val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
+//        log.info { "Cache miss m2m: Will store in cache $secondsToLiveInCache seconds" }
+//        Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
 
         /** The legacy way */
-        // serviceToken[targetAlias] = jwt
+        serviceToken[targetAlias] = jwt
         return jwt
     }
 }

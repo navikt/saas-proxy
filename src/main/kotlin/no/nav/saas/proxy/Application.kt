@@ -75,7 +75,7 @@ object Application {
         log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Entering cache query loop" }
-        cacheQueryLoop()
+        // cacheQueryLoop()
     }
 
     tailrec fun cacheQueryLoop() {
