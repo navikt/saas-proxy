@@ -109,7 +109,11 @@ object TokenExchangeHandler {
                 log.info { "Cache miss (Redis) obo: Will store in cache $secondsToLiveInCache seconds" }
             }
             val millisBeforeRedisStore = System.currentTimeMillis()
-            Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
+            if (secondsToLiveInCache > 3) {
+                Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
+            } else {
+                log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
+            }
             Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
         } else {
             /** The legacy way */
@@ -168,7 +172,11 @@ object TokenExchangeHandler {
                 log.info { "Cache miss (Redis) m2m: Will store in cache $secondsToLiveInCache seconds" }
             }
             val millisBeforeRedisStore = System.currentTimeMillis()
-            Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
+            if (secondsToLiveInCache > 3) {
+                Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
+            } else {
+                log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
+            }
             Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
         } else {
             /** The legacy way */
