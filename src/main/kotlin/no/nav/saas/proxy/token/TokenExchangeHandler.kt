@@ -1,6 +1,7 @@
 package no.nav.saas.proxy.token
 
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.saas.proxy.Application
 import no.nav.saas.proxy.Metrics
 import no.nav.saas.proxy.env
@@ -98,8 +99,15 @@ object TokenExchangeHandler {
         if (Redis.useMe) {
             /** The redis way */
             val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
-            val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
-            log.info { "Cache miss (Redis): Will store in cache $secondsToLiveInCache seconds" }
+            val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 3
+            if (secondsToLiveInCache < 5) {
+                File("/tmp/badmargin-obo").writeText("JwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded")
+            }
+            withLoggingContext(
+                mapOf("processing_time" to secondsToLiveInCache.toString())
+            ) {
+                log.info { "Cache miss (Redis) obo: Will store in cache $secondsToLiveInCache seconds" }
+            }
             val millisBeforeRedisStore = System.currentTimeMillis()
             Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
             Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
@@ -150,8 +158,15 @@ object TokenExchangeHandler {
         if (Redis.useMe) {
             /** The redis way */
             val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
-            val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 10
-            log.info { "Cache miss (Redis) m2m: Will store in cache $secondsToLiveInCache seconds" }
+            val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 3
+            if (secondsToLiveInCache < 5) {
+                File("/tmp/badmargin-m2m").writeText("JwtGotten:\n$jwtEncoded")
+            }
+            withLoggingContext(
+                mapOf("processing_time" to secondsToLiveInCache.toString())
+            ) {
+                log.info { "Cache miss (Redis) m2m: Will store in cache $secondsToLiveInCache seconds" }
+            }
             val millisBeforeRedisStore = System.currentTimeMillis()
             Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
             Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
