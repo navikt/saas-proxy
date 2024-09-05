@@ -11,8 +11,8 @@ spec:
   image: '{{ image }}'
   port: 8080
   replicas:
-    min: 8
-    max: 10
+    min: 12
+    max: 12
   liveness:
     path: /internal/isAlive
   readiness:
