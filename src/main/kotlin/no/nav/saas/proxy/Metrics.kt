@@ -4,6 +4,7 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import io.prometheus.client.Histogram
+import io.prometheus.client.Summary
 import io.prometheus.client.hotspot.DefaultExports
 
 object Metrics {
@@ -18,6 +19,12 @@ object Metrics {
 
     val cacheSize: Gauge = registerGauge("cache_size")
 
+    private val cacheFetchTime: Summary = registerSummary("cache_fetch_time")
+    private val cacheFetchTimeMax: Gauge = registerGauge("cache_fetch_time_max")
+
+    private val cacheStoreTime: Summary = registerSummary("cache_store_time")
+    private val cacheStoreTimeMax: Gauge = registerGauge("cache_store_time_max")
+
     private val forwardedCalls: Counter =
         registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status")
 
@@ -26,6 +33,16 @@ object Metrics {
     val handlingMsHistogram = registerForwardedCallHistogram("handling_ms")
 
     val redirectMsHistogram = registerForwardedCallHistogram("redirect_ms")
+
+    fun fetchTimeObserve(durationMillis: Long) {
+        cacheFetchTime.observe(durationMillis.toDouble())
+        if (durationMillis > cacheFetchTimeMax.get()) cacheFetchTimeMax.set(durationMillis.toDouble())
+    }
+
+    fun storeTimeObserve(durationMillis: Long) {
+        cacheStoreTime.observe(durationMillis.toDouble())
+        if (durationMillis > cacheStoreTimeMax.get()) cacheStoreTimeMax.set(durationMillis.toDouble())
+    }
 
     fun forwardedCallsInc(
         targetApp: String,
@@ -49,6 +66,8 @@ object Metrics {
             .buckets(50.0, 100.0, 200.0, 300.0, 400.0, 500.0, 1000.0, 2000.0, 4000.0)
             .register()
     }
+
+    fun registerSummary(name: String) = Summary.build().name(name).help(name).register()
 
     fun registerGauge(name: String) =
         Gauge.build().name(name).help(name).register()

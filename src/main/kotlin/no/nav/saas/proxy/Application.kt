@@ -75,16 +75,19 @@ object Application {
         log.info { "Starting" }
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Entering cache query loop" }
-        // cacheQueryLoop()
+        if (Redis.useMe) {
+            cacheQueryLoop()
+        }
     }
 
     tailrec fun cacheQueryLoop() {
-        runBlocking { delay(900000) } // 15 min
+        runBlocking { delay(60000) } // 1 min
         try {
             Metrics.cacheSize.set(Redis.commands.dbsize().toDouble())
         } catch (e: Exception) {
             log.warn { "Failed to query Redis dbSize" }
         }
+        runBlocking { delay(840000) } // 14 min
         cacheQueryLoop()
     }
 
