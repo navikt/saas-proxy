@@ -19,6 +19,7 @@ import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import javax.naming.AuthenticationException
+import javax.net.ssl.SSLHandshakeException
 
 object TokenExchangeHandler {
     /**
@@ -91,7 +92,7 @@ object TokenExchangeHandler {
                     }"""
                 ).toBody()
             )
-        val res = client(req)
+        val res = clientCallWithRetries(req)
 
         val jwtEncoded = res.extractAccessToken(targetAlias, "obo")
         val jwt = JwtToken(jwtEncoded)
@@ -154,7 +155,7 @@ object TokenExchangeHandler {
                 ).toBody()
             )
 
-        val res = client(req)
+        val res = clientCallWithRetries(req)
 
         val jwtEncoded = res.extractAccessToken(targetAlias, "m2m")
         val jwt = JwtToken(jwtEncoded)
@@ -183,6 +184,32 @@ object TokenExchangeHandler {
             serviceToken[targetAlias] = jwt
         }
         return jwt
+    }
+
+    fun clientCallWithRetries(
+        request: Request,
+        maxRetries: Int = 3,
+        delayMillis: Long = 100
+    ): Response {
+        var attempt = 0
+        var lastException: Exception? = null
+
+        while (attempt < maxRetries) {
+            try {
+                attempt++
+                return client(request)
+            } catch (e: SSLHandshakeException) {
+                lastException = e
+                log.warn { "SSL handshake failed on attempt $attempt. Retrying in ${delayMillis}ms..." }
+                Thread.sleep(delayMillis)
+            } catch (e: Exception) {
+                lastException = e
+                log.error { "Unexpected error on attempt $attempt: ${e.message}" }
+                break // Exit loop for non-retriable exceptions
+            }
+        }
+
+        throw lastException ?: RuntimeException("Failed to execute action after $maxRetries attempts.")
     }
 }
 
