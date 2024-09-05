@@ -20,6 +20,7 @@ import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NON_AUTHORITATIVE_INFORMATION
 import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.SERVICE_UNAVAILABLE
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.bind
 import org.http4k.routing.path
@@ -31,6 +32,7 @@ import java.io.File
 import java.io.StringWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.system.measureTimeMillis
 
 const val NAIS_DEFAULT_PORT = 8080
 const val NAIS_ISALIVE = "/internal/isAlive"
@@ -83,7 +85,7 @@ object Application {
     tailrec fun cacheQueryLoop() {
         runBlocking { delay(60000) } // 1 min
         try {
-            Metrics.cacheSize.set(Redis.commands.dbsize().toDouble())
+            Metrics.cacheSize.set(Redis.dbSize().toDouble())
         } catch (e: Exception) {
             log.warn { "Failed to query Redis dbSize" }
         }
@@ -93,9 +95,25 @@ object Application {
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
+    var initialCheckPassed = false
+
     fun api(): HttpHandler = routes(
         NAIS_ISALIVE bind Method.GET to { Response(OK) },
-        NAIS_ISREADY bind Method.GET to { Response(OK) },
+        NAIS_ISREADY bind Method.GET to {
+            if (initialCheckPassed) {
+                Response(OK)
+            } else {
+                var response = 0L
+                val queryTime = measureTimeMillis {
+                    response = Redis.dbSize()
+                }
+                log.info { "Initial check query time $queryTime ms (got count $response)" }
+                if (queryTime < 100) {
+                    initialCheckPassed = true
+                }
+                Response(SERVICE_UNAVAILABLE)
+            }
+        },
         NAIS_METRICS bind Method.GET to {
             runCatching {
                 StringWriter().let { str ->

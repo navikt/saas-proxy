@@ -29,4 +29,6 @@ object Redis {
     }
 
     val commands = connectToRedis()
+
+    fun dbSize(): Long = commands.dbsize()
 }
