@@ -18,6 +18,8 @@ import java.io.File
 import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.naming.AuthenticationException
 import javax.net.ssl.SSLHandshakeException
 
@@ -101,21 +103,23 @@ object TokenExchangeHandler {
             /** The redis way */
             val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
             val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 3
-            if (secondsToLiveInCache < 5) {
-                File("/tmp/badmargin-obo").writeText("JwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded")
-            }
             withLoggingContext(
                 mapOf("processing_time" to secondsToLiveInCache.toString())
             ) {
-                log.info { "Cache miss (Redis) obo: Will store in cache $secondsToLiveInCache seconds" }
+                if (secondsToLiveInCache > 3) {
+                    log.info { "Cache miss (Redis) obo: Will store in cache $secondsToLiveInCache seconds" }
+                    val millisBeforeRedisStore = System.currentTimeMillis()
+                    Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
+                    Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
+                } else {
+                    File("/tmp/badmargin-obo").writeText(
+                        LocalDateTime.now().format(
+                            DateTimeFormatter.ISO_DATE_TIME
+                        ) + "\n\n" + "JwtIn:\n${jwtIn.tokenAsString}:\n\nJwtGotten:\n$jwtEncoded"
+                    )
+                    log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
+                }
             }
-            val millisBeforeRedisStore = System.currentTimeMillis()
-            if (secondsToLiveInCache > 3) {
-                Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
-            } else {
-                log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
-            }
-            Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
         } else {
             /** The legacy way */
             OBOcache[key] = jwt
@@ -164,21 +168,19 @@ object TokenExchangeHandler {
             /** The redis way */
             val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
             val secondsToLiveInCache = Duration.between(Instant.now(), expireTime).seconds - 3
-            if (secondsToLiveInCache < 5) {
-                File("/tmp/badmargin-m2m").writeText("JwtGotten:\n$jwtEncoded")
-            }
             withLoggingContext(
                 mapOf("processing_time" to secondsToLiveInCache.toString())
             ) {
-                log.info { "Cache miss (Redis) m2m: Will store in cache $secondsToLiveInCache seconds" }
+                if (secondsToLiveInCache > 3) {
+                    log.info { "Cache miss (Redis) m2m: Will store in cache $secondsToLiveInCache seconds" }
+                    val millisBeforeRedisStore = System.currentTimeMillis()
+                    Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
+                    Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
+                } else {
+                    File("/tmp/badmargin-m2m").writeText("JwtGotten:\n$jwtEncoded")
+                    log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
+                }
             }
-            val millisBeforeRedisStore = System.currentTimeMillis()
-            if (secondsToLiveInCache > 3) {
-                Redis.commands.setex(targetAlias, secondsToLiveInCache, jwtEncoded)
-            } else {
-                log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
-            }
-            Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
         } else {
             /** The legacy way */
             serviceToken[targetAlias] = jwt
@@ -220,7 +222,11 @@ fun Response.extractAccessToken(alias: String, tokenType: String): String {
         File("/tmp/failedStatusWhenExtracting").writeText(
             "Received $status when attempting token extraction from $alias"
         )
-        File("/tmp/failedExtractBody-$alias-$tokenType").writeText(this.bodyString())
+        File("/tmp/failedExtractBody-$alias-$tokenType").writeText(
+            LocalDateTime.now().format(
+                DateTimeFormatter.ISO_DATE_TIME
+            ) + "\n\n" + this.bodyString()
+        )
         Metrics.tokenFetchFail.labels(alias, tokenType).inc()
         TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
         throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")

@@ -187,7 +187,11 @@ object Application {
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (!optionalToken.isPresent) {
                 log.info { "Proxy: Not authorized" }
-                File("/tmp/noauth-$targetApp").writeText(req.toMessage())
+                File("/tmp/noauth-$targetApp").writeText(
+                    LocalDateTime.now().format(
+                        DateTimeFormatter.ISO_DATE_TIME
+                    ) + "\n\n" + req.toMessage()
+                )
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
                 val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
