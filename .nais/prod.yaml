@@ -93,6 +93,7 @@ spec:
         - host: "sokos-utbetaldata.prod-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.prod-fss-pub.nais.io"
         - host: "axsys.prod-fss-pub.nais.io"
+        - host: "sokos-kontoregister.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
