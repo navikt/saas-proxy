@@ -22,6 +22,9 @@
     ]
   },
   "okonomi": {
+    "sokos-kontoregister": [
+      "GET /sokos-kontoregister/v1/hent-kontonummer-for-organisasjon/"
+    ],
     "sokos-kontoregister-person": [
       "POST /api/system/v1/hent-aktiv-konto"
     ],
