@@ -11,6 +11,8 @@ import no.nav.security.token.support.core.jwt.JwtToken
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+import org.apache.http.pool.PoolStats
 import org.http4k.client.ApacheClient
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
@@ -32,6 +34,9 @@ import java.io.File
 import java.io.StringWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
 const val NAIS_DEFAULT_PORT = 8080
@@ -60,7 +65,15 @@ object Application {
 
     val ingressSet = Ingresses.parse(System.getenv(env_INGRESS_FILE))
 
+    val connectionManager = PoolingHttpClientConnectionManager().apply {
+        maxTotal = 30 // Set max total connections
+        defaultMaxPerRoute = 20 // Set max connections per route
+    }
+
+    val executor: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+
     val httpClient = HttpClients.custom()
+        .setConnectionManager(connectionManager)
         .setDefaultRequestConfig(
             RequestConfig.custom()
                 .setConnectTimeout(60000)
@@ -69,12 +82,26 @@ object Application {
                 .setRedirectsEnabled(false)
                 .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
                 .build()
-        ).setMaxConnPerRoute(20).setMaxConnTotal(30).build()
+        ).build()
 
     val client = ApacheClient(httpClient)
 
     fun start() {
         log.info { "Starting" }
+
+        executor.scheduleAtFixedRate(
+            {
+                val stats: PoolStats = connectionManager.totalStats
+                Metrics.activeConnections.set(stats.leased.toDouble())
+                Metrics.idleConnections.set(stats.available.toDouble())
+                Metrics.maxConnections.set(connectionManager.maxTotal.toDouble())
+                Metrics.pendingConnections.set(stats.pending.toDouble())
+            },
+            0,
+            10,
+            TimeUnit.SECONDS
+        )
+
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Entering cache query loop" }
         if (Redis.useMe) {
@@ -192,6 +219,7 @@ object Application {
                         DateTimeFormatter.ISO_DATE_TIME
                     ) + "\n\n" + req.toMessage()
                 )
+                Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
                 val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)

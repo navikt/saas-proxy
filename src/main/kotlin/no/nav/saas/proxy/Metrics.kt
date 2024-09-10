@@ -15,6 +15,8 @@ object Metrics {
 
     val tokenFetchFail: Counter = registerLabelCounter("token_fetch_fail", "target_alias", "token_type")
 
+    val noAuth: Counter = registerLabelCounter("no_auth", "target_app")
+
     val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "path")
 
     val cacheSize: Gauge = registerGauge("cache_size")
@@ -33,6 +35,14 @@ object Metrics {
     val handlingMsHistogram = registerForwardedCallHistogram("handling_ms")
 
     val redirectMsHistogram = registerForwardedCallHistogram("redirect_ms")
+
+    val activeConnections: Gauge = registerGauge("connections_active")
+
+    val idleConnections: Gauge = registerGauge("connections_idle")
+
+    val maxConnections: Gauge = registerGauge("connections_max")
+
+    val pendingConnections: Gauge = registerGauge("connections_pending")
 
     fun fetchTimeObserve(durationMillis: Long) {
         cacheFetchTime.observe(durationMillis.toDouble())
