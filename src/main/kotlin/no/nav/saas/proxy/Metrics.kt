@@ -15,6 +15,8 @@ object Metrics {
 
     val tokenFetchFail: Counter = registerLabelCounter("token_fetch_fail", "target_alias", "token_type")
 
+    val noAuth: Counter = registerLabelCounter("no_auth", "target_app")
+
     val testApiCalls: Gauge = registerLabelGauge("test_api_calls", "path")
 
     val cacheSize: Gauge = registerGauge("cache_size")

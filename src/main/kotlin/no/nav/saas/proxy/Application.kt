@@ -219,6 +219,7 @@ object Application {
                         DateTimeFormatter.ISO_DATE_TIME
                     ) + "\n\n" + req.toMessage()
                 )
+                Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
                 val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)

@@ -9,6 +9,7 @@ import no.nav.saas.proxy.env_AZURE_APP_CLIENT_ID
 import no.nav.saas.proxy.env_AZURE_APP_CLIENT_SECRET
 import no.nav.saas.proxy.env_AZURE_OPENID_CONFIG_TOKEN_ENDPOINT
 import no.nav.security.token.support.core.jwt.JwtToken
+import org.apache.http.NoHttpResponseException
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -96,7 +97,7 @@ object TokenExchangeHandler {
             )
         val res = clientCallWithRetries(req)
 
-        val jwtEncoded = res.extractAccessToken(targetAlias, "obo")
+        val jwtEncoded = res.extractAccessToken(targetAlias, "obo", req)
         val jwt = JwtToken(jwtEncoded)
 
         if (Redis.useMe) {
@@ -161,7 +162,7 @@ object TokenExchangeHandler {
 
         val res = clientCallWithRetries(req)
 
-        val jwtEncoded = res.extractAccessToken(targetAlias, "m2m")
+        val jwtEncoded = res.extractAccessToken(targetAlias, "m2m", req)
         val jwt = JwtToken(jwtEncoded)
 
         if (Redis.useMe) {
@@ -204,6 +205,10 @@ object TokenExchangeHandler {
                 lastException = e
                 log.warn { "SSL handshake failed on attempt $attempt. Retrying in ${delayMillis}ms..." }
                 Thread.sleep(delayMillis)
+            } catch (e: NoHttpResponseException) {
+                lastException = e
+                log.warn { "No Http Response fail on attempt $attempt. Retrying in ${delayMillis}ms..." }
+                Thread.sleep(delayMillis)
             } catch (e: Exception) {
                 lastException = e
                 log.error { "Unexpected error on attempt $attempt: ${e.message}" }
@@ -215,17 +220,14 @@ object TokenExchangeHandler {
     }
 }
 
-fun Response.extractAccessToken(alias: String, tokenType: String): String {
+fun Response.extractAccessToken(alias: String, tokenType: String, request: Request): String {
     try {
         return JSONObject(this.bodyString()).get("access_token").toString()
     } catch (e: Exception) {
-        File("/tmp/failedStatusWhenExtracting").writeText(
-            "Received $status when attempting token extraction from $alias"
-        )
-        File("/tmp/failedExtractBody-$alias-$tokenType").writeText(
+        File("/tmp/failedExtractAccessToken-$alias-$tokenType").writeText(
             LocalDateTime.now().format(
                 DateTimeFormatter.ISO_DATE_TIME
-            ) + "\n\n" + this.bodyString()
+            ) + "\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage()
         )
         Metrics.tokenFetchFail.labels(alias, tokenType).inc()
         TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
