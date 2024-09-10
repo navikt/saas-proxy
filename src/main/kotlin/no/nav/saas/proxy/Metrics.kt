@@ -34,6 +34,14 @@ object Metrics {
 
     val redirectMsHistogram = registerForwardedCallHistogram("redirect_ms")
 
+    val activeConnections: Gauge = registerGauge("connections_active")
+
+    val idleConnections: Gauge = registerGauge("connections_idle")
+
+    val maxConnections: Gauge = registerGauge("connections_max")
+
+    val pendingConnections: Gauge = registerGauge("connections_pending")
+
     fun fetchTimeObserve(durationMillis: Long) {
         cacheFetchTime.observe(durationMillis.toDouble())
         if (durationMillis > cacheFetchTimeMax.get()) cacheFetchTimeMax.set(durationMillis.toDouble())
