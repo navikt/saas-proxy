@@ -200,19 +200,26 @@ object TokenExchangeHandler {
         while (attempt < maxRetries) {
             try {
                 attempt++
-                return azureClient(request)
+                val response = azureClient(request)
+                if (response.status.code == 504) {
+                    log.warn { "Time out on attempt $attempt. Retrying..." }
+                } else {
+                    return response
+                }
             } catch (e: SSLHandshakeException) {
                 lastException = e
                 log.warn { "SSL handshake failed on attempt $attempt. Retrying in ${delayMillis}ms..." }
+                Thread.sleep(delayMillis)
             } catch (e: NoHttpResponseException) {
                 lastException = e
                 log.warn { "No Http Response fail on attempt $attempt. Retrying in ${delayMillis}ms..." }
+                Thread.sleep(delayMillis)
             } catch (e: Exception) {
                 lastException = e
                 log.error { "Unexpected error on attempt $attempt: ${e.message}. Retrying in ${delayMillis}ms..." }
+                Thread.sleep(delayMillis)
                 // break // Exit loop for non-retriable exceptions
             }
-            Thread.sleep(delayMillis)
         }
 
         throw lastException ?: RuntimeException("Failed to execute action after $maxRetries attempts.")
