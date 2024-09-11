@@ -110,6 +110,9 @@ object Application {
     fun updateConnectionMetrics(connectionManager: PoolingHttpClientConnectionManager, clientLabel: String) {
         val stats: PoolStats = connectionManager.totalStats
         Metrics.activeConnections.labels(clientLabel).set(stats.leased.toDouble())
+        if (stats.leased.toDouble() > Metrics.activeConnectionsMax.labels(clientLabel).get()) {
+            Metrics.activeConnectionsMax.labels(clientLabel).set(stats.leased.toDouble())
+        }
         Metrics.idleConnections.labels(clientLabel).set(stats.available.toDouble())
         Metrics.maxConnections.labels(clientLabel).set(stats.max.toDouble())
         Metrics.pendingConnections.labels(clientLabel).set(stats.pending.toDouble())

@@ -38,6 +38,8 @@ object Metrics {
 
     val activeConnections: Gauge = registerLabelGauge("connections_active", "client")
 
+    val activeConnectionsMax: Gauge = registerLabelGauge("connections_active_max", "client")
+
     val idleConnections: Gauge = registerLabelGauge("connections_idle", "client")
 
     val maxConnections: Gauge = registerLabelGauge("connections_max", "client")
