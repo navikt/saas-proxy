@@ -34,7 +34,7 @@ object TokenExchangeHandler {
 
     val log = KotlinLogging.logger { }
 
-    private val client = Application.client
+    private val azureClient = Application.clientAzure
 
     private val clientId: String = env(env_AZURE_APP_CLIENT_ID)
     private val clientSecret: String = env(env_AZURE_APP_CLIENT_SECRET)
@@ -200,20 +200,19 @@ object TokenExchangeHandler {
         while (attempt < maxRetries) {
             try {
                 attempt++
-                return client(request)
+                return azureClient(request)
             } catch (e: SSLHandshakeException) {
                 lastException = e
                 log.warn { "SSL handshake failed on attempt $attempt. Retrying in ${delayMillis}ms..." }
-                Thread.sleep(delayMillis)
             } catch (e: NoHttpResponseException) {
                 lastException = e
                 log.warn { "No Http Response fail on attempt $attempt. Retrying in ${delayMillis}ms..." }
-                Thread.sleep(delayMillis)
             } catch (e: Exception) {
                 lastException = e
-                log.error { "Unexpected error on attempt $attempt: ${e.message}" }
-                break // Exit loop for non-retriable exceptions
+                log.error { "Unexpected error on attempt $attempt: ${e.message}. Retrying in ${delayMillis}ms..." }
+                // break // Exit loop for non-retriable exceptions
             }
+            Thread.sleep(delayMillis)
         }
 
         throw lastException ?: RuntimeException("Failed to execute action after $maxRetries attempts.")

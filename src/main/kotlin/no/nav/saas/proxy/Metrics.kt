@@ -36,13 +36,13 @@ object Metrics {
 
     val redirectMsHistogram = registerForwardedCallHistogram("redirect_ms")
 
-    val activeConnections: Gauge = registerGauge("connections_active")
+    val activeConnections: Gauge = registerLabelGauge("connections_active", "client")
 
-    val idleConnections: Gauge = registerGauge("connections_idle")
+    val idleConnections: Gauge = registerLabelGauge("connections_idle", "client")
 
-    val maxConnections: Gauge = registerGauge("connections_max")
+    val maxConnections: Gauge = registerLabelGauge("connections_max", "client")
 
-    val pendingConnections: Gauge = registerGauge("connections_pending")
+    val pendingConnections: Gauge = registerLabelGauge("connections_pending", "client")
 
     fun fetchTimeObserve(durationMillis: Long) {
         cacheFetchTime.observe(durationMillis.toDouble())

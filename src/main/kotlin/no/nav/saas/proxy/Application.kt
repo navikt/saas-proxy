@@ -56,6 +56,9 @@ const val HOST = "host"
 const val env_WHITELIST_FILE = "WHITELIST_FILE"
 const val env_INGRESS_FILE = "INGRESS_FILE"
 
+const val client_DOWNSTREAM = "downstream"
+const val client_TOKEN = "token"
+
 object Application {
     private val log = KotlinLogging.logger { }
 
@@ -66,8 +69,13 @@ object Application {
     val ingressSet = Ingresses.parse(System.getenv(env_INGRESS_FILE))
 
     val connectionManager = PoolingHttpClientConnectionManager().apply {
-        maxTotal = 30 // Set max total connections
-        defaultMaxPerRoute = 20 // Set max connections per route
+        maxTotal = 20
+        defaultMaxPerRoute = 10
+    }
+
+    val azureConnectionManager = PoolingHttpClientConnectionManager().apply {
+        maxTotal = 10
+        defaultMaxPerRoute = 5
     }
 
     val executor: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
@@ -84,18 +92,36 @@ object Application {
                 .build()
         ).build()
 
+    val azureHttpClient = HttpClients.custom()
+        .setConnectionManager(azureConnectionManager)
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setConnectTimeout(5000)
+                .setSocketTimeout(5000)
+                .setConnectionRequestTimeout(3000)
+                .setRedirectsEnabled(false)
+                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .build()
+        ).build()
+
     val client = ApacheClient(httpClient)
+    val clientAzure = ApacheClient(azureHttpClient)
+
+    fun updateConnectionMetrics(connectionManager: PoolingHttpClientConnectionManager, clientLabel: String) {
+        val stats: PoolStats = connectionManager.totalStats
+        Metrics.activeConnections.labels(clientLabel).set(stats.leased.toDouble())
+        Metrics.idleConnections.labels(clientLabel).set(stats.available.toDouble())
+        Metrics.maxConnections.labels(clientLabel).set(stats.max.toDouble())
+        Metrics.pendingConnections.labels(clientLabel).set(stats.pending.toDouble())
+    }
 
     fun start() {
         log.info { "Starting" }
 
         executor.scheduleAtFixedRate(
             {
-                val stats: PoolStats = connectionManager.totalStats
-                Metrics.activeConnections.set(stats.leased.toDouble())
-                Metrics.idleConnections.set(stats.available.toDouble())
-                Metrics.maxConnections.set(connectionManager.maxTotal.toDouble())
-                Metrics.pendingConnections.set(stats.pending.toDouble())
+                updateConnectionMetrics(connectionManager, client_DOWNSTREAM)
+                updateConnectionMetrics(azureConnectionManager, client_TOKEN)
             },
             0,
             10,
