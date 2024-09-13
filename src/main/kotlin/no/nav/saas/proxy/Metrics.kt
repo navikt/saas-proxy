@@ -34,8 +34,6 @@ object Metrics {
 
     val handlingMsHistogram = registerForwardedCallHistogram("handling_ms")
 
-    val redirectMsHistogram = registerForwardedCallHistogram("redirect_ms")
-
     val activeConnections: Gauge = registerLabelGauge("connections_active", "client")
 
     val activeConnectionsMax: Gauge = registerLabelGauge("connections_active_max", "client")
@@ -64,12 +62,10 @@ object Metrics {
         status: String,
         totalMs: Long,
         handlingMs: Long,
-        redirectMs: Long
     ) {
         forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
         totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
         handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
-        redirectMsHistogram.labels(targetApp, tokenType, status).observe(redirectMs.toDouble())
     }
 
     fun registerForwardedCallHistogram(name: String): Histogram {

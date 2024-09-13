@@ -294,8 +294,7 @@ object Application {
                         tokenType = tokenType,
                         status = response.status.code.toString(),
                         totalMs = totalCallTime,
-                        handlingMs = handlingTokenTime,
-                        redirectMs = redirectCallTime
+                        handlingMs = handlingTokenTime
                     )
                 } catch (e: Exception) {
                     log.error { "Could not register forwarded call metric" }
