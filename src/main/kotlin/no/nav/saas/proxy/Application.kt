@@ -240,6 +240,11 @@ object Application {
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
+                File("/tmp/notwhitelisted-$targetApp").writeText(
+                    LocalDateTime.now().format(
+                        DateTimeFormatter.ISO_DATE_TIME
+                    ) + "\n\nREQUEST:\n" + req.toMessage()
+                )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (!optionalToken.isPresent) {
                 log.info { "Proxy: Not authorized" }
