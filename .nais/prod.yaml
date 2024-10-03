@@ -99,7 +99,7 @@ spec:
         - host: "sosialhjelp-modia-api.prod-fss-pub.nais.io"
         - host: "axsys.prod-fss-pub.nais.io"
         - host: "sokos-kontoregister.prod-fss-pub.nais.io"
-        - host: "https://pdl-api.prod-fss-pub.nais.io"
+        - host: "pdl-api.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
