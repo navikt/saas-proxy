@@ -106,6 +106,9 @@
     "pdl-fullmakt": [
       "POST /api/internbruker/fullmaktsgiver",
       "POST /api/internbruker/fullmaktsgiver-historikk"
+    ],
+    "pdl-api" : [
+      "POST /api/graphql"
     ]
   },
   "pensjon-saksbehandling": {
