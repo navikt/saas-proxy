@@ -101,6 +101,7 @@ spec:
         - host: "sosialhjelp-modia-api.dev-fss-pub.nais.io"
         - host: "axsys.dev-fss-pub.nais.io"
         - host: "pdl-api.dev-fss-pub.nais.io"
+        - host: "sokos-kontoregister-q1.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
