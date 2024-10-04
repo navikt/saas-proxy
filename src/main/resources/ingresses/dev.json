@@ -18,6 +18,7 @@
     "arena-api-q2": "https://arena-api-q2.dev-fss-pub.nais.io"
   },
   "okonomi": {
+    "sokos-kontoregister": "https://sokos-kontoregister-q1.dev-fss-pub.nais.io",
     "sokos-skattekort-person": "https://sokos-skattekort-person.dev-fss-pub.nais.io",
     "sokos-utbetaldata": "https://sokos-utbetaldata.dev-fss-pub.nais.io"
   },
