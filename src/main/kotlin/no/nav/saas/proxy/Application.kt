@@ -2,11 +2,13 @@ package no.nav.saas.proxy
 
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
+import no.nav.saas.proxy.ingresses.IngressSet
 import no.nav.saas.proxy.ingresses.Ingresses
 import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
 import no.nav.saas.proxy.token.Redis
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
+import no.nav.saas.proxy.whitelist.RuleSet
 import no.nav.saas.proxy.whitelist.Whitelist
 import no.nav.saas.proxy.whitelist.Whitelist.evaluateAsRule
 import no.nav.saas.proxy.whitelist.Whitelist.findScope
@@ -26,24 +28,23 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 const val TARGET_APP = "target-app"
-const val TARGET_CLIENT_ID = "target-client-id"
 const val TARGET_NAMESPACE = "target-namespace"
-const val HOST = "host"
 
 object Application {
     private val log = KotlinLogging.logger { }
 
     const val useRedis = true
 
-    val clientIdProxy = System.getenv("AZURE_APP_CLIENT_ID")
+    private val blockFromForwarding =
+        listOf(TARGET_APP, TARGET_NAMESPACE, "host", "authorization").map { it.lowercase() }
 
-    val ruleSet = Whitelist.parse(System.getenv(config_WHITELIST_FILE))
+    val clientIdProxy = env("AZURE_APP_CLIENT_ID")
 
-    val ingressSet = Ingresses.parse(System.getenv(config_INGRESS_FILE))
+    val ruleSet: RuleSet = Whitelist.parse(env(config_WHITELIST_FILE))
+
+    val ingressSet: IngressSet = Ingresses.parse(env(config_INGRESS_FILE))
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
@@ -66,7 +67,7 @@ object Application {
         }
     }
 
-    val redirectHttpHandler = { req: Request ->
+    private val redirectHttpHandler = { req: Request ->
         val millisAtStart = System.currentTimeMillis()
         val path = req.path("rest") ?: ""
 
@@ -101,16 +102,16 @@ object Application {
                 Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
-                val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
 
                 val forwardHeaders =
                     req.headers.filter {
-                        !(blockFromForwarding.contains(it.first) || it.first.lowercase() == "authorization")
+                        !(blockFromForwarding.contains(it.first.lowercase()))
                     }.toList() + listOf(
-                        "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
-                            optionalToken.get(),
-                            "${targetCluster(ingress)}.$namespace.$targetApp",
-                            approvedByRules.findScope()
+                        "Authorization" to "Bearer ${
+                        TokenExchangeHandler.exchange(
+                            jwtIn = optionalToken.get(),
+                            targetAlias = "${targetCluster(ingress)}.$namespace.$targetApp",
+                            scope = approvedByRules.findScope()
                         ).tokenAsString}"
                     )
 
@@ -149,13 +150,11 @@ object Application {
             }
         }
     }
-}
 
-val currentDateTime: String get() = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
-
-fun targetCluster(specifiedIngress: String?): String {
-    val currentCluster = System.getenv("NAIS_CLUSTER_NAME")
-    return specifiedIngress?.let {
-        currentCluster.replace("gcp", "fss")
-    } ?: currentCluster
+    private fun targetCluster(specifiedIngress: String?): String {
+        val currentCluster = env("NAIS_CLUSTER_NAME")
+        return specifiedIngress?.let {
+            currentCluster.replace("gcp", "fss")
+        } ?: currentCluster
+    }
 }

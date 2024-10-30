@@ -5,6 +5,7 @@ import mu.withLoggingContext
 import no.nav.saas.proxy.Application
 import no.nav.saas.proxy.HttpClientResources.clientAzure
 import no.nav.saas.proxy.Metrics
+import no.nav.saas.proxy.currentDateTime
 import no.nav.saas.proxy.env
 import no.nav.saas.proxy.env_AZURE_APP_CLIENT_ID
 import no.nav.saas.proxy.env_AZURE_APP_CLIENT_SECRET
@@ -20,8 +21,6 @@ import java.io.File
 import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.naming.AuthenticationException
 import javax.net.ssl.SSLHandshakeException
 
@@ -33,15 +32,12 @@ object TokenExchangeHandler {
      * Exchanges an azure on-behalf-of-token with audience to this app for one with audience to salesforce. Caches the result
      */
 
-    val log = KotlinLogging.logger { }
+    private val log = KotlinLogging.logger { }
 
     private val clientId: String = env(env_AZURE_APP_CLIENT_ID)
     private val clientSecret: String = env(env_AZURE_APP_CLIENT_SECRET)
 
     private val azureTokenEndPoint: String = env(env_AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)
-
-    private var serviceToken: MutableMap<String, JwtToken> = mutableMapOf() // alias, token out
-    private var OBOcache: MutableMap<String, JwtToken> = mutableMapOf() // token in (alias + user), token out
 
     fun isOBOToken(jwt: JwtToken) = jwt.jwtTokenClaims.get("NAVident") != null
 
@@ -51,7 +47,6 @@ object TokenExchangeHandler {
         val key = targetAlias + jwtIn.tokenAsString
 
         if (Application.useRedis) {
-            /** The redis way */
             val millisBeforeRedisFetch = System.currentTimeMillis()
             val cachedResult = Redis.commands.get(key)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
@@ -59,15 +54,6 @@ object TokenExchangeHandler {
                 log.info { "Cache hit (Redis): Retrieved token result from cache." }
                 return JwtToken(cachedResult)
             }
-        } else {
-            /** The legacy way */
-            OBOcache[key]?.let { cachedToken ->
-                if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-                    log.info { "Cached exchange obo token $targetAlias" }
-                    return cachedToken
-                }
-            }
-            Metrics.cacheSize.set(OBOcache.size.toDouble())
         }
 
         log.info { "Exchange obo token $targetAlias" }
@@ -100,32 +86,19 @@ object TokenExchangeHandler {
         val jwt = JwtToken(jwtEncoded)
 
         if (Application.useRedis) {
-            /** The redis way */
             updateRedisCache(jwt, jwtEncoded, key, jwtIn.tokenAsString, "obo")
-        } else {
-            /** The legacy way */
-            OBOcache[key] = jwt
         }
         return jwt
     }
 
     fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
         if (Application.useRedis) {
-            /** The redis way */
             val millisBeforeRedisFetch = System.currentTimeMillis()
             val cachedResult = Redis.commands.get(targetAlias)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
             if (cachedResult != null) {
                 log.info { "Cache hit (Redis) m2m: Retrieved token result from cache." }
                 return JwtToken(cachedResult)
-            }
-        } else {
-            /** The legacy way */
-            serviceToken[targetAlias]?.let { cachedToken ->
-                if (cachedToken.jwtTokenClaims.expirationTime.toInstant().minusSeconds(10) > Instant.now()) {
-                    log.info { "Cached service obo token $targetAlias" }
-                    return cachedToken
-                }
             }
         }
         log.info { "Acquire service token $targetAlias" }
@@ -147,11 +120,7 @@ object TokenExchangeHandler {
         val jwt = JwtToken(jwtEncoded)
 
         if (Application.useRedis) {
-            /** The redis way */
             updateRedisCache(jwt, jwtEncoded, targetAlias)
-        } else {
-            /** The legacy way */
-            serviceToken[targetAlias] = jwt
         }
         return jwt
     }
@@ -169,8 +138,7 @@ object TokenExchangeHandler {
                 Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
             } else {
                 File("/tmp/badmargin-$lblType").writeText(
-                    LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + "\n\n" +
-                        "JwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded"
+                    "$currentDateTime\n\nJwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded"
                 )
                 log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
             }
@@ -212,19 +180,17 @@ object TokenExchangeHandler {
 
         throw lastException ?: RuntimeException("Failed to execute action after $maxRetries attempts.")
     }
-}
 
-fun Response.extractAccessToken(alias: String, tokenType: String, request: Request): String {
-    try {
-        return JSONObject(this.bodyString()).get("access_token").toString()
-    } catch (e: Exception) {
-        File("/tmp/failedExtractAccessToken-$alias-$tokenType").writeText(
-            LocalDateTime.now().format(
-                DateTimeFormatter.ISO_DATE_TIME
-            ) + "\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage()
-        )
-        Metrics.tokenFetchFail.labels(alias, tokenType).inc()
-        TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
-        throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")
+    private fun Response.extractAccessToken(alias: String, tokenType: String, request: Request): String {
+        try {
+            return JSONObject(this.bodyString()).get("access_token").toString()
+        } catch (e: Exception) {
+            File("/tmp/failedExtractAccessToken-$alias-$tokenType").writeText(
+                "$currentDateTime\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage()
+            )
+            Metrics.tokenFetchFail.labels(alias, tokenType).inc()
+            TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
+            throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")
+        }
     }
 }
