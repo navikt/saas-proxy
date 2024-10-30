@@ -5,7 +5,6 @@ import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.token.Redis
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
-import no.nav.security.token.support.core.jwt.JwtToken
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -51,13 +50,12 @@ object Application {
     )
 
     fun start() {
-        log.info { "Starting" }
-
         HttpClientResources.scheduleConnectionMetricsUpdater()
 
         apiServer(8080).start()
-        log.info { "Entering cache query loop" }
+
         if (useRedis) {
+            log.info { "Entering cache query loop" }
             Redis.cacheQueryLoop()
         }
     }
@@ -97,8 +95,7 @@ object Application {
         val path = req.path("rest") ?: ""
 
         val targetApp = req.header(TARGET_APP)
-        val targetClientId = req.header(TARGET_CLIENT_ID)
-        val targetNamespace = req.header(TARGET_NAMESPACE) // optional
+        val targetNamespace = req.header(TARGET_NAMESPACE) // optional, but recommended
 
         Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
 
@@ -112,31 +109,25 @@ object Application {
             val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                 .filter { it.evaluateAsRule(req.method, "/$path") }
 
-            val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: clientIdProxy)
+            val optionalToken = TokenValidation.firstValidToken(req, clientIdProxy)
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
                 File("/tmp/notwhitelisted-$targetApp").writeText(
-                    LocalDateTime.now().format(
-                        DateTimeFormatter.ISO_DATE_TIME
-                    ) + "\n\nREQUEST:\n" + req.toMessage()
+                    "$currentDateTime\n\nREQUEST:\n" + req.toMessage()
                 )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (!optionalToken.isPresent) {
                 log.info { "Proxy: Not authorized" }
                 File("/tmp/noauth-$targetApp").writeText(
-                    LocalDateTime.now().format(
-                        DateTimeFormatter.ISO_DATE_TIME
-                    ) + "\n\n" + req.toMessage()
+                    "$currentDateTime\n\n" + req.toMessage()
                 )
                 Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
                 val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
 
-                val exchangeToken = optionalToken.get().audAsString() == clientIdProxy
-
-                val forwardHeaders = if (exchangeToken) {
+                val forwardHeaders =
                     req.headers.filter {
                         !(blockFromForwarding.contains(it.first) || it.first.lowercase() == "authorization")
                     }.toList() + listOf(
@@ -146,11 +137,6 @@ object Application {
                             approvedByRules.findScope()
                         ).tokenAsString}"
                     )
-                } else {
-                    req.headers.filter {
-                        !blockFromForwarding.contains(it.first)
-                    }.toList()
-                }
 
                 val host = ingress ?: "http://$targetApp.$namespace"
                 val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
@@ -164,18 +150,13 @@ object Application {
                 val totalCallTime = millisAfterRedirect - millisAtStart
                 val handlingTokenTime = totalCallTime - redirectCallTime
 
-                log.info { "Forwarded call (${response.status}) to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
+                log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
 
                 try {
-                    val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
+                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
                     Metrics.forwardedCallsInc(
-                        targetApp = targetApp,
-                        path = Metrics.mask(path),
-                        ingress = ingress ?: "",
-                        tokenType = tokenType,
-                        status = response.status.code.toString(),
-                        totalMs = totalCallTime,
-                        handlingMs = handlingTokenTime
+                        targetApp = targetApp, path = Metrics.mask(path), ingress = ingress ?: "", tokenType = tokenType,
+                        status = response.status.code.toString(), totalMs = totalCallTime, handlingMs = handlingTokenTime
                     )
                 } catch (e: Exception) {
                     log.error { "Could not register forwarded call metric" }
@@ -183,12 +164,9 @@ object Application {
 
                 try {
                     File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}-${response.status.code}").writeText(
-                        LocalDateTime.now().format(
-                            DateTimeFormatter.ISO_DATE_TIME
-                        ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
+                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
                     )
                 } catch (e: Exception) {
-                    File("/tmp/FailedStoreForwardedCall").writeText("$targetApp")
                     log.error { "Failed to store forwarded call" }
                 }
                 response
@@ -197,7 +175,7 @@ object Application {
     }
 }
 
-fun JwtToken.audAsString() = this.jwtTokenClaims.get("aud").toString().let { it.substring(1, it.length - 1) }
+val currentDateTime: String get() = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
 
 fun targetCluster(specifiedIngress: String?): String {
     val currentCluster = System.getenv("NAIS_CLUSTER_NAME")

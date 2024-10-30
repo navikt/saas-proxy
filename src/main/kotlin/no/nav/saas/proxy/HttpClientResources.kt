@@ -1,5 +1,6 @@
 package no.nav.saas.proxy
 
+import mu.KotlinLogging
 import org.apache.http.client.config.CookieSpecs
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.client.CloseableHttpClient
@@ -12,6 +13,8 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 object HttpClientResources {
+    private val log = KotlinLogging.logger { }
+
     private const val client_DOWNSTREAM = "downstream"
     private const val client_TOKEN = "token"
 
@@ -55,6 +58,7 @@ object HttpClientResources {
     val clientAzure = ApacheClient(azureHttpClient)
 
     fun scheduleConnectionMetricsUpdater() {
+        log.info { "Schedule connection metrics updater" }
         executor.scheduleAtFixedRate(
             {
                 updateConnectionMetrics(connectionManager, client_DOWNSTREAM)
