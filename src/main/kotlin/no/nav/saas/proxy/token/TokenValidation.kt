@@ -1,11 +1,10 @@
 package no.nav.saas.proxy.token
 
 import mu.KotlinLogging
-import no.nav.saas.proxy.config_WHITELIST_FILE
 import no.nav.saas.proxy.env_AZURE_APP_WELL_KNOWN_URL
-import no.nav.saas.proxy.toNavRequest
 import no.nav.security.token.support.core.configuration.IssuerProperties
 import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
+import no.nav.security.token.support.core.http.HttpRequest
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.security.token.support.core.validation.JwtTokenValidationHandler
 import org.http4k.core.Request
@@ -45,11 +44,17 @@ object TokenValidation {
     fun firstValidToken(request: Request, clientId: String): Optional<JwtToken> =
         validatorFor(clientId).getValidatedTokens(request.toNavRequest()).firstValidToken
 
-    fun nameClaim(request: Request): String = this.firstValidToken(request, clientIdProxy).get().nameClaim()
-
-    fun expireTime(request: Request): Long = this.firstValidToken(request, clientIdProxy).get().expireTime()
-
-    val isDev = (System.getenv(config_WHITELIST_FILE) == "/whitelist/dev.json")
+    private fun Request.toNavRequest(): HttpRequest {
+        val req = this
+        return object : HttpRequest {
+            override fun getHeader(headerName: String): String {
+                return req.header(headerName) ?: ""
+            }
+            override fun getCookies(): Array<HttpRequest.NameValue> {
+                return arrayOf()
+            }
+        }
+    }
 }
 
 fun JwtToken.nameClaim(): String {

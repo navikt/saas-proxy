@@ -28,7 +28,7 @@ object Redis {
         if (initialCheckPassed) {
             Response(Status.OK)
         } else {
-            var response = 0L
+            var response: Long
             val queryTime = measureTimeMillis {
                 response = dbSize()
             }

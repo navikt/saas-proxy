@@ -2,15 +2,21 @@ package no.nav.saas.proxy
 
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
+import no.nav.saas.proxy.ingresses.Ingresses
+import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
 import no.nav.saas.proxy.token.Redis
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
+import no.nav.saas.proxy.whitelist.Whitelist
+import no.nav.saas.proxy.whitelist.Whitelist.evaluateAsRule
+import no.nav.saas.proxy.whitelist.Whitelist.findScope
+import no.nav.saas.proxy.whitelist.Whitelist.namespaceOfApp
+import no.nav.saas.proxy.whitelist.Whitelist.rulesOf
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
-import org.http4k.core.Status.Companion.NON_AUTHORITATIVE_INFORMATION
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.bind
@@ -35,7 +41,7 @@ object Application {
 
     val clientIdProxy = System.getenv("AZURE_APP_CLIENT_ID")
 
-    val ruleSet = Rules.parse(System.getenv(config_WHITELIST_FILE))
+    val ruleSet = Whitelist.parse(System.getenv(config_WHITELIST_FILE))
 
     val ingressSet = Ingresses.parse(System.getenv(config_INGRESS_FILE))
 
@@ -45,7 +51,7 @@ object Application {
         "/internal/isAlive" bind Method.GET to { Response(OK) },
         "/internal/isReady" bind Method.GET to Redis.isReadyHttpHandler,
         "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
-        "/internal/test/{rest:.*}" bind testWhitelistHandler,
+        "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
         "/{rest:.*}" bind redirectHttpHandler
     )
 
@@ -57,36 +63,6 @@ object Application {
         if (useRedis) {
             log.info { "Entering cache query loop" }
             Redis.cacheQueryLoop()
-        }
-    }
-
-    val testWhitelistHandler = { req: Request ->
-        req.headers
-        val path = (req.path("rest") ?: "")
-        Metrics.testApiCalls.labels(path).inc()
-        log.info { "Test url called with path $path" }
-        val method = req.method
-        val targetApp = req.header(TARGET_APP)
-        val targetNamespace = req.header(TARGET_NAMESPACE)
-        if (targetApp == null) {
-            Response(BAD_REQUEST).body("Proxy: Missing target-app header")
-        } else {
-            val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
-            val ingress = ingressSet.ingressOf(targetApp, namespace)
-
-            val rules = ruleSet.rulesOf(targetApp, namespace)
-            if (rules.isEmpty()) {
-                Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
-            } else {
-                var report = "Report:\n"
-                report += if (ingress != null) "Targets ingress $ingress\n" else "Targets app in gcp\n"
-                val approved = rules.filter {
-                    report += "Evaluating $it on method ${req.method}, path /$path "
-                    it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
-                }.isNotEmpty()
-                report += if (approved) "Approved" else "Not approved"
-                Response(OK).body(report)
-            }
         }
     }
 
