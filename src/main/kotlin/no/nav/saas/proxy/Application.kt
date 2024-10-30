@@ -40,8 +40,6 @@ object Application {
     private val blockFromForwarding =
         listOf(TARGET_APP, TARGET_NAMESPACE, "host", "authorization").map { it.lowercase() }
 
-    val clientIdProxy = env("AZURE_APP_CLIENT_ID")
-
     val ruleSet: RuleSet = Whitelist.parse(env(config_WHITELIST_FILE))
 
     val ingressSet: IngressSet = Ingresses.parse(env(config_INGRESS_FILE))
@@ -86,7 +84,7 @@ object Application {
             val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                 .filter { it.evaluateAsRule(req.method, "/$path") }
 
-            val optionalToken = TokenValidation.firstValidToken(req, clientIdProxy)
+            val optionalToken = TokenValidation.firstValidToken(req)
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
@@ -152,7 +150,7 @@ object Application {
     }
 
     private fun targetCluster(specifiedIngress: String?): String {
-        val currentCluster = env("NAIS_CLUSTER_NAME")
+        val currentCluster = env(env_NAIS_CLUSTER_NAME)
         return specifiedIngress?.let {
             currentCluster.replace("gcp", "fss")
         } ?: currentCluster

@@ -189,7 +189,7 @@ object TokenExchangeHandler {
                 "$currentDateTime\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage()
             )
             Metrics.tokenFetchFail.labels(alias, tokenType).inc()
-            TokenExchangeHandler.log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
+            log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
             throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")
         }
     }
