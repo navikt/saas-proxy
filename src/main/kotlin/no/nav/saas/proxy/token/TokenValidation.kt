@@ -1,8 +1,8 @@
 package no.nav.saas.proxy.token
 
 import mu.KotlinLogging
+import no.nav.saas.proxy.config_WHITELIST_FILE
 import no.nav.saas.proxy.env_AZURE_APP_WELL_KNOWN_URL
-import no.nav.saas.proxy.env_WHITELIST_FILE
 import no.nav.saas.proxy.toNavRequest
 import no.nav.security.token.support.core.configuration.IssuerProperties
 import no.nav.security.token.support.core.configuration.MultiIssuerConfiguration
@@ -49,7 +49,7 @@ object TokenValidation {
 
     fun expireTime(request: Request): Long = this.firstValidToken(request, clientIdProxy).get().expireTime()
 
-    val isDev = (System.getenv(env_WHITELIST_FILE) == "/whitelist/dev.json")
+    val isDev = (System.getenv(config_WHITELIST_FILE) == "/whitelist/dev.json")
 }
 
 fun JwtToken.nameClaim(): String {

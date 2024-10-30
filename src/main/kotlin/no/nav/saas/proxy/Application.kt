@@ -1,28 +1,18 @@
 package no.nav.saas.proxy
 
-import io.prometheus.client.exporter.common.TextFormat
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.token.Redis
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
 import no.nav.security.token.support.core.jwt.JwtToken
-import org.apache.http.client.config.CookieSpecs
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.pool.PoolStats
-import org.http4k.client.ApacheClient
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NON_AUTHORITATIVE_INFORMATION
 import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Status.Companion.SERVICE_UNAVAILABLE
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.bind
 import org.http4k.routing.path
@@ -31,194 +21,80 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
-import java.io.StringWriter
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import kotlin.system.measureTimeMillis
-
-const val NAIS_DEFAULT_PORT = 8080
-const val NAIS_ISALIVE = "/internal/isAlive"
-const val NAIS_ISREADY = "/internal/isReady"
-const val NAIS_METRICS = "/internal/metrics"
-
-const val API_URI_VAR = "rest"
-const val API_INTERNAL_TEST_URI = "/internal/test/{$API_URI_VAR:.*}"
-const val API_URI = "/{$API_URI_VAR:.*}"
 
 const val TARGET_APP = "target-app"
 const val TARGET_CLIENT_ID = "target-client-id"
 const val TARGET_NAMESPACE = "target-namespace"
 const val HOST = "host"
 
-const val env_WHITELIST_FILE = "WHITELIST_FILE"
-const val env_INGRESS_FILE = "INGRESS_FILE"
-
-const val client_DOWNSTREAM = "downstream"
-const val client_TOKEN = "token"
-
 object Application {
     private val log = KotlinLogging.logger { }
 
+    const val useRedis = true
+
     val clientIdProxy = System.getenv("AZURE_APP_CLIENT_ID")
 
-    val ruleSet = Rules.parse(System.getenv(env_WHITELIST_FILE))
+    val ruleSet = Rules.parse(System.getenv(config_WHITELIST_FILE))
 
-    val ingressSet = Ingresses.parse(System.getenv(env_INGRESS_FILE))
+    val ingressSet = Ingresses.parse(System.getenv(config_INGRESS_FILE))
 
-    val connectionManager = PoolingHttpClientConnectionManager().apply {
-        maxTotal = 20
-        defaultMaxPerRoute = 10
-    }
+    fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
-    val azureConnectionManager = PoolingHttpClientConnectionManager().apply {
-        maxTotal = 10
-        defaultMaxPerRoute = 5
-    }
-
-    val executor: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
-
-    val httpClient = HttpClients.custom()
-        .setConnectionManager(connectionManager)
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(60000)
-                .setSocketTimeout(60000)
-                .setConnectionRequestTimeout(60000)
-                .setRedirectsEnabled(false)
-                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .build()
-        ).build()
-
-    val azureHttpClient = HttpClients.custom()
-        .setConnectionManager(azureConnectionManager)
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(5000)
-                .setSocketTimeout(5000)
-                .setConnectionRequestTimeout(3000)
-                .setRedirectsEnabled(false)
-                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .build()
-        ).build()
-
-    val client = ApacheClient(httpClient)
-    val clientAzure = ApacheClient(azureHttpClient)
-
-    fun updateConnectionMetrics(connectionManager: PoolingHttpClientConnectionManager, clientLabel: String) {
-        val stats: PoolStats = connectionManager.totalStats
-        Metrics.activeConnections.labels(clientLabel).set(stats.leased.toDouble())
-        if (stats.leased.toDouble() > Metrics.activeConnectionsMax.labels(clientLabel).get()) {
-            Metrics.activeConnectionsMax.labels(clientLabel).set(stats.leased.toDouble())
-        }
-        Metrics.idleConnections.labels(clientLabel).set(stats.available.toDouble())
-        Metrics.maxConnections.labels(clientLabel).set(stats.max.toDouble())
-        Metrics.pendingConnections.labels(clientLabel).set(stats.pending.toDouble())
-    }
+    fun api(): HttpHandler = routes(
+        "/internal/isAlive" bind Method.GET to { Response(OK) },
+        "/internal/isReady" bind Method.GET to Redis.isReadyHttpHandler,
+        "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
+        "/internal/test/{rest:.*}" bind testWhitelistHandler,
+        "/{rest:.*}" bind redirectHttpHandler
+    )
 
     fun start() {
         log.info { "Starting" }
 
-        executor.scheduleAtFixedRate(
-            {
-                updateConnectionMetrics(connectionManager, client_DOWNSTREAM)
-                updateConnectionMetrics(azureConnectionManager, client_TOKEN)
-            },
-            0,
-            10,
-            TimeUnit.SECONDS
-        )
+        HttpClientResources.scheduleConnectionMetricsUpdater()
 
-        apiServer(NAIS_DEFAULT_PORT).start()
+        apiServer(8080).start()
         log.info { "Entering cache query loop" }
-        if (Redis.useMe) {
-            cacheQueryLoop()
+        if (useRedis) {
+            Redis.cacheQueryLoop()
         }
     }
 
-    tailrec fun cacheQueryLoop() {
-        runBlocking { delay(60000) } // 1 min
-        try {
-            Metrics.cacheSize.set(Redis.dbSize().toDouble())
-        } catch (e: Exception) {
-            log.warn { "Failed to query Redis dbSize" }
+    val testWhitelistHandler = { req: Request ->
+        req.headers
+        val path = (req.path("rest") ?: "")
+        Metrics.testApiCalls.labels(path).inc()
+        log.info { "Test url called with path $path" }
+        val method = req.method
+        val targetApp = req.header(TARGET_APP)
+        val targetNamespace = req.header(TARGET_NAMESPACE)
+        if (targetApp == null) {
+            Response(BAD_REQUEST).body("Proxy: Missing target-app header")
+        } else {
+            val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
+            val ingress = ingressSet.ingressOf(targetApp, namespace)
+
+            val rules = ruleSet.rulesOf(targetApp, namespace)
+            if (rules.isEmpty()) {
+                Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
+            } else {
+                var report = "Report:\n"
+                report += if (ingress != null) "Targets ingress $ingress\n" else "Targets app in gcp\n"
+                val approved = rules.filter {
+                    report += "Evaluating $it on method ${req.method}, path /$path "
+                    it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
+                }.isNotEmpty()
+                report += if (approved) "Approved" else "Not approved"
+                Response(OK).body(report)
+            }
         }
-        runBlocking { delay(840000) } // 14 min
-        cacheQueryLoop()
     }
 
-    fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
-
-    var initialCheckPassed = false
-
-    fun api(): HttpHandler = routes(
-        NAIS_ISALIVE bind Method.GET to { Response(OK) },
-        NAIS_ISREADY bind Method.GET to {
-            if (initialCheckPassed) {
-                Response(OK)
-            } else {
-                var response = 0L
-                val queryTime = measureTimeMillis {
-                    response = Redis.dbSize()
-                }
-                log.info { "Initial check query time $queryTime ms (got count $response)" }
-                if (queryTime < 100) {
-                    initialCheckPassed = true
-                }
-                Response(SERVICE_UNAVAILABLE)
-            }
-        },
-        NAIS_METRICS bind Method.GET to {
-            runCatching {
-                StringWriter().let { str ->
-                    TextFormat.write004(str, Metrics.cRegistry.metricFamilySamples())
-                    str
-                }.toString()
-            }
-                .onFailure {
-                    log.error { "/prometheus failed writing metrics  - ${it.localizedMessage}" }
-                }
-                .getOrDefault("").let {
-                    if (it.isNotEmpty()) Response(OK).body(it) else Response(Status.NO_CONTENT)
-                }
-        },
-        API_INTERNAL_TEST_URI bind { req: Request ->
-            req.headers
-            val path = (req.path(API_URI_VAR) ?: "")
-            Metrics.testApiCalls.labels(path).inc()
-            log.info { "Test url called with path $path" }
-            val method = req.method
-            val targetApp = req.header(TARGET_APP)
-            val targetNamespace = req.header(TARGET_NAMESPACE)
-            if (targetApp == null) {
-                Response(BAD_REQUEST).body("Proxy: Missing target-app header")
-            } else {
-                val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
-                val ingress = ingressSet.ingressOf(targetApp, namespace)
-
-                val rules = ruleSet.rulesOf(targetApp, namespace)
-                if (rules.isEmpty()) {
-                    Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
-                } else {
-                    var report = "Report:\n"
-                    report += if (ingress != null) "Targets ingress $ingress\n" else "Targets app in gcp\n"
-                    val approved = rules.filter {
-                        report += "Evaluating $it on method ${req.method}, path /$path "
-                        it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
-                    }.isNotEmpty()
-                    report += if (approved) "Approved" else "Not approved"
-                    Response(OK).body(report)
-                }
-            }
-        },
-        API_URI bind redirect
-    )
-
-    val redirect = { req: Request ->
+    val redirectHttpHandler = { req: Request ->
         val millisAtStart = System.currentTimeMillis()
-        val path = req.path(API_URI_VAR) ?: ""
+        val path = req.path("rest") ?: ""
 
         val targetApp = req.header(TARGET_APP)
         val targetClientId = req.header(TARGET_CLIENT_ID)

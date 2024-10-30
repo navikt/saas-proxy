@@ -3,6 +3,7 @@ package no.nav.saas.proxy.token
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.saas.proxy.Application
+import no.nav.saas.proxy.HttpClientResources.clientAzure
 import no.nav.saas.proxy.Metrics
 import no.nav.saas.proxy.env
 import no.nav.saas.proxy.env_AZURE_APP_CLIENT_ID
@@ -34,8 +35,6 @@ object TokenExchangeHandler {
 
     val log = KotlinLogging.logger { }
 
-    private val azureClient = Application.clientAzure
-
     private val clientId: String = env(env_AZURE_APP_CLIENT_ID)
     private val clientSecret: String = env(env_AZURE_APP_CLIENT_SECRET)
 
@@ -51,7 +50,7 @@ object TokenExchangeHandler {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias, scope)
         val key = targetAlias + jwtIn.tokenAsString
 
-        if (Redis.useMe) {
+        if (Application.useRedis) {
             /** The redis way */
             val millisBeforeRedisFetch = System.currentTimeMillis()
             val cachedResult = Redis.commands.get(key)
@@ -100,7 +99,7 @@ object TokenExchangeHandler {
         val jwtEncoded = res.extractAccessToken(targetAlias, "obo", req)
         val jwt = JwtToken(jwtEncoded)
 
-        if (Redis.useMe) {
+        if (Application.useRedis) {
             /** The redis way */
             updateRedisCache(jwt, jwtEncoded, key, jwtIn.tokenAsString, "obo")
         } else {
@@ -111,7 +110,7 @@ object TokenExchangeHandler {
     }
 
     fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
-        if (Redis.useMe) {
+        if (Application.useRedis) {
             /** The redis way */
             val millisBeforeRedisFetch = System.currentTimeMillis()
             val cachedResult = Redis.commands.get(targetAlias)
@@ -147,7 +146,7 @@ object TokenExchangeHandler {
         val jwtEncoded = res.extractAccessToken(targetAlias, "m2m", req)
         val jwt = JwtToken(jwtEncoded)
 
-        if (Redis.useMe) {
+        if (Application.useRedis) {
             /** The redis way */
             updateRedisCache(jwt, jwtEncoded, targetAlias)
         } else {
@@ -189,7 +188,7 @@ object TokenExchangeHandler {
         while (attempt < maxRetries) {
             try {
                 attempt++
-                val response = azureClient(request)
+                val response = clientAzure(request)
                 if (response.status.code == 504) {
                     log.warn { "Time out on attempt $attempt. Retrying..." }
                 } else {

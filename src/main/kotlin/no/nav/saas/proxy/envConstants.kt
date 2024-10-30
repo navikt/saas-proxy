@@ -9,6 +9,9 @@ const val env_REDIS_URI_SAASPROXY = "REDIS_URI_SAASPROXY"
 const val env_REDIS_USERNAME_SAASPROXY = "REDIS_USERNAME_SAASPROXY"
 const val env_REDIS_PASSWORD_SAASPROXY = "REDIS_PASSWORD_SAASPROXY"
 
+const val config_WHITELIST_FILE = "WHITELIST_FILE"
+const val config_INGRESS_FILE = "INGRESS_FILE"
+
 /**
  * Shortcut for fetching environment variables
  */
