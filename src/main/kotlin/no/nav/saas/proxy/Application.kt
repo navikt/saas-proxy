@@ -84,7 +84,7 @@ object Application {
             val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                 .filter { it.evaluateAsRule(req.method, "/$path") }
 
-            val optionalToken = TokenValidation.firstValidToken(req)
+            val token = TokenValidation.firstValidToken(req)
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
@@ -92,7 +92,7 @@ object Application {
                     "$currentDateTime\n\nREQUEST:\n" + req.toMessage()
                 )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
-            } else if (!optionalToken.isPresent) {
+            } else if (!token.isPresent) {
                 log.info { "Proxy: Not authorized" }
                 File("/tmp/noauth-$targetApp").writeText(
                     "$currentDateTime\n\n" + req.toMessage()
@@ -107,7 +107,7 @@ object Application {
                     }.toList() + listOf(
                         "Authorization" to "Bearer ${
                         TokenExchangeHandler.exchange(
-                            jwtIn = optionalToken.get(),
+                            jwtIn = token.get(),
                             targetAlias = "${targetCluster(ingress)}.$namespace.$targetApp",
                             scope = approvedByRules.findScope()
                         ).tokenAsString}"
@@ -128,7 +128,7 @@ object Application {
                 log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
 
                 try {
-                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
+                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token.get())) "obo" else "m2m"}"
                     Metrics.forwardedCallsInc(
                         targetApp = targetApp, path = Metrics.mask(path), ingress = ingress ?: "", tokenType = tokenType,
                         status = response.status.code.toString(), totalMs = totalCallTime, handlingMs = handlingTokenTime
@@ -138,7 +138,7 @@ object Application {
                 }
 
                 try {
-                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}-${response.status.code}").writeText(
+                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(token.get())) "obo" else "m2m"}-${response.status.code}").writeText(
                         "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
                     )
                 } catch (e: Exception) {

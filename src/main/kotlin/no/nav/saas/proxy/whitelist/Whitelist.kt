@@ -13,8 +13,8 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.routing.path
 
-typealias RuleSet = Map<String, Map<String, List<String>>> // Map of namespaces, with map of apps, with list of patterns
 typealias Rule = String
+typealias RuleSet = Map<String, Map<String, List<Rule>>> // Map of namespaces, with map of apps, with list of patterns
 
 object Whitelist {
     private val log = KotlinLogging.logger { }
