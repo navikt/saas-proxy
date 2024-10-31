@@ -37,6 +37,8 @@ object Application {
 
     const val useRedis = true
 
+    val cluster = env(env_NAIS_CLUSTER_NAME)
+
     private val blockFromForwarding =
         listOf(TARGET_APP, TARGET_NAMESPACE, "host", "authorization").map { it.lowercase() }
 
@@ -149,10 +151,12 @@ object Application {
         }
     }
 
-    private fun targetCluster(specifiedIngress: String?): String {
-        val currentCluster = env(env_NAIS_CLUSTER_NAME)
-        return specifiedIngress?.let {
-            currentCluster.replace("gcp", "fss")
-        } ?: currentCluster
-    }
+    /**
+     * targetCluster - resolves target cluster based on the cluster of the proxy (dev or prod)
+     *                 with gcp replaced with fss if we are targeting an ingress
+     */
+    private fun targetCluster(specifiedIngress: String?) =
+        specifiedIngress?.let {
+            cluster.replace("gcp", "fss")
+        } ?: cluster
 }

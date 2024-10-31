@@ -11,7 +11,6 @@ import no.nav.saas.proxy.env_AZURE_APP_CLIENT_ID
 import no.nav.saas.proxy.env_AZURE_APP_CLIENT_SECRET
 import no.nav.saas.proxy.env_AZURE_OPENID_CONFIG_TOKEN_ENDPOINT
 import no.nav.security.token.support.core.jwt.JwtToken
-import org.apache.http.NoHttpResponseException
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -22,7 +21,6 @@ import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import javax.naming.AuthenticationException
-import javax.net.ssl.SSLHandshakeException
 
 object TokenExchangeHandler {
     /**
@@ -56,7 +54,7 @@ object TokenExchangeHandler {
             }
         }
 
-        log.info { "Exchange obo token $targetAlias" }
+        log.info { "Exchange obo token for $targetAlias" }
 
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -101,7 +99,7 @@ object TokenExchangeHandler {
                 return JwtToken(cachedResult)
             }
         }
-        log.info { "Acquire service token $targetAlias" }
+        log.info { "Acquiring service token for $targetAlias" }
         val m2mscope = if (scope == "defaultaccess") ".default" else scope
         val req = Request(Method.POST, azureTokenEndPoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -162,19 +160,10 @@ object TokenExchangeHandler {
                 } else {
                     return response
                 }
-            } catch (e: SSLHandshakeException) {
-                lastException = e
-                log.warn { "SSL handshake failed on attempt $attempt. Retrying in ${delayMillis}ms..." }
-                Thread.sleep(delayMillis)
-            } catch (e: NoHttpResponseException) {
-                lastException = e
-                log.warn { "No Http Response fail on attempt $attempt. Retrying in ${delayMillis}ms..." }
-                Thread.sleep(delayMillis)
             } catch (e: Exception) {
                 lastException = e
                 log.error { "Unexpected error on attempt $attempt: ${e.message}. Retrying in ${delayMillis}ms..." }
                 Thread.sleep(delayMillis)
-                // break // Exit loop for non-retriable exceptions
             }
         }
 
