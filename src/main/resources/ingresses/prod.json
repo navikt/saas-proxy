@@ -23,7 +23,6 @@
     "sokos-utbetaldata": "https://sokos-utbetaldata.prod-fss-pub.nais.io"
   },
   "pdl": {
-    "pdl-fullmakt": "https://pdl-fullmakt.prod-fss-pub.nais.io",
     "pdl-api": "https://pdl-api.prod-fss-pub.nais.io"
   },
   "org": {

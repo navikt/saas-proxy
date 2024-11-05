@@ -84,6 +84,8 @@ spec:
           namespace: pensjon-saksbehandling
         - application: norg2
           namespace: org
+        - application: repr-api
+          namespace: repr
       external:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"
