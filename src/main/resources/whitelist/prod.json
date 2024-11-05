@@ -105,10 +105,10 @@
       "POST /vedtak/detaljer"
     ]
   },
-  "pdl": {
-    "pdl-fullmakt": [
-      "POST /api/internbruker/fullmaktsgiver",
-      "POST /api/internbruker/fullmaktsgiver-historikk"
+  "repr": {
+    "repr-api": [
+      "POST /internbruker/fullmakt/fullmaktsgiver",
+      "POST api/internbruker/fullmakt/fullmaktsgiver-historikk"
     ],
     "pdl-api" : [
       "POST /graphql"
