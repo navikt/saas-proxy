@@ -86,6 +86,8 @@ spec:
           namespace: pensjon-saksbehandling
         - application: norg2
           namespace: org
+        - application: repr-api
+          namespace: repr
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
@@ -95,7 +97,6 @@ spec:
         - host: "dokarkiv.dev-fss-pub.nais.io"
         - host: "regoppslag.dev-fss-pub.nais.io"
         - host: "arena-api-q2.dev-fss-pub.nais.io"
-        - host: "pdl-fullmakt.dev-fss-pub.nais.io"
         - host: "sokos-skattekort-person.dev-fss-pub.nais.io"
         - host: "sokos-utbetaldata.dev-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.dev-fss-pub.nais.io"
