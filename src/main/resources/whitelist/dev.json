@@ -107,7 +107,7 @@
   },
   "repr": {
     "repr-api": [
-      "POST /internbruker/fullmakt/fullmaktsgiver",
+      "POST api/internbruker/fullmakt/fullmaktsgiver",
       "POST api/internbruker/fullmakt/fullmaktsgiver-historikk"
     ],
     "pdl-api" : [
