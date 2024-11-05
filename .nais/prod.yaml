@@ -95,7 +95,6 @@ spec:
         - host: "dokarkiv.prod-fss-pub.nais.io"
         - host: "regoppslag.prod-fss-pub.nais.io"
         - host: "arena-api.prod-fss-pub.nais.io"
-        - host: "pdl-fullmakt.prod-fss-pub.nais.io"
         - host: "sokos-skattekort-person.prod-fss-pub.nais.io"
         - host: "sokos-utbetaldata.prod-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.prod-fss-pub.nais.io"
