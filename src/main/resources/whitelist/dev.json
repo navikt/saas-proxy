@@ -109,7 +109,9 @@
     "repr-api": [
       "POST /api/internbruker/fullmakt/fullmaktsgiver",
       "POST /api/internbruker/fullmakt/fullmaktsgiver-historikk"
-    ],
+    ]
+  },
+  "pdl": {
     "pdl-api" : [
       "POST /graphql"
     ]
