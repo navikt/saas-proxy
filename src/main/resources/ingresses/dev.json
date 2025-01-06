@@ -30,8 +30,5 @@
   },
   "teamdigisos": {
     "sosialhjelp-modia-api": "https://sosialhjelp-modia-api.dev-fss-pub.nais.io"
-  },
-  "pensjon-saksbehandling": {
-    "pen-nks-service": "https://pen-nks-service.dev-fss-pub.nais.io"
   }
 }
