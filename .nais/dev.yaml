@@ -86,6 +86,8 @@ spec:
           namespace: org
         - application: repr-api
           namespace: repr
+        - application: pen-nks-service
+          namespace: pensjon-saksbehandling
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
@@ -101,7 +103,6 @@ spec:
         - host: "axsys.dev-fss-pub.nais.io"
         - host: "pdl-api.dev-fss-pub.nais.io"
         - host: "sokos-kontoregister-q2.dev-fss-pub.nais.io"
-        - host: "pen-nks-service.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
