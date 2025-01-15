@@ -88,6 +88,8 @@ spec:
           namespace: repr
         - application: pen-nks-service
           namespace: pensjon-saksbehandling
+        - application: hm-saksbehandling
+          namespace: teamdigihot
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
