@@ -13,9 +13,6 @@ import no.nav.saas.proxy.env
 import no.nav.saas.proxy.env_REDIS_PASSWORD_SAASPROXY
 import no.nav.saas.proxy.env_REDIS_URI_SAASPROXY
 import no.nav.saas.proxy.env_REDIS_USERNAME_SAASPROXY
-import org.http4k.core.HttpHandler
-import org.http4k.core.Response
-import org.http4k.core.Status
 import kotlin.system.measureTimeMillis
 
 object Redis {
@@ -24,9 +21,9 @@ object Redis {
 
     var initialCheckPassed = false
 
-    val isReadyHttpHandler: HttpHandler = {
-        if (initialCheckPassed) {
-            Response(Status.OK)
+    fun isReady(): Boolean {
+        return if (initialCheckPassed) {
+            true
         } else {
             var response: Long
             val queryTime = measureTimeMillis {
@@ -36,7 +33,7 @@ object Redis {
             if (queryTime < 100) {
                 initialCheckPassed = true
             }
-            Response(Status.SERVICE_UNAVAILABLE)
+            false
         }
     }
 

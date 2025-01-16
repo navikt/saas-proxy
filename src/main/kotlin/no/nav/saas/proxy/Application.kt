@@ -18,6 +18,7 @@ import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
@@ -50,7 +51,7 @@ object Application {
 
     fun api(): HttpHandler = routes(
         "/internal/isAlive" bind Method.GET to { Response(OK) },
-        "/internal/isReady" bind Method.GET to Redis.isReadyHttpHandler,
+        "/internal/isReady" bind Method.GET to isReadyHttpHandler,
         "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
         "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
         "/{rest:.*}" bind redirectHttpHandler
@@ -64,6 +65,14 @@ object Application {
         if (useRedis) {
             log.info { "Entering cache query loop" }
             Redis.cacheQueryLoop()
+        }
+    }
+
+    private val isReadyHttpHandler: HttpHandler = {
+        if (Redis.isReady() && TokenValidation.isReady()) {
+            Response(OK)
+        } else {
+            Response(Status.SERVICE_UNAVAILABLE)
         }
     }
 
