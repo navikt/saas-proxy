@@ -24,6 +24,9 @@ spec:
   redis:
     - instance: saasproxy # Determines env variable names
       access: readwrite
+  valkey:
+    - instance: saasproxy # Determines env variable names
+      access: readwrite
   prometheus:
     enabled: true
     path: /internal/metrics
