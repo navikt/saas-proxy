@@ -44,12 +44,12 @@ object TokenExchangeHandler {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias, scope)
         val key = targetAlias + jwtIn.tokenAsString
 
-        if (Application.useRedis) {
+        if (Application.useValkey) {
             val millisBeforeRedisFetch = System.currentTimeMillis()
-            val cachedResult = Redis.commands.get(key)
+            val cachedResult = Valkey.commands.get(key)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
             if (cachedResult != null) {
-                log.info { "Cache hit (Redis): Retrieved token result from cache." }
+                log.info { "Cache hit (Valkey): Retrieved token result from cache." }
                 return JwtToken(cachedResult)
             }
         }
@@ -83,16 +83,16 @@ object TokenExchangeHandler {
         val jwtEncoded = res.extractAccessToken(targetAlias, "obo", req)
         val jwt = JwtToken(jwtEncoded)
 
-        if (Application.useRedis) {
+        if (Application.useValkey) {
             updateRedisCache(jwt, jwtEncoded, key, jwtIn.tokenAsString, "obo")
         }
         return jwt
     }
 
     fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
-        if (Application.useRedis) {
+        if (Application.useValkey) {
             val millisBeforeRedisFetch = System.currentTimeMillis()
-            val cachedResult = Redis.commands.get(targetAlias)
+            val cachedResult = Valkey.commands.get(targetAlias)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
             if (cachedResult != null) {
                 log.info { "Cache hit (Redis) m2m: Retrieved token result from cache." }
@@ -117,7 +117,7 @@ object TokenExchangeHandler {
         val jwtEncoded = res.extractAccessToken(targetAlias, "m2m", req)
         val jwt = JwtToken(jwtEncoded)
 
-        if (Application.useRedis) {
+        if (Application.useValkey) {
             updateRedisCache(jwt, jwtEncoded, targetAlias)
         }
         return jwt
@@ -132,7 +132,7 @@ object TokenExchangeHandler {
         ) {
             if (secondsToLiveInCache > 3) {
                 val millisBeforeRedisStore = System.currentTimeMillis()
-                Redis.commands.setex(key, secondsToLiveInCache, jwtEncoded)
+                Valkey.commands.setex(key, secondsToLiveInCache, jwtEncoded)
                 Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
             } else {
                 File("/tmp/badmargin-$lblType").writeText(

@@ -5,9 +5,9 @@ import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.ingresses.IngressSet
 import no.nav.saas.proxy.ingresses.Ingresses
 import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
-import no.nav.saas.proxy.token.Redis
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
+import no.nav.saas.proxy.token.Valkey
 import no.nav.saas.proxy.whitelist.RuleSet
 import no.nav.saas.proxy.whitelist.Whitelist
 import no.nav.saas.proxy.whitelist.Whitelist.evaluateAsRule
@@ -36,7 +36,7 @@ const val TARGET_NAMESPACE = "target-namespace"
 object Application {
     private val log = KotlinLogging.logger { }
 
-    const val useRedis = true
+    const val useValkey = true
 
     val cluster = env(env_NAIS_CLUSTER_NAME)
 
@@ -61,15 +61,10 @@ object Application {
         HttpClientResources.scheduleConnectionMetricsUpdater()
 
         apiServer(8080).start()
-
-        if (useRedis) {
-            log.info { "Entering cache query loop" }
-            Redis.cacheQueryLoop()
-        }
     }
 
     private val isReadyHttpHandler: HttpHandler = {
-        if (Redis.isReady() && TokenValidation.isReady()) {
+        if (Valkey.isReady() && TokenValidation.isReady()) {
             Response(OK)
         } else {
             Response(Status.SERVICE_UNAVAILABLE)

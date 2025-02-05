@@ -1,20 +1,6 @@
 package no.nav.saas.proxy.token
 
-import io.lettuce.core.RedisClient
-import io.lettuce.core.RedisURI
-import io.lettuce.core.StaticCredentialsProvider
-import io.lettuce.core.api.StatefulRedisConnection
-import io.lettuce.core.api.sync.RedisCommands
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
-import no.nav.saas.proxy.Metrics
-import no.nav.saas.proxy.env
-import no.nav.saas.proxy.env_REDIS_PASSWORD_SAASPROXY
-import no.nav.saas.proxy.env_REDIS_URI_SAASPROXY
-import no.nav.saas.proxy.env_REDIS_USERNAME_SAASPROXY
-import kotlin.system.measureTimeMillis
-
+/*
 object Redis {
 
     private val log = KotlinLogging.logger { }
@@ -67,3 +53,4 @@ object Redis {
         cacheQueryLoop()
     }
 }
+*/

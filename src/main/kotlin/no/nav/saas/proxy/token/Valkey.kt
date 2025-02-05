@@ -23,7 +23,6 @@ object Valkey {
             true
         } else {
             try {
-                var response: Long
                 val queryTime = measureTimeMillis {
                     commands.get("dummy")
                 }
