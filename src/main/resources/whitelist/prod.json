@@ -40,6 +40,11 @@
       "POST /graphql"
     ]
   },
+  "teamdigihot": {
+    "hm-saksbehandling": [
+      "POST /graphql"
+    ]
+  },
   "teamcrm": {
     "sf-arkiv": [
       "POST /.*",
