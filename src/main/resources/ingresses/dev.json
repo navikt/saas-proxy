@@ -7,8 +7,8 @@
     "sf-nks-brukervarsel-proxy": "https://sf-brukervarsel-proxy.dev-fss-pub.nais.io"
   },
   "teamdokumenthandtering": {
-    "saf-q2": "https://saf-q2.dev-fss-pub.nais.io",
-    "dokarkiv-q2": "https://dokarkiv-q2.dev-fss-pub.nais.io",
+    "saf": "https://saf-q2.dev-fss-pub.nais.io",
+    "dokarkiv": "https://dokarkiv-q2.dev-fss-pub.nais.io",
     "regoppslag": "https://regoppslag.dev-fss-pub.nais.io"
   },
   "oppgavehandtering": {
