@@ -1,4 +1,10 @@
 package no.nav.saas.proxy
+import no.nav.saas.proxy.whitelist.RuleSet
+import no.nav.saas.proxy.whitelist.Whitelist
+import no.nav.saas.proxy.whitelist.Whitelist.evaluateAsRule
+import no.nav.saas.proxy.whitelist.Whitelist.findScope
+import no.nav.saas.proxy.whitelist.Whitelist.namespaceOfApp
+import no.nav.saas.proxy.whitelist.Whitelist.rulesOf
 import org.http4k.core.Method
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -11,8 +17,8 @@ const val WHITELIST_DEV = "/whitelist/dev.json"
 const val WHITELIST_PROD = "/whitelist/prod.json"
 
 class WhitelistTest {
-    private val devRuleSet: RuleSet = Rules.parse(WHITELIST_DEV)
-    private val prodRuleSet: RuleSet = Rules.parse(WHITELIST_PROD)
+    private val devRuleSet: RuleSet = Whitelist.parse(WHITELIST_DEV)
+    private val prodRuleSet: RuleSet = Whitelist.parse(WHITELIST_PROD)
 
     private val rulesSet = setOf(devRuleSet, prodRuleSet)
 

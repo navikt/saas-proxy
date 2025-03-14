@@ -22,6 +22,9 @@
     ]
   },
   "okonomi": {
+    "sokos-kontoregister-q2": [
+      "GET /kontoregister/api/v1/hent-kontonummer-for-organisasjon/.*"
+    ],
     "sokos-kontoregister-person": [
       "POST /api/system/v1/hent-aktiv-konto"
     ],
@@ -34,6 +37,11 @@
   },
   "nom": {
     "nom-api": [
+      "POST /graphql"
+    ]
+  },
+  "teamdigihot": {
+    "hm-saksbehandling": [
       "POST /graphql"
     ]
   },
@@ -102,13 +110,14 @@
       "POST /vedtak/detaljer"
     ]
   },
+  "repr": {
+    "repr-api": [
+      "POST /api/internbruker/fullmakt/fullmaktsgiver",
+      "POST /api/internbruker/fullmakt/fullmaktsgiver-historikk"
+    ]
+  },
   "pdl": {
-    "pdl-fullmakt": [
-      "POST /api/internbruker/fullmaktsgiver",
-      "POST /api/internbruker/fullmaktsgiver-historikk"
-    ],
     "pdl-api" : [
-      "POST /api/graphql",
       "POST /graphql"
     ]
   },

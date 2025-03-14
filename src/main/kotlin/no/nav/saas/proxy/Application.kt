@@ -1,28 +1,26 @@
 package no.nav.saas.proxy
 
-import io.prometheus.client.exporter.common.TextFormat
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.nav.saas.proxy.token.Redis
+import no.nav.saas.proxy.HttpClientResources.client
+import no.nav.saas.proxy.ingresses.IngressSet
+import no.nav.saas.proxy.ingresses.Ingresses
+import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
-import no.nav.security.token.support.core.jwt.JwtToken
-import org.apache.http.client.config.CookieSpecs
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.pool.PoolStats
-import org.http4k.client.ApacheClient
+import no.nav.saas.proxy.token.Valkey
+import no.nav.saas.proxy.whitelist.RuleSet
+import no.nav.saas.proxy.whitelist.Whitelist
+import no.nav.saas.proxy.whitelist.Whitelist.evaluateAsRule
+import no.nav.saas.proxy.whitelist.Whitelist.findScope
+import no.nav.saas.proxy.whitelist.Whitelist.namespaceOfApp
+import no.nav.saas.proxy.whitelist.Whitelist.rulesOf
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
-import org.http4k.core.Status.Companion.NON_AUTHORITATIVE_INFORMATION
 import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Status.Companion.SERVICE_UNAVAILABLE
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.bind
 import org.http4k.routing.path
@@ -31,198 +29,54 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
-import java.io.StringWriter
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import kotlin.system.measureTimeMillis
-
-const val NAIS_DEFAULT_PORT = 8080
-const val NAIS_ISALIVE = "/internal/isAlive"
-const val NAIS_ISREADY = "/internal/isReady"
-const val NAIS_METRICS = "/internal/metrics"
-
-const val API_URI_VAR = "rest"
-const val API_INTERNAL_TEST_URI = "/internal/test/{$API_URI_VAR:.*}"
-const val API_URI = "/{$API_URI_VAR:.*}"
 
 const val TARGET_APP = "target-app"
-const val TARGET_CLIENT_ID = "target-client-id"
 const val TARGET_NAMESPACE = "target-namespace"
-const val HOST = "host"
-
-const val env_WHITELIST_FILE = "WHITELIST_FILE"
-const val env_INGRESS_FILE = "INGRESS_FILE"
-
-const val client_DOWNSTREAM = "downstream"
-const val client_TOKEN = "token"
 
 object Application {
     private val log = KotlinLogging.logger { }
 
-    val clientIdProxy = System.getenv("AZURE_APP_CLIENT_ID")
+    const val useValkey = true
 
-    val ruleSet = Rules.parse(System.getenv(env_WHITELIST_FILE))
+    val cluster = env(env_NAIS_CLUSTER_NAME)
 
-    val ingressSet = Ingresses.parse(System.getenv(env_INGRESS_FILE))
+    private val blockFromForwarding =
+        listOf(TARGET_APP, TARGET_NAMESPACE, "host", "authorization").map { it.lowercase() }
 
-    val connectionManager = PoolingHttpClientConnectionManager().apply {
-        maxTotal = 20
-        defaultMaxPerRoute = 10
-    }
+    val ruleSet: RuleSet = Whitelist.parse(env(config_WHITELIST_FILE))
 
-    val azureConnectionManager = PoolingHttpClientConnectionManager().apply {
-        maxTotal = 10
-        defaultMaxPerRoute = 5
-    }
-
-    val executor: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
-
-    val httpClient = HttpClients.custom()
-        .setConnectionManager(connectionManager)
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(60000)
-                .setSocketTimeout(60000)
-                .setConnectionRequestTimeout(60000)
-                .setRedirectsEnabled(false)
-                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .build()
-        ).build()
-
-    val azureHttpClient = HttpClients.custom()
-        .setConnectionManager(azureConnectionManager)
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(5000)
-                .setSocketTimeout(5000)
-                .setConnectionRequestTimeout(3000)
-                .setRedirectsEnabled(false)
-                .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .build()
-        ).build()
-
-    val client = ApacheClient(httpClient)
-    val clientAzure = ApacheClient(azureHttpClient)
-
-    fun updateConnectionMetrics(connectionManager: PoolingHttpClientConnectionManager, clientLabel: String) {
-        val stats: PoolStats = connectionManager.totalStats
-        Metrics.activeConnections.labels(clientLabel).set(stats.leased.toDouble())
-        if (stats.leased.toDouble() > Metrics.activeConnectionsMax.labels(clientLabel).get()) {
-            Metrics.activeConnectionsMax.labels(clientLabel).set(stats.leased.toDouble())
-        }
-        Metrics.idleConnections.labels(clientLabel).set(stats.available.toDouble())
-        Metrics.maxConnections.labels(clientLabel).set(stats.max.toDouble())
-        Metrics.pendingConnections.labels(clientLabel).set(stats.pending.toDouble())
-    }
-
-    fun start() {
-        log.info { "Starting" }
-
-        executor.scheduleAtFixedRate(
-            {
-                updateConnectionMetrics(connectionManager, client_DOWNSTREAM)
-                updateConnectionMetrics(azureConnectionManager, client_TOKEN)
-            },
-            0,
-            10,
-            TimeUnit.SECONDS
-        )
-
-        apiServer(NAIS_DEFAULT_PORT).start()
-        log.info { "Entering cache query loop" }
-        if (Redis.useMe) {
-            cacheQueryLoop()
-        }
-    }
-
-    tailrec fun cacheQueryLoop() {
-        runBlocking { delay(60000) } // 1 min
-        try {
-            Metrics.cacheSize.set(Redis.dbSize().toDouble())
-        } catch (e: Exception) {
-            log.warn { "Failed to query Redis dbSize" }
-        }
-        runBlocking { delay(840000) } // 14 min
-        cacheQueryLoop()
-    }
+    val ingressSet: IngressSet = Ingresses.parse(env(config_INGRESS_FILE))
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
-    var initialCheckPassed = false
-
     fun api(): HttpHandler = routes(
-        NAIS_ISALIVE bind Method.GET to { Response(OK) },
-        NAIS_ISREADY bind Method.GET to {
-            if (initialCheckPassed) {
-                Response(OK)
-            } else {
-                var response = 0L
-                val queryTime = measureTimeMillis {
-                    response = Redis.dbSize()
-                }
-                log.info { "Initial check query time $queryTime ms (got count $response)" }
-                if (queryTime < 100) {
-                    initialCheckPassed = true
-                }
-                Response(SERVICE_UNAVAILABLE)
-            }
-        },
-        NAIS_METRICS bind Method.GET to {
-            runCatching {
-                StringWriter().let { str ->
-                    TextFormat.write004(str, Metrics.cRegistry.metricFamilySamples())
-                    str
-                }.toString()
-            }
-                .onFailure {
-                    log.error { "/prometheus failed writing metrics  - ${it.localizedMessage}" }
-                }
-                .getOrDefault("").let {
-                    if (it.isNotEmpty()) Response(OK).body(it) else Response(Status.NO_CONTENT)
-                }
-        },
-        API_INTERNAL_TEST_URI bind { req: Request ->
-            req.headers
-            val path = (req.path(API_URI_VAR) ?: "")
-            Metrics.testApiCalls.labels(path).inc()
-            log.info { "Test url called with path $path" }
-            val method = req.method
-            val targetApp = req.header(TARGET_APP)
-            val targetNamespace = req.header(TARGET_NAMESPACE)
-            if (targetApp == null) {
-                Response(BAD_REQUEST).body("Proxy: Missing target-app header")
-            } else {
-                val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
-                val ingress = ingressSet.ingressOf(targetApp, namespace)
-
-                val rules = ruleSet.rulesOf(targetApp, namespace)
-                if (rules.isEmpty()) {
-                    Response(NON_AUTHORITATIVE_INFORMATION).body("App not found in rules. Not approved")
-                } else {
-                    var report = "Report:\n"
-                    report += if (ingress != null) "Targets ingress $ingress\n" else "Targets app in gcp\n"
-                    val approved = rules.filter {
-                        report += "Evaluating $it on method ${req.method}, path /$path "
-                        it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
-                    }.isNotEmpty()
-                    report += if (approved) "Approved" else "Not approved"
-                    Response(OK).body(report)
-                }
-            }
-        },
-        API_URI bind redirect
+        "/internal/isAlive" bind Method.GET to { Response(OK) },
+        "/internal/isReady" bind Method.GET to isReadyHttpHandler,
+        "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
+        "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
+        "/{rest:.*}" bind redirectHttpHandler
     )
 
-    val redirect = { req: Request ->
+    fun start() {
+        HttpClientResources.scheduleConnectionMetricsUpdater()
+
+        apiServer(8080).start()
+    }
+
+    private val isReadyHttpHandler: HttpHandler = {
+        if (Valkey.isReady() && TokenValidation.isReady()) {
+            Response(OK)
+        } else {
+            Response(Status.SERVICE_UNAVAILABLE)
+        }
+    }
+
+    private val redirectHttpHandler = { req: Request ->
         val millisAtStart = System.currentTimeMillis()
-        val path = req.path(API_URI_VAR) ?: ""
+        val path = req.path("rest") ?: ""
 
         val targetApp = req.header(TARGET_APP)
-        val targetClientId = req.header(TARGET_CLIENT_ID)
-        val targetNamespace = req.header(TARGET_NAMESPACE) // optional
+        val targetNamespace = req.header(TARGET_NAMESPACE) // optional, but recommended
 
         Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
 
@@ -236,45 +90,34 @@ object Application {
             val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
                 .filter { it.evaluateAsRule(req.method, "/$path") }
 
-            val optionalToken = TokenValidation.firstValidToken(req, targetClientId ?: clientIdProxy)
+            val token = TokenValidation.firstValidToken(req)
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
                 File("/tmp/notwhitelisted-$targetApp").writeText(
-                    LocalDateTime.now().format(
-                        DateTimeFormatter.ISO_DATE_TIME
-                    ) + "\n\nREQUEST:\n" + req.toMessage()
+                    "$currentDateTime\n\nREQUEST:\n" + req.toMessage()
                 )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
-            } else if (!optionalToken.isPresent) {
+            } else if (!token.isPresent) {
                 log.info { "Proxy: Not authorized" }
                 File("/tmp/noauth-$targetApp").writeText(
-                    LocalDateTime.now().format(
-                        DateTimeFormatter.ISO_DATE_TIME
-                    ) + "\n\n" + req.toMessage()
+                    "$currentDateTime\n\n" + req.toMessage()
                 )
                 Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
-                val blockFromForwarding = listOf(TARGET_APP, TARGET_CLIENT_ID, HOST)
 
-                val exchangeToken = optionalToken.get().audAsString() == clientIdProxy
-
-                val forwardHeaders = if (exchangeToken) {
+                val forwardHeaders =
                     req.headers.filter {
-                        !(blockFromForwarding.contains(it.first) || it.first.lowercase() == "authorization")
+                        !(blockFromForwarding.contains(it.first.lowercase()))
                     }.toList() + listOf(
-                        "Authorization" to "Bearer ${TokenExchangeHandler.exchange(
-                            optionalToken.get(),
-                            "${targetCluster(ingress)}.$namespace.$targetApp",
-                            approvedByRules.findScope()
+                        "Authorization" to "Bearer ${
+                        TokenExchangeHandler.exchange(
+                            jwtIn = token.get(),
+                            targetAlias = "${targetCluster(ingress)}.$namespace.$targetApp",
+                            scope = approvedByRules.findScope()
                         ).tokenAsString}"
                     )
-                } else {
-                    req.headers.filter {
-                        !blockFromForwarding.contains(it.first)
-                    }.toList()
-                }
 
                 val host = ingress ?: "http://$targetApp.$namespace"
                 val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
@@ -288,44 +131,36 @@ object Application {
                 val totalCallTime = millisAfterRedirect - millisAtStart
                 val handlingTokenTime = totalCallTime - redirectCallTime
 
-                log.info { "Forwarded call (${response.status}) to $internUrl (token exchange $exchangeToken, target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
+                log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
 
                 try {
-                    val tokenType = "${if (exchangeToken) "proxy" else "app"}:${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}"
+                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token.get())) "obo" else "m2m"}"
                     Metrics.forwardedCallsInc(
-                        targetApp = targetApp,
-                        path = Metrics.mask(path),
-                        ingress = ingress ?: "",
-                        tokenType = tokenType,
-                        status = response.status.code.toString(),
-                        totalMs = totalCallTime,
-                        handlingMs = handlingTokenTime
+                        targetApp = targetApp, path = Metrics.mask(path), ingress = ingress ?: "", tokenType = tokenType,
+                        status = response.status.code.toString(), totalMs = totalCallTime, handlingMs = handlingTokenTime
                     )
                 } catch (e: Exception) {
                     log.error { "Could not register forwarded call metric" }
                 }
 
                 try {
-                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(optionalToken.get())) "obo" else "m2m"}-${response.status.code}").writeText(
-                        LocalDateTime.now().format(
-                            DateTimeFormatter.ISO_DATE_TIME
-                        ) + "\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
+                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(token.get())) "obo" else "m2m"}-${response.status.code}").writeText(
+                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
                     )
                 } catch (e: Exception) {
-                    File("/tmp/FailedStoreForwardedCall").writeText("$targetApp")
                     log.error { "Failed to store forwarded call" }
                 }
                 response
             }
         }
     }
-}
 
-fun JwtToken.audAsString() = this.jwtTokenClaims.get("aud").toString().let { it.substring(1, it.length - 1) }
-
-fun targetCluster(specifiedIngress: String?): String {
-    val currentCluster = System.getenv("NAIS_CLUSTER_NAME")
-    return specifiedIngress?.let {
-        currentCluster.replace("gcp", "fss")
-    } ?: currentCluster
+    /**
+     * targetCluster - resolves target cluster based on the cluster of the proxy (dev or prod)
+     *                 with gcp replaced with fss if we are targeting an ingress
+     */
+    private fun targetCluster(specifiedIngress: String?) =
+        specifiedIngress?.let {
+            cluster.replace("gcp", "fss")
+        } ?: cluster
 }

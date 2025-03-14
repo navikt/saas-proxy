@@ -1,5 +1,6 @@
 package no.nav.saas.proxy
 
+import no.nav.saas.proxy.ingresses.Ingresses
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 

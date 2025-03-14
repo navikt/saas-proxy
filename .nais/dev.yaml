@@ -11,8 +11,8 @@ spec:
   image: "{{ image }}"
   port: 8080
   replicas:
-    min: 1
-    max: 1
+    min: 2
+    max: 2
   liveness:
     path: /internal/isAlive
   readiness:
@@ -21,7 +21,7 @@ spec:
     exec:
       command: ["/bin/bash", "/pre-stop.sh"]
   terminationGracePeriodSeconds: 60
-  redis:
+  valkey:
     - instance: saasproxy # Determines env variable names
       access: readwrite
   prometheus:
@@ -82,10 +82,14 @@ spec:
           namespace: paw
         - application: tiltakspenger-datadeling
           namespace: tpts
-        - application: pen-nks-service
-          namespace: pensjon-saksbehandling
         - application: norg2
           namespace: org
+        - application: repr-api
+          namespace: repr
+        - application: pen-nks-service
+          namespace: pensjon-saksbehandling
+        - application: hm-saksbehandling
+          namespace: teamdigihot
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
@@ -95,12 +99,12 @@ spec:
         - host: "dokarkiv-q2.dev-fss-pub.nais.io"
         - host: "regoppslag.dev-fss-pub.nais.io"
         - host: "arena-api-q2.dev-fss-pub.nais.io"
-        - host: "pdl-fullmakt.dev-fss-pub.nais.io"
         - host: "sokos-skattekort-person.dev-fss-pub.nais.io"
         - host: "sokos-utbetaldata.dev-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.dev-fss-pub.nais.io"
         - host: "axsys.dev-fss-pub.nais.io"
         - host: "pdl-api.dev-fss-pub.nais.io"
+        - host: "sokos-kontoregister-q2.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
