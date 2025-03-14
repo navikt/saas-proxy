@@ -74,11 +74,11 @@
     ]
   },
   "teamdokumenthandtering": {
-    "saf-q2": [
+    "saf": [
       "GET /rest/hentdokument/.*",
       "POST /graphql"
     ],
-    "dokarkiv-q2": [
+    "dokarkiv": [
       "POST /rest/journalpostapi/v1/journalpost",
       "PATCH /rest/journalpostapi/v1/journalpost/.*/ferdigstill"
     ],
