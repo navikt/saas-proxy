@@ -90,6 +90,8 @@ spec:
           namespace: pensjon-saksbehandling
         - application: hm-saksbehandling
           namespace: teamdigihot
+        - application: api-intern
+          namespace: aap  
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
