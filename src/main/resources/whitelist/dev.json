@@ -149,5 +149,12 @@
     "sosialhjelp-modia-api": [
       "GET /api/fodselsnummer"
     ]
+  },
+  "aap": {
+    "api-intern": [
+      "POST /perioder",
+      "POST /sakerByFnr",
+      "POST /maksimum"
+    ]
   }
 }
