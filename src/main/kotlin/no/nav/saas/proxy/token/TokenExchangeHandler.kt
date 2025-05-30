@@ -95,7 +95,7 @@ object TokenExchangeHandler {
             val cachedResult = Valkey.commands.get(targetAlias)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
             if (cachedResult != null) {
-                log.info { "Cache hit (Redis) m2m: Retrieved token result from cache." }
+                log.info { "Cache hit (Valkey) m2m: Retrieved token result from cache." }
                 return JwtToken(cachedResult)
             }
         }
