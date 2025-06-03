@@ -108,6 +108,8 @@ spec:
         - host: "pdl-api.dev-fss-pub.nais.io"
         - host: "sokos-kontoregister-q2.dev-fss-pub.nais.io"
         - host: "dokument-test-354.adeo.no"
+        - host: "otds-042.adeo.no"
+        - host: "empower1-q.adeo.no"
   envFrom:
     - secret: salesforce-entra
   env:
