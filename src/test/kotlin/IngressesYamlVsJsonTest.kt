@@ -54,7 +54,8 @@ class IngressesYamlVsJsonTest {
                 .filterNot {
                     it.contains("dokument-test-354.adeo.no") ||
                         it.contains("otds-042.adeo.no") ||
-                        it.contains("empower1-q.adeo.no")
+                        it.contains("empower1-q.adeo.no") ||
+                        it.contains("dokument1-q.adeo.no")
                 }
                 .toSet()
 
