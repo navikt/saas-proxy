@@ -51,9 +51,10 @@ class IngressesYamlVsJsonTest {
                     "host"
                 ) as List<String>
                 ).map { "https://$it" }
-                .filterNot { it.contains("dokument-test-354.adeo.no") ||
-                            it.contains("otds-042.adeo.no") ||
-                            it.contains("empower1-q.adeo.no")
+                .filterNot {
+                    it.contains("dokument-test-354.adeo.no") ||
+                        it.contains("otds-042.adeo.no") ||
+                        it.contains("empower1-q.adeo.no")
                 }
                 .toSet()
 
