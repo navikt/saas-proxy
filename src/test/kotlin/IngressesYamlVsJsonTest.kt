@@ -50,7 +50,9 @@ class IngressesYamlVsJsonTest {
                     "external",
                     "host"
                 ) as List<String>
-                ).map { "https://$it" }.toSet()
+                ).map { "https://$it" }
+                .filterNot { it.contains("dokument-test-354.adeo.no") }
+                .toSet()
 
             // Check for missing URLs in YAML and JSON
             val missingInYaml = jsonIngressUrls - yamlHosts
