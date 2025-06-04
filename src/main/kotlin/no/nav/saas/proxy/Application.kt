@@ -32,7 +32,7 @@ import java.io.File
 
 const val TARGET_APP = "target-app"
 const val TARGET_NAMESPACE = "target-namespace"
-const val TARGET_ONLY_REDIRECT = "target-skip-token"
+const val TARGET_ONLY_REDIRECT = "target-only-redirect"
 
 object Application {
     private val log = KotlinLogging.logger { }
