@@ -60,6 +60,8 @@ spec:
           cluster: dev-external
         - application: itestapp
           namespace: teamcrm
+        - application: simtest
+          namespace: teamcrm
     outbound:
       rules:
         - application: veilarbapi
