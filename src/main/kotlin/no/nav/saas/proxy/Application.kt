@@ -32,6 +32,7 @@ import java.io.File
 
 const val TARGET_APP = "target-app"
 const val TARGET_NAMESPACE = "target-namespace"
+const val TARGET_ONLY_REDIRECT = "target-skip-token"
 
 object Application {
     private val log = KotlinLogging.logger { }
@@ -41,7 +42,7 @@ object Application {
     val cluster = env(env_NAIS_CLUSTER_NAME)
 
     private val blockFromForwarding =
-        listOf(TARGET_APP, TARGET_NAMESPACE, "host", "authorization").map { it.lowercase() }
+        listOf(TARGET_APP, TARGET_NAMESPACE, TARGET_ONLY_REDIRECT, "host", "authorization").map { it.lowercase() }
 
     val ruleSet: RuleSet = Whitelist.parse(env(config_WHITELIST_FILE))
 
@@ -77,10 +78,33 @@ object Application {
 
         val targetApp = req.header(TARGET_APP)
         val targetNamespace = req.header(TARGET_NAMESPACE) // optional, but recommended
+        val targetOnlyRedirect = req.header(TARGET_ONLY_REDIRECT) != null
 
         Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
 
-        if (targetApp == null) {
+        if (targetOnlyRedirect) {
+            if (TokenValidation.firstValidToken(req).isPresent) {
+                val ingress = req.header(TARGET_ONLY_REDIRECT)
+                val forwardHeaders =
+                    req.headers.filter {
+                        !(blockFromForwarding.contains(it.first.lowercase()))
+                    }.toList()
+                val url = "$ingress${req.uri}"
+                val redirect = Request(req.method, url).body(req.body).headers(forwardHeaders)
+                val response = client(redirect)
+                log.info { "Forwarded call to $url" }
+                try {
+                    File("/tmp/latestRedirect-${response.status.code}").writeText(
+                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
+                    )
+                } catch (e: Exception) {
+                    log.error { "Failed to store forwarded call" }
+                }
+                response
+            } else {
+                Response(UNAUTHORIZED)
+            }
+        } else if (targetApp == null) {
             log.info { "Proxy: Bad request - missing targetApp header" }
             File("/tmp/missingheader").writeText(req.toMessage())
             Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
