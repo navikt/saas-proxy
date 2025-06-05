@@ -1,7 +1,7 @@
 apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
-  name: saas-proxy
+  name: saas-proxy2
   namespace: teamcrm
   labels:
     team: teamcrm
@@ -39,8 +39,8 @@ spec:
       cpu: 10m
       memory: 512Mi
   ingresses:
-    - "https://saas-proxy.ekstern.dev.nav.no"
-    - "https://saas-proxy.intern.dev.nav.no"
+    - "https://saas-proxy2.ekstern.dev.nav.no"
+    - "https://saas-proxy2.intern.dev.nav.no"
   azure:
     application:
       enabled: true
