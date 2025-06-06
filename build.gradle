@@ -50,8 +50,8 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:1.5.18"
     implementation "net.logstash.logback:logstash-logback-encoder:8.1"
 
-    implementation "io.prometheus:simpleclient_common:0.16.0"
-    implementation "io.prometheus:simpleclient_hotspot:0.16.0"
+    implementation "io.prometheus:simpleclient_common:0.8.1"
+    implementation "io.prometheus:simpleclient_hotspot:0.8.1"
 
 //    implementation "net.minidev:json-smart:2.4.9" //Desired transient json-smart to token-validation above
 //    implementation "org.apache.commons:commons-compress:1.26.0" //transient http4k-apache
