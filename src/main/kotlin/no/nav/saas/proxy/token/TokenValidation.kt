@@ -11,7 +11,6 @@ import no.nav.security.token.support.core.validation.JwtTokenValidationHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import java.net.URL
-import java.util.Optional
 
 object TokenValidation {
 
@@ -44,7 +43,7 @@ object TokenValidation {
         )
     )
 
-    fun firstValidToken(request: Request): Optional<JwtToken> =
+    fun firstValidToken(request: Request): JwtToken? =
         jwtTokenValidationHandler.getValidatedTokens(request.toNavRequest()).firstValidToken
 
     private fun Request.toNavRequest(): HttpRequest {
@@ -52,9 +51,6 @@ object TokenValidation {
         return object : HttpRequest {
             override fun getHeader(headerName: String): String {
                 return req.header(headerName) ?: ""
-            }
-            override fun getCookies(): Array<HttpRequest.NameValue> {
-                return arrayOf()
             }
         }
     }

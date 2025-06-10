@@ -42,7 +42,7 @@ object TokenExchangeHandler {
     // target alias example: cluster.namespace.app
     fun exchange(jwtIn: JwtToken, targetAlias: String, scope: String): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias, scope)
-        val key = targetAlias + jwtIn.tokenAsString
+        val key = targetAlias + jwtIn.encodedToken
 
         if (Application.useValkey) {
             val millisBeforeRedisFetch = System.currentTimeMillis()
@@ -61,7 +61,7 @@ object TokenExchangeHandler {
             .body(
                 listOf(
                     "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                    "assertion" to jwtIn.tokenAsString,
+                    "assertion" to jwtIn.encodedToken,
                     "client_id" to clientId,
                     "scope" to "api://$targetAlias/$scope",
                     "client_secret" to clientSecret,
@@ -84,7 +84,7 @@ object TokenExchangeHandler {
         val jwt = JwtToken(jwtEncoded)
 
         if (Application.useValkey) {
-            updateRedisCache(jwt, jwtEncoded, key, jwtIn.tokenAsString, "obo")
+            updateRedisCache(jwt, jwtEncoded, key, jwtIn.encodedToken, "obo")
         }
         return jwt
     }

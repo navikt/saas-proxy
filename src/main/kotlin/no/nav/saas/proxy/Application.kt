@@ -44,6 +44,19 @@ object Application {
     private val blockFromForwarding =
         listOf(TARGET_APP, TARGET_NAMESPACE, TARGET_ONLY_REDIRECT, "host", "authorization").map { it.lowercase() }
 
+    // Hop-by-hop headers as defined by RFC 7230 section 6.1.
+    // These headers are specific to a single transport-level connection and should not be forwarded by proxies.
+    private val blockFromResponse = listOf(
+        "connection",
+        "keep-alive",
+        "proxy-authenticate",
+        "proxy-authorization",
+        "te",
+        "trailer",
+        "transfer-encoding",
+        "upgrade"
+    )
+
     val ruleSet: RuleSet = Whitelist.parse(env(config_WHITELIST_FILE))
 
     val ingressSet: IngressSet = Ingresses.parse(env(config_INGRESS_FILE))
@@ -59,7 +72,7 @@ object Application {
     )
 
     fun start() {
-        HttpClientResources.scheduleConnectionMetricsUpdater()
+        // HttpClientResources.scheduleConnectionMetricsUpdater()
 
         apiServer(8080).start()
     }
@@ -83,7 +96,7 @@ object Application {
         Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
 
         if (targetOnlyRedirect) {
-            if (TokenValidation.firstValidToken(req).isPresent) {
+            if (TokenValidation.firstValidToken(req) != null) {
                 val ingress = req.header(TARGET_ONLY_REDIRECT)
                 val forwardHeaders =
                     req.headers.filter {
@@ -122,7 +135,7 @@ object Application {
                     "$currentDateTime\n\nREQUEST:\n" + req.toMessage()
                 )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
-            } else if (!token.isPresent) {
+            } else if (token == null) {
                 log.info { "Proxy: Not authorized" }
                 File("/tmp/noauth-$targetApp").writeText(
                     "$currentDateTime\n\n" + req.toMessage()
@@ -137,10 +150,10 @@ object Application {
                     }.toList() + listOf(
                         "Authorization" to "Bearer ${
                         TokenExchangeHandler.exchange(
-                            jwtIn = token.get(),
+                            jwtIn = token,
                             targetAlias = "${targetCluster(ingress)}.$namespace.$targetApp",
                             scope = approvedByRules.findScope()
-                        ).tokenAsString}"
+                        ).encodedToken}"
                     )
 
                 val host = ingress ?: "http://$targetApp.$namespace"
@@ -158,7 +171,7 @@ object Application {
                 log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
 
                 try {
-                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token.get())) "obo" else "m2m"}"
+                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
                     Metrics.forwardedCallsInc(
                         targetApp = targetApp, path = Metrics.mask(path), ingress = ingress ?: "", tokenType = tokenType,
                         status = response.status.code.toString(), totalMs = totalCallTime, handlingMs = handlingTokenTime
@@ -167,14 +180,7 @@ object Application {
                     log.error { "Could not register forwarded call metric " }
                 }
 
-                try {
-                    File("/tmp/latestForwarded-$targetApp-${(if (ingress == null) "service" else "ingress")}-${if (TokenExchangeHandler.isOBOToken(token.get())) "obo" else "m2m"}-${response.status.code}").writeText(
-                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
-                    )
-                } catch (e: Exception) {
-                    log.error { "Failed to store forwarded call" }
-                }
-                response
+                response.withoutBlockedHeaders()
             }
         }
     }
@@ -187,4 +193,11 @@ object Application {
         specifiedIngress?.let {
             cluster.replace("gcp", "fss")
         } ?: cluster
+
+    private fun Response.withoutBlockedHeaders(): Response {
+        val filteredHeaders = this.headers.filter { (key, _) -> key.lowercase() !in blockFromResponse }
+        return Response(this.status)
+            .headers(filteredHeaders)
+            .body(this.body)
+    }
 }
