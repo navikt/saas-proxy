@@ -113,7 +113,7 @@ object Application {
                 } catch (e: Exception) {
                     log.error { "Failed to store forwarded call" }
                 }
-                response
+                response.withoutBlockedHeaders()
             } else {
                 Response(UNAUTHORIZED)
             }
