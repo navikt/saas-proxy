@@ -54,6 +54,7 @@ object Application {
         "te",
         "trailer",
         "transfer-encoding",
+        "content-length",
         "upgrade"
     )
 
