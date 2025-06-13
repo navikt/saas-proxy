@@ -14,6 +14,7 @@ import no.nav.saas.proxy.whitelist.Whitelist.evaluateAsRule
 import no.nav.saas.proxy.whitelist.Whitelist.findScope
 import no.nav.saas.proxy.whitelist.Whitelist.namespaceOfApp
 import no.nav.saas.proxy.whitelist.Whitelist.rulesOf
+import org.http4k.core.Body
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -29,6 +30,7 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
+import java.nio.ByteBuffer
 
 const val TARGET_APP = "target-app"
 const val TARGET_NAMESPACE = "target-namespace"
@@ -76,6 +78,7 @@ object Application {
         // HttpClientResources.scheduleConnectionMetricsUpdater()
 
         apiServer(8080).start()
+        File("/tmp/started").writeText("started")
     }
 
     private val isReadyHttpHandler: HttpHandler = {
@@ -107,13 +110,13 @@ object Application {
                 val redirect = Request(req.method, url).body(req.body).headers(forwardHeaders)
                 val response = client(redirect)
                 log.info { "Forwarded call to $url" }
-                try {
-                    File("/tmp/latestRedirect-${response.status.code}").writeText(
-                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
-                    )
-                } catch (e: Exception) {
-                    log.error { "Failed to store forwarded call" }
-                }
+//                try {
+//                    File("/tmp/latestRedirect-${response.status.code}").writeText(
+//                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
+//                    )
+//                } catch (e: Exception) {
+//                    log.error { "Failed to store forwarded call" }
+//                }
                 response.withoutBlockedHeaders()
             } else {
                 Response(UNAUTHORIZED)
@@ -197,8 +200,10 @@ object Application {
 
     private fun Response.withoutBlockedHeaders(): Response {
         val filteredHeaders = this.headers.filter { (key, _) -> key.lowercase() !in blockFromResponse }
+
+        val bodyBytes = this.body.stream.use { it.readBytes() }
         return Response(this.status)
             .headers(filteredHeaders)
-            .body(this.body)
+            .body(Body(ByteBuffer.wrap(bodyBytes)))
     }
 }
