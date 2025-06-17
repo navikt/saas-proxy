@@ -67,12 +67,14 @@ object Metrics {
         ingress: String,
         tokenType: String,
         status: String,
-        totalMs: Long,
-        handlingMs: Long,
+        totalMs: Long? = null,
+        handlingMs: Long? = null,
     ) {
         forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
-        totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
-        handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
+        if (totalMs != null && handlingMs != null) {
+            totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
+            handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
+        }
     }
 
     fun registerForwardedCallHistogram(name: String): Histogram {

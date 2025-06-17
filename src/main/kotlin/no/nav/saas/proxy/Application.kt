@@ -164,31 +164,54 @@ object Application {
                 val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                 val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
 
-                val millisBeforeRedirect = System.currentTimeMillis()
-                val response = client(redirect)
-                val millisAfterRedirect = System.currentTimeMillis()
-
-                val redirectCallTime = millisAfterRedirect - millisBeforeRedirect
-                val totalCallTime = millisAfterRedirect - millisAtStart
-                val handlingTokenTime = totalCallTime - redirectCallTime
-
-                log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
-
-                if (!response.status.successful && response.status.code != 404) {
-                    File("/tmp/latest-$targetApp-${response.status.code}").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
-                }
-
                 try {
-                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
-                    Metrics.forwardedCallsInc(
-                        targetApp = targetApp, path = Metrics.mask(path), ingress = ingress ?: "", tokenType = tokenType,
-                        status = response.status.code.toString(), totalMs = totalCallTime, handlingMs = handlingTokenTime
-                    )
-                } catch (e: Exception) {
-                    log.error { "Could not register forwarded call metric " }
-                }
+                    val millisBeforeRedirect = System.currentTimeMillis()
+                    val response = client(redirect)
+                    val millisAfterRedirect = System.currentTimeMillis()
 
-                response.withoutBlockedHeaders()
+                    val redirectCallTime = millisAfterRedirect - millisBeforeRedirect
+                    val totalCallTime = millisAfterRedirect - millisAtStart
+                    val handlingTokenTime = totalCallTime - redirectCallTime
+
+                    log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
+
+                    if (!response.status.successful && response.status.code != 404) {
+                        File("/tmp/latest-$targetApp-${response.status.code}").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
+                    }
+
+                    try {
+                        val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
+                        Metrics.forwardedCallsInc(
+                            targetApp = targetApp,
+                            path = Metrics.mask(path),
+                            ingress = ingress ?: "",
+                            tokenType = tokenType,
+                            status = response.status.code.toString(),
+                            totalMs = totalCallTime,
+                            handlingMs = handlingTokenTime
+                        )
+                    } catch (e: Exception) {
+                        log.error { "Could not register forwarded call metric " }
+                    }
+
+                    response.withoutBlockedHeaders()
+                } catch (e: Exception) { // To catch issues in the client(request) call
+                    log.error { "Failed call to $internUrl (target cluster ${targetCluster(ingress)}))" }
+                    try {
+                        val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
+                        Metrics.forwardedCallsInc(
+                            targetApp = targetApp,
+                            path = Metrics.mask(path),
+                            ingress = ingress ?: "",
+                            tokenType = tokenType,
+                            status = "500"
+                        )
+                    } catch (e: Exception) {
+                        log.error { "Could not register forwarded call metric " }
+                    }
+                    File("/tmp/latest-$targetApp-EXCEPTION").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
+                    Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
+                }
             }
         }
     }
