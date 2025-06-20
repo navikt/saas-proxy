@@ -103,6 +103,7 @@ spec:
         - host: "axsys.prod-fss-pub.nais.io"
         - host: "sokos-kontoregister.prod-fss-pub.nais.io"
         - host: "pdl-api.prod-fss-pub.nais.io"
+        - host: "dokument1.adeo.no"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
