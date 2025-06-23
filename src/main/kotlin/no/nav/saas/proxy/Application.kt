@@ -210,7 +210,33 @@ object Application {
                         log.error { "Could not register forwarded call metric " }
                     }
                     File("/tmp/latest-$targetApp-EXCEPTION").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
-                    Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
+                    if (redirect.method == Method.GET) {
+                        // Retry on exceptions on GET // TODO refactor
+                        try {
+                            val response = client(redirect)
+                            val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
+                            Metrics.forwardedCallsInc(
+                                targetApp = targetApp,
+                                path = Metrics.mask(path),
+                                ingress = ingress ?: "",
+                                tokenType = tokenType,
+                                status = "retry-" + response.status.code.toString()
+                            )
+                            response.withoutBlockedHeaders()
+                        } catch (e: Exception) {
+                            val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
+                            Metrics.forwardedCallsInc(
+                                targetApp = targetApp,
+                                path = Metrics.mask(path),
+                                ingress = ingress ?: "",
+                                tokenType = tokenType,
+                                status = "retry-500"
+                            )
+                            Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
+                        }
+                    } else {
+                        Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
+                    }
                 }
             }
         }
