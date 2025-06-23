@@ -158,10 +158,10 @@
     ]
   },
     "teamdagpenger": {
-    "dp-datadeling": [
-      "POST /dagpenger/v1/perioder",
-      "POST /dagpenger/v1/soknader",
-      "POST /dagpenger/v1/vedtak"
+      "dp-datadeling": [
+        "POST /dagpenger/v1/perioder",
+        "POST /dagpenger/v1/soknader",
+        "POST /dagpenger/v1/vedtak"
     ]
   }
 }
