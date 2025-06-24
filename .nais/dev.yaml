@@ -94,6 +94,8 @@ spec:
           namespace: teamdigihot
         - application: api-intern
           namespace: aap  
+        - application: dp-datadeling
+          namespace: teamdagpenger  
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
