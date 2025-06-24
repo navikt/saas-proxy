@@ -197,18 +197,6 @@ object Application {
                     response.withoutBlockedHeaders()
                 } catch (e: Exception) { // To catch issues in the client(request) call
                     log.error { "Failed call to $internUrl (target cluster ${targetCluster(ingress)}))" }
-                    try {
-                        val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
-                        Metrics.forwardedCallsInc(
-                            targetApp = targetApp,
-                            path = Metrics.mask(path),
-                            ingress = ingress ?: "",
-                            tokenType = tokenType,
-                            status = "500"
-                        )
-                    } catch (e: Exception) {
-                        log.error { "Could not register forwarded call metric " }
-                    }
                     File("/tmp/latest-$targetApp-EXCEPTION").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
                     if (redirect.method == Method.GET) {
                         // Retry on exceptions on GET // TODO refactor
@@ -235,6 +223,18 @@ object Application {
                             Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
                         }
                     } else {
+                        try {
+                            val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
+                            Metrics.forwardedCallsInc(
+                                targetApp = targetApp,
+                                path = Metrics.mask(path),
+                                ingress = ingress ?: "",
+                                tokenType = tokenType,
+                                status = "500"
+                            )
+                        } catch (e: Exception) {
+                            log.error { "Could not register forwarded call metric " }
+                        }
                         Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
                     }
                 }
