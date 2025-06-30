@@ -92,6 +92,8 @@ spec:
           namespace: pensjon-saksbehandling
         - application: hm-saksbehandling
           namespace: teamdigihot
+        - application: oebs-digihot-api
+          namespace: team-oebs
         - application: api-intern
           namespace: aap  
         - application: dp-datadeling
@@ -112,6 +114,7 @@ spec:
         - host: "pdl-api.dev-fss-pub.nais.io"
         - host: "sokos-kontoregister-q2.dev-fss-pub.nais.io"
         - host: "dokument1-q.adeo.no"
+        - host: "oebs-digihot-api-q1.dev-fss-pub.nais.io "
   envFrom:
     - secret: salesforce-entra
   env:
