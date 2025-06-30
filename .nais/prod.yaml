@@ -88,6 +88,8 @@ spec:
           namespace: repr
         - application: hm-saksbehandling
           namespace: teamdigihot
+        - application: oebs-digihot-api
+          namespace: team-oebs
       external:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"

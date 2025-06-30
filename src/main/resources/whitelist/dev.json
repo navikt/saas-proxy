@@ -45,6 +45,12 @@
       "POST /graphql"
     ]
   },
+  "team-oebs": {
+    "oebs-digihot-api": [
+      "GET /.*",
+      "POST /.*"
+    ]
+  },
   "teamcrm": {
     "sf-arkiv": [
       "POST /.*",
