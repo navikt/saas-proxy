@@ -92,6 +92,8 @@ spec:
           namespace: pensjon-saksbehandling
         - application: hm-saksbehandling
           namespace: teamdigihot
+        - application: oebs-digihot-api
+          namespace: team-oebs
         - application: api-intern
           namespace: aap  
         - application: dp-datadeling
