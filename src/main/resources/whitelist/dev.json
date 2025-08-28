@@ -46,7 +46,7 @@
     ]
   },
   "team-oebs": {
-    "oebs-digihot-api": [
+    "oebs-digihot-api-q1": [
       "GET /.*",
       "POST /.*"
     ]
