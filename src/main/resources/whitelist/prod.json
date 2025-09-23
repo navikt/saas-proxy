@@ -119,7 +119,8 @@
   "repr": {
     "repr-api": [
       "POST /api/internbruker/fullmakt/fullmaktsgiver",
-      "POST /api/internbruker/fullmakt/fullmaktsgiver-historikk"
+      "POST /api/internbruker/fullmakt/fullmaktsgiver-historikk",
+      "POST /api/v2/internbruker/fullmakt/bruker-som-fullmaktsgiver/alle-fullmakter"
     ]
   },
   "pdl": {
