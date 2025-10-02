@@ -162,7 +162,8 @@
     "api-intern": [
       "POST /perioder",
       "POST /sakerByFnr",
-      "POST /maksimum"
+      "POST /maksimum",
+      "POST /kelvin/meldekort-detaljer"
     ]
   },
   "teamdagpenger": {
