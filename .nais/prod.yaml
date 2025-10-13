@@ -104,7 +104,7 @@ spec:
         - host: "sokos-kontoregister.prod-fss-pub.nais.io"
         - host: "pdl-api.prod-fss-pub.nais.io"
         - host: "dokument1.adeo.no"
-        - host: "oebs-digihot-api.dev-fss-pub.nais.io"
+        - host: "oebs-digihot-api.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
