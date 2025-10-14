@@ -35,6 +35,6 @@
     "oebs-digihot-api": "https://oebs-digihot-api.prod-fss-pub.nais.io"
   },
   "arbeidsforhold": {
-    "aareg-tilgangskontroll": "https://aareg-tilgangskontroll.intern.dev.nav.no"
+    "aareg-tilgangskontroll": "https://aareg-tilgangskontroll.intern.nav.no"
   }
 }
