@@ -172,5 +172,11 @@
       "POST /dagpenger/datadeling/v1/soknader",
       "POST /dagpenger/datadeling/v1/vedtak"
     ]
+  },
+  "arbeidsforhold": {
+    "aareg-tilgangskontroll-q2": [
+      "POST /api/v1/tilganger/opprett",
+      "POST /api/v1/tilganger/fjern"
+    ]
   }
 }
