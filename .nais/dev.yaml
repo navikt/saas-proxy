@@ -93,9 +93,11 @@ spec:
         - application: hm-saksbehandling
           namespace: teamdigihot
         - application: api-intern
-          namespace: aap  
+          namespace: aap
         - application: dp-datadeling
-          namespace: teamdagpenger  
+          namespace: teamdagpenger
+        - application: aareg-tilgangskontroll-q2
+          namespace: arbeidsforhold
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
@@ -113,7 +115,6 @@ spec:
         - host: "sokos-kontoregister-q2.dev-fss-pub.nais.io"
         - host: "dokument1-q.adeo.no"
         - host: "oebs-digihot-api-q1.dev-fss-pub.nais.io"
-        - host: "aareg-tilgangskontroll-q2.intern.dev.nav.no"
   envFrom:
     - secret: salesforce-entra
   env:

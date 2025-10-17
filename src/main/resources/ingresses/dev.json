@@ -33,8 +33,5 @@
   },
   "team-oebs": {
     "oebs-digihot-api-q1": "https://oebs-digihot-api-q1.dev-fss-pub.nais.io"
-  },
-  "arbeidsforhold": {
-    "aareg-tilgangskontroll-q2": "https://aareg-tilgangskontroll-q2.intern.dev.nav.no"
   }
 }
