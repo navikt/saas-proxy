@@ -157,5 +157,11 @@
     "sosialhjelp-modia-api": [
       "GET /api/fodselsnummer"
     ]
+  },
+  "arbeidsforhold": {
+    "aareg-tilgangskontroll": [
+      "POST /api/v1/tilganger/opprett",
+      "POST /api/v1/tilganger/fjern"
+    ]
   }
 }
