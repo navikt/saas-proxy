@@ -93,9 +93,9 @@ spec:
         - application: hm-saksbehandling
           namespace: teamdigihot
         - application: api-intern
-          namespace: aap  
+          namespace: aap
         - application: dp-datadeling
-          namespace: teamdagpenger  
+          namespace: teamdagpenger
         - application: aareg-tilgangskontroll-q2
           namespace: arbeidsforhold
       external:
