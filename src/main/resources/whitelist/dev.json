@@ -49,6 +49,14 @@
     "oebs-digihot-api-q1": [
       "GET /.*",
       "POST /.*"
+    ],
+    "oebs-digihot-api-q2": [
+      "GET /.*",
+      "POST /.*"
+    ],
+    "oebs-digihot-api-t1": [
+      "GET /.*",
+      "POST /.*"
     ]
   },
   "teamcrm": {
