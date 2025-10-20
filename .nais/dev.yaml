@@ -115,6 +115,8 @@ spec:
         - host: "sokos-kontoregister-q2.dev-fss-pub.nais.io"
         - host: "dokument1-q.adeo.no"
         - host: "oebs-digihot-api-q1.dev-fss-pub.nais.io"
+        - host: "oebs-digihot-api-q2.dev-fss-pub.nais.io"
+        - host: "oebs-digihot-api-t1.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:

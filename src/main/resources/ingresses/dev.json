@@ -32,6 +32,8 @@
     "sosialhjelp-modia-api": "https://sosialhjelp-modia-api.dev-fss-pub.nais.io"
   },
   "team-oebs": {
-    "oebs-digihot-api-q1": "https://oebs-digihot-api-q1.dev-fss-pub.nais.io"
+    "oebs-digihot-api-q1": "https://oebs-digihot-api-q1.dev-fss-pub.nais.io",
+    "oebs-digihot-api-q2": "https://oebs-digihot-api-q2.dev-fss-pub.nais.io",
+    "oebs-digihot-api-t1": "https://oebs-digihot-api-t1.dev-fss-pub.nais.io"
   }
 }
