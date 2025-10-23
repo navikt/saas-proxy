@@ -30,11 +30,8 @@
   },
   "teamdigisos": {
     "sosialhjelp-modia-api": "https://sosialhjelp-modia-api.prod-fss-pub.nais.io"
-},
+  },
   "team-oebs": {
     "oebs-digihot-api": "https://oebs-digihot-api.prod-fss-pub.nais.io"
-  },
-  "arbeidsforhold": {
-    "aareg-tilgangskontroll": "https://aareg-tilgangskontroll.intern.nav.no"
   }
 }
