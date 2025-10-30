@@ -88,8 +88,6 @@ spec:
           namespace: org
         - application: repr-api
           namespace: repr
-        - application: pen-nks-service
-          namespace: pensjon-saksbehandling
         - application: hm-saksbehandling
           namespace: teamdigihot
         - application: api-intern
@@ -117,6 +115,7 @@ spec:
         - host: "oebs-digihot-api-q1.dev-fss-pub.nais.io"
         - host: "oebs-digihot-api-q2.dev-fss-pub.nais.io"
         - host: "oebs-digihot-api-t1.dev-fss-pub.nais.io"
+        - host: "pensjon-pen-q2.dev-fss-pub.nais.io"
   envFrom:
     - secret: salesforce-entra
   env:
