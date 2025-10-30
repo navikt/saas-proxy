@@ -138,13 +138,13 @@
   },
   "pensjon-saksbehandling": {
     "pen-nks-service": [
-      "GET /api/sak/.*/etteroppgjorshistorikk",
-      "GET /api/inntektsgrenserUT",
-      "GET /api/leveattest",
-      "GET /api/sak",
-      "GET /api/uforehistorikk",
+      "POST /api/uforetrygd/ekstern/nks/sak/.*/etteroppgjorshistorikk",
+      "POST /api/uforetrygd/ekstern/nks/inntektsgrenser",
+      "POST /api/ekstern/nks/leveattest",
+      "POST /api/ekstern/nks/sak",
+      "POST /api/uforetrygd/ekstern/uforehistorikk",
       "GET /api/sak/.*/vedtak",
-      "GET /api/vedtakssammendrag"
+      "POST /api/ekstern/nks/vedtakssammendrag/.*"
     ]
   },
   "org": {
