@@ -143,7 +143,7 @@
       "POST /api/ekstern/nks/leveattest",
       "POST /api/ekstern/nks/sak",
       "POST /api/uforetrygd/ekstern/uforehistorikk",
-      "GET /api/sak/.*/vedtak",
+      "POST /api/ekstern/nks/vedtakshistorikk",
       "POST /api/ekstern/nks/vedtakssammendrag/.*"
     ]
   },
