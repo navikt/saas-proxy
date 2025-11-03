@@ -40,7 +40,7 @@
 </details>
 
 <details>
-<summary><strong>`org.http4k:http4k-server-netty:5.14.4.0`</strong></summary>
+<summary><strong>`org.http4k:http4k-server-netty:5.47.0.0`</strong></summary>
 
 ## http4k-server-netty
 
@@ -105,7 +105,7 @@
 </details>
 
 <details>
-<summary><strong>`ch.qos.logback:logback-classic:1.5.18`</strong></summary>
+<summary><strong>`ch.qos.logback:logback-classic:1.5.20`</strong></summary>
 
 ## logback-classic
 
