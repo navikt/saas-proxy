@@ -173,7 +173,7 @@ object Application {
                     val totalCallTime = millisAfterRedirect - millisAtStart
                     val handlingTokenTime = totalCallTime - redirectCallTime
 
-                    log.info { "Forwarded call (${response.status}) to $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
+                    log.info { "Forwarded call (${response.status}) to ${req.method.name} $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
 
                     if (!response.status.successful && response.status.code != 404) {
                         File("/tmp/latest-$targetApp-${response.status.code}").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
