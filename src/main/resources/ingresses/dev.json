@@ -37,6 +37,6 @@
     "oebs-digihot-api-t1": "https://oebs-digihot-api-t1.dev-fss-pub.nais.io"
   },
   "pensjon-saksbehandling": {
-    "pen-nks-service": "https://pensjon-pen-q2.dev-fss-pub.nais.io"
+    "pensjon-pen-q2": "https://pensjon-pen-q2.dev-fss-pub.nais.io"
   }
 }

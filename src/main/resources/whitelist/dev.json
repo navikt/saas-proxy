@@ -137,7 +137,7 @@
     ]
   },
   "pensjon-saksbehandling": {
-    "pen-nks-service": [
+    "pensjon-pen-q2": [
       "POST /api/uforetrygd/ekstern/nks/sak/.*/etteroppgjorshistorikk",
       "POST /api/uforetrygd/ekstern/nks/inntektsgrenser",
       "POST /api/ekstern/nks/leveattest",
