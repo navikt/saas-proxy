@@ -121,7 +121,9 @@
   "tpts": {
     "tiltakspenger-datadeling": [
       "POST /vedtak/perioder",
-      "POST /vedtak/detaljer"
+      "POST /vedtak/detaljer",
+      "POST /vedtak/tidslinje",
+      "POST /meldekort/detaljer"
     ]
   },
   "repr": {
