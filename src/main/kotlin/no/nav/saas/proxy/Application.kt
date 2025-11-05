@@ -249,7 +249,7 @@ object Application {
                                 status = "500",
                             )
                         } catch (e: Exception) {
-                            log.error { "Could not register forwarded call metric " + e.message}
+                            log.error { "Could not register forwarded call metric " + e.message }
                         }
                         Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
                     }
