@@ -39,7 +39,7 @@ const val TARGET_ONLY_REDIRECT = "target-only-redirect"
 object Application {
     private val log = KotlinLogging.logger { }
 
-    const val useValkey = true
+    const val USE_VALKEY = true
 
     val cluster = env(env_NAIS_CLUSTER_NAME)
 
@@ -48,17 +48,18 @@ object Application {
 
     // Hop-by-hop headers as defined by RFC 7230 section 6.1.
     // These headers are specific to a single transport-level connection and should not be forwarded by proxies.
-    private val blockFromResponse = listOf(
-        "connection",
-        "keep-alive",
-        "proxy-authenticate",
-        "proxy-authorization",
-        "te",
-        "trailer",
-        "transfer-encoding",
-        "content-length",
-        "upgrade"
-    )
+    private val blockFromResponse =
+        listOf(
+            "connection",
+            "keep-alive",
+            "proxy-authenticate",
+            "proxy-authorization",
+            "te",
+            "trailer",
+            "transfer-encoding",
+            "content-length",
+            "upgrade",
+        )
 
     val ruleSet: RuleSet = Whitelist.parse(env(config_WHITELIST_FILE))
 
@@ -66,13 +67,14 @@ object Application {
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
-    fun api(): HttpHandler = routes(
-        "/internal/isAlive" bind Method.GET to { Response(OK) },
-        "/internal/isReady" bind Method.GET to isReadyHttpHandler,
-        "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
-        "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
-        "/{rest:.*}" bind redirectHttpHandler
-    )
+    fun api(): HttpHandler =
+        routes(
+            "/internal/isAlive" bind Method.GET to { Response(OK) },
+            "/internal/isReady" bind Method.GET to isReadyHttpHandler,
+            "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
+            "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
+            "/{rest:.*}" bind redirectHttpHandler,
+        )
 
     fun start() {
         // HttpClientResources.scheduleConnectionMetricsUpdater()
@@ -103,9 +105,10 @@ object Application {
             if (TokenValidation.firstValidToken(req) != null) {
                 val ingress = req.header(TARGET_ONLY_REDIRECT)
                 val forwardHeaders =
-                    req.headers.filter {
-                        !(blockFromForwarding.contains(it.first.lowercase()))
-                    }.toList()
+                    req.headers
+                        .filter {
+                            !(blockFromForwarding.contains(it.first.lowercase()))
+                        }.toList()
                 val url = "$ingress${req.uri}"
                 val redirect = Request(req.method, url).body(req.body).headers(forwardHeaders)
                 val response = client(redirect)
@@ -128,37 +131,41 @@ object Application {
         } else {
             val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
             val ingress = ingressSet.ingressOf(targetApp, namespace)
-            val approvedByRules = ruleSet.rulesOf(targetApp, namespace)
-                .filter { it.evaluateAsRule(req.method, "/$path") }
+            val approvedByRules =
+                ruleSet
+                    .rulesOf(targetApp, namespace)
+                    .filter { it.evaluateAsRule(req.method, "/$path") }
 
             val token = TokenValidation.firstValidToken(req)
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted" }
                 File("/tmp/notwhitelisted-$targetApp").writeText(
-                    "$currentDateTime\n\nREQUEST:\n" + req.toMessage()
+                    "$currentDateTime\n\nREQUEST:\n" + req.toMessage(),
                 )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (token == null) {
                 log.info { "Proxy: Not authorized" }
                 File("/tmp/noauth-$targetApp").writeText(
-                    "$currentDateTime\n\n" + req.toMessage()
+                    "$currentDateTime\n\n" + req.toMessage(),
                 )
                 Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
 
                 val forwardHeaders =
-                    req.headers.filter {
-                        !(blockFromForwarding.contains(it.first.lowercase()))
-                    }.toList() + listOf(
-                        "Authorization" to "Bearer ${
-                        TokenExchangeHandler.exchange(
-                            jwtIn = token,
-                            targetAlias = "${targetCluster(ingress)}.$namespace.$targetApp",
-                            scope = approvedByRules.findScope()
-                        ).encodedToken}"
-                    )
+                    req.headers
+                        .filter {
+                            !(blockFromForwarding.contains(it.first.lowercase()))
+                        }.toList() +
+                        listOf(
+                            "Authorization" to "Bearer ${
+                                TokenExchangeHandler.exchange(
+                                    jwtIn = token,
+                                    targetAlias = "${targetCluster(ingress)}.$namespace.$targetApp",
+                                    scope = approvedByRules.findScope(),
+                                ).encodedToken}",
+                        )
 
                 val host = ingress ?: "http://$targetApp.$namespace"
                 val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
@@ -173,10 +180,16 @@ object Application {
                     val totalCallTime = millisAfterRedirect - millisAtStart
                     val handlingTokenTime = totalCallTime - redirectCallTime
 
-                    log.info { "Forwarded call (${response.status}) to ${req.method.name} $internUrl (target cluster ${targetCluster(ingress)}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)" }
+                    log.info {
+                        "Forwarded call (${response.status}) to ${req.method.name} $internUrl (target cluster ${targetCluster(
+                            ingress,
+                        )}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
+                    }
 
                     if (!response.status.successful && response.status.code != 404) {
-                        File("/tmp/latest-$targetApp-${response.status.code}").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
+                        File(
+                            "/tmp/latest-$targetApp-${response.status.code}",
+                        ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
                     }
 
                     try {
@@ -188,16 +201,19 @@ object Application {
                             tokenType = tokenType,
                             status = response.status.code.toString(),
                             totalMs = totalCallTime,
-                            handlingMs = handlingTokenTime
+                            handlingMs = handlingTokenTime,
                         )
                     } catch (e: Exception) {
-                        log.error { "Could not register forwarded call metric " }
+                        log.error { "Could not register forwarded call metric " + e.message }
                     }
 
                     response.withoutBlockedHeaders()
-                } catch (e: Exception) { // To catch issues in the client(request) call
+                } catch (e: Exception) {
+                    // To catch issues in the client(request) call
                     log.error { "Failed call to $internUrl (target cluster ${targetCluster(ingress)}))" }
-                    File("/tmp/latest-$targetApp-EXCEPTION").writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
+                    File(
+                        "/tmp/latest-$targetApp-EXCEPTION",
+                    ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
                     if (redirect.method == Method.GET) {
                         // Retry on exceptions on GET // TODO refactor
                         try {
@@ -208,7 +224,7 @@ object Application {
                                 path = Metrics.mask(path),
                                 ingress = ingress ?: "",
                                 tokenType = tokenType,
-                                status = "retry-" + response.status.code.toString()
+                                status = "retry-" + response.status.code.toString(),
                             )
                             response.withoutBlockedHeaders()
                         } catch (e: Exception) {
@@ -218,7 +234,7 @@ object Application {
                                 path = Metrics.mask(path),
                                 ingress = ingress ?: "",
                                 tokenType = tokenType,
-                                status = "retry-500"
+                                status = "retry-500",
                             )
                             Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
                         }
@@ -230,10 +246,10 @@ object Application {
                                 path = Metrics.mask(path),
                                 ingress = ingress ?: "",
                                 tokenType = tokenType,
-                                status = "500"
+                                status = "500",
                             )
                         } catch (e: Exception) {
-                            log.error { "Could not register forwarded call metric " }
+                            log.error { "Could not register forwarded call metric " + e.message}
                         }
                         Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
                     }

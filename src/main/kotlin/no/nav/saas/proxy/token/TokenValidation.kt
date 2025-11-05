@@ -13,14 +13,15 @@ import org.http4k.core.Request
 import java.net.URL
 
 object TokenValidation {
-
     var initialCheckPassed = false
 
     fun isReady(): Boolean {
-        fun createDummyRequest(): Request {
-            return Request(Method.GET, "/dummy")
-                .header("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c")
-        }
+        fun createDummyRequest(): Request =
+            Request(Method.GET, "/dummy")
+                .header(
+                    "Authorization",
+                    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                )
         return if (initialCheckPassed) {
             true
         } else {
@@ -32,26 +33,25 @@ object TokenValidation {
         }
     }
 
-    private val jwtTokenValidationHandler = JwtTokenValidationHandler(
-        MultiIssuerConfiguration(
-            mapOf(
-                "azure" to IssuerProperties(
-                    URL(env(env_AZURE_APP_WELL_KNOWN_URL)),
-                    listOf(env(env_AZURE_APP_CLIENT_ID))
-                )
-            )
+    private val jwtTokenValidationHandler =
+        JwtTokenValidationHandler(
+            MultiIssuerConfiguration(
+                mapOf(
+                    "azure" to
+                        IssuerProperties(
+                            URL(env(env_AZURE_APP_WELL_KNOWN_URL)),
+                            listOf(env(env_AZURE_APP_CLIENT_ID)),
+                        ),
+                ),
+            ),
         )
-    )
 
-    fun firstValidToken(request: Request): JwtToken? =
-        jwtTokenValidationHandler.getValidatedTokens(request.toNavRequest()).firstValidToken
+    fun firstValidToken(request: Request): JwtToken? = jwtTokenValidationHandler.getValidatedTokens(request.toNavRequest()).firstValidToken
 
     private fun Request.toNavRequest(): HttpRequest {
         val req = this
         return object : HttpRequest {
-            override fun getHeader(headerName: String): String {
-                return req.header(headerName) ?: ""
-            }
+            override fun getHeader(headerName: String): String = req.header(headerName) ?: ""
         }
     }
 }

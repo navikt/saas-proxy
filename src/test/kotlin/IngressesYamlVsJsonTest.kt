@@ -7,26 +7,29 @@ import org.yaml.snakeyaml.Yaml
 import java.io.File
 
 class IngressesYamlVsJsonTest {
-
     private val gson = Gson()
     private val yaml = Yaml()
 
     // Helper function to fetch nodes from a yaml structure
-    fun getNestedValue(yamlMap: Map<String, Any>, vararg keys: Any): Any? {
+    fun getNestedValue(
+        yamlMap: Map<String, Any>,
+        vararg keys: Any,
+    ): Any? {
         var current: Any? = yamlMap
         for (key in keys) {
-            current = when (current) {
-                is Map<*, *> -> current[key] // Access map by key
-                is List<*> -> {
-                    if (key is String) {
-                        // Map over list of maps to get specific key in each map
-                        current.mapNotNull { (it as? Map<*, *>)?.get(key) }
-                    } else {
-                        return null
+            current =
+                when (current) {
+                    is Map<*, *> -> current[key] // Access map by key
+                    is List<*> -> {
+                        if (key is String) {
+                            // Map over list of maps to get specific key in each map
+                            current.mapNotNull { (it as? Map<*, *>)?.get(key) }
+                        } else {
+                            return null
+                        }
                     }
+                    else -> return null // Return null if the path is invalid
                 }
-                else -> return null // Return null if the path is invalid
-            }
         }
         return current
     }
@@ -41,21 +44,21 @@ class IngressesYamlVsJsonTest {
             val yamlFile = File(".nais/$env.yaml")
             val yamlConfig: Map<String, Any> = yaml.load(yamlFile.inputStream())
 
-            val yamlHosts = (
-                getNestedValue(
-                    yamlConfig,
-                    "spec",
-                    "accessPolicy",
-                    "outbound",
-                    "external",
-                    "host"
-                ) as List<String>
+            val yamlHosts =
+                (
+                    getNestedValue(
+                        yamlConfig,
+                        "spec",
+                        "accessPolicy",
+                        "outbound",
+                        "external",
+                        "host",
+                    ) as List<String>
                 ).map { "https://$it" }
-                .filterNot {
-                    it.contains("dokument1.adeo.no") ||
-                        it.contains("dokument1-q.adeo.no")
-                }
-                .toSet()
+                    .filterNot {
+                        it.contains("dokument1.adeo.no") ||
+                            it.contains("dokument1-q.adeo.no")
+                    }.toSet()
 
             // Check for missing URLs in YAML and JSON
             val missingInYaml = jsonIngressUrls - yamlHosts

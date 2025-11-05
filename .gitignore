@@ -17,6 +17,7 @@ out/
 logbody*
 Scratch*
 
+.kotlin/
 
 # misc
 .*.sw?

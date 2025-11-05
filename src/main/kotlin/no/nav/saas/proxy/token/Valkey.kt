@@ -13,19 +13,19 @@ import no.nav.saas.proxy.env_VALKEY_USERNAME_SAASPROXY
 import kotlin.system.measureTimeMillis
 
 object Valkey {
-
     private val log = KotlinLogging.logger { }
 
     var initialCheckPassed = false
 
-    fun isReady(): Boolean {
-        return if (initialCheckPassed) {
+    fun isReady(): Boolean =
+        if (initialCheckPassed) {
             true
         } else {
             try {
-                val queryTime = measureTimeMillis {
-                    commands.get("dummy")
-                }
+                val queryTime =
+                    measureTimeMillis {
+                        commands.get("dummy")
+                    }
                 log.info { "Initial check query time $queryTime ms" }
                 if (queryTime < 100) {
                     initialCheckPassed = true
@@ -36,13 +36,14 @@ object Valkey {
                 false
             }
         }
-    }
 
     fun connect(): RedisCommands<String, String> {
-        val redisURI = RedisURI.Builder.redis(env(env_VALKEY_HOST_SAASPROXY), env(env_VALKEY_PORT_SAASPROXY).toInt())
-            .withSsl(true)
-            .withAuthentication(env(env_VALKEY_USERNAME_SAASPROXY), env(env_VALKEY_PASSWORD_SAASPROXY).toCharArray())
-            .build()
+        val redisURI =
+            RedisURI.Builder
+                .redis(env(env_VALKEY_HOST_SAASPROXY), env(env_VALKEY_PORT_SAASPROXY).toInt())
+                .withSsl(true)
+                .withAuthentication(env(env_VALKEY_USERNAME_SAASPROXY), env(env_VALKEY_PASSWORD_SAASPROXY).toCharArray())
+                .build()
 
         val client: RedisClient = RedisClient.create(redisURI)
 

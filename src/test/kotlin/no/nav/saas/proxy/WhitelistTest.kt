@@ -72,7 +72,18 @@ class WhitelistTest {
 
     @Test
     fun `Test that evaluation of all rules do not throw exception`() {
-        rulesSet.forEach { it.values.forEach { it.values.forEach { it.forEach { it.evaluateAsRule(Method.PURGE, "/not/present/path!!!!!") } } } }
+        rulesSet.forEach {
+            it.values.forEach {
+                it.values.forEach {
+                    it.forEach {
+                        it.evaluateAsRule(
+                            Method.PURGE,
+                            "/not/present/path!!!!!",
+                        )
+                    }
+                }
+            }
+        }
     }
 
     @Test
