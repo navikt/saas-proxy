@@ -20,9 +20,12 @@ object Whitelist {
     private val log = KotlinLogging.logger { }
 
     fun parse(filePath: String): RuleSet =
-        Gson().fromJson<RuleSet>(Application::class.java.getResource(filePath).readText(), Map::class.java)
+        Gson().fromJson<RuleSet>(Application::class.java.getResource(filePath)!!.readText(), Map::class.java)
 
-    fun Rule.evaluateAsRule(method: Method, path: String): Boolean {
+    fun Rule.evaluateAsRule(
+        method: Method,
+        path: String,
+    ): Boolean {
         val split = this.split(" ")
         val methodPart = Method.valueOf(split[0])
         val pathPart = split[1]
@@ -31,23 +34,29 @@ object Whitelist {
 
     fun RuleSet.namespaceOfApp(app: String): String? {
         val namespaces = this.filter { it.value.keys.contains(app) }.map { it.key }
-        if (namespaces.size > 1) throw IllegalStateException("App found in two namespaces in rules and no namespace header provided - cannot deduce ruleset")
+        if (namespaces.size >
+            1
+        ) {
+            throw IllegalStateException("App found in two namespaces in rules and no namespace header provided - cannot deduce ruleset")
+        }
         return this.filter { it.value.keys.contains(app) }.map { it.key }.firstOrNull()
     }
 
-    fun RuleSet.rulesOf(app: String, namespace: String): List<Rule> {
-        return this[namespace]?.let { it[app] } ?: listOf()
-    }
+    fun RuleSet.rulesOf(
+        app: String,
+        namespace: String,
+    ): List<Rule> = this[namespace]?.let { it[app] } ?: listOf()
 
     fun List<Rule>.findScope(): String =
-        this.map {
-            val split = it.split(" ")
-            if (split.size > 2) {
-                split[2].removePrefix("scope:")
-            } else {
-                ""
-            }
-        }.firstOrNull { it.isNotEmpty() } ?: "defaultaccess"
+        this
+            .map {
+                val split = it.split(" ")
+                if (split.size > 2) {
+                    split[2].removePrefix("scope:")
+                } else {
+                    ""
+                }
+            }.firstOrNull { it.isNotEmpty() } ?: "defaultaccess"
 
     val testRulesHandler = { req: Request ->
         req.headers
@@ -69,10 +78,11 @@ object Whitelist {
             } else {
                 var report = "Report:\n"
                 report += if (ingress != null) "Targets ingress $ingress\n" else "Targets app in gcp\n"
-                val approved = rules.filter {
-                    report += "Evaluating $it on method ${req.method}, path /$path "
-                    it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
-                }.isNotEmpty()
+                val approved =
+                    rules.any {
+                        report += "Evaluating $it on method ${req.method}, path /$path "
+                        it.evaluateAsRule(method, "/$path").also { report += "$it\n" }
+                    }
                 report += if (approved) "Approved" else "Not approved"
                 Response(Status.OK).body(report)
             }

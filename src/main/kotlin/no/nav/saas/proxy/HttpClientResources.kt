@@ -10,24 +10,28 @@ import java.util.concurrent.ScheduledExecutorService
 object HttpClientResources {
     private val log = KotlinLogging.logger { }
 
-    private const val client_DOWNSTREAM = "downstream"
-    private const val client_TOKEN = "token"
+    private const val CLIENT_DOWNSTREAM = "downstream"
+    private const val CLIENT_TOKEN = "token"
 
     // OkHttpClient for downstream with longer timeouts
-    private val httpClient: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(Duration.ofSeconds(60))
-        .readTimeout(Duration.ofSeconds(60))
-        .writeTimeout(Duration.ofSeconds(60))
-        .retryOnConnectionFailure(false)
-        .build()
+    private val httpClient: OkHttpClient =
+        OkHttpClient
+            .Builder()
+            .connectTimeout(Duration.ofSeconds(60))
+            .readTimeout(Duration.ofSeconds(60))
+            .writeTimeout(Duration.ofSeconds(60))
+            .retryOnConnectionFailure(false)
+            .build()
 
     // OkHttpClient for Azure/Entra token calls with shorter timeouts
-    private val azureHttpClient: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(Duration.ofSeconds(5))
-        .readTimeout(Duration.ofSeconds(5))
-        .writeTimeout(Duration.ofSeconds(3))
-        .retryOnConnectionFailure(false)
-        .build()
+    private val azureHttpClient: OkHttpClient =
+        OkHttpClient
+            .Builder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .readTimeout(Duration.ofSeconds(5))
+            .writeTimeout(Duration.ofSeconds(3))
+            .retryOnConnectionFailure(false)
+            .build()
 
     val client = OkHttp(httpClient)
     val clientAzure = OkHttp(azureHttpClient)

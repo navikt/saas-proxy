@@ -40,11 +40,15 @@ object TokenExchangeHandler {
     fun isOBOToken(jwt: JwtToken) = jwt.jwtTokenClaims.get("NAVident") != null
 
     // target alias example: cluster.namespace.app
-    fun exchange(jwtIn: JwtToken, targetAlias: String, scope: String): JwtToken {
+    fun exchange(
+        jwtIn: JwtToken,
+        targetAlias: String,
+        scope: String,
+    ): JwtToken {
         if (!isOBOToken(jwtIn)) return acquireServiceToken(targetAlias, scope)
         val key = targetAlias + jwtIn.encodedToken
 
-        if (Application.useValkey) {
+        if (Application.USE_VALKEY) {
             val millisBeforeRedisFetch = System.currentTimeMillis()
             val cachedResult = Valkey.commands.get(key)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
@@ -53,20 +57,20 @@ object TokenExchangeHandler {
                 return JwtToken(cachedResult)
             }
         }
-
         log.info { "Exchange obo token for $targetAlias" }
 
-        val req = Request(Method.POST, azureTokenEndPoint)
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(
-                listOf(
-                    "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                    "assertion" to jwtIn.encodedToken,
-                    "client_id" to clientId,
-                    "scope" to "api://$targetAlias/$scope",
-                    "client_secret" to clientSecret,
-                    "requested_token_use" to "on_behalf_of",
-                    "claims" to """{
+        val req =
+            Request(Method.POST, azureTokenEndPoint)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .body(
+                    listOf(
+                        "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                        "assertion" to jwtIn.encodedToken,
+                        "client_id" to clientId,
+                        "scope" to "api://$targetAlias/$scope",
+                        "client_secret" to clientSecret,
+                        "requested_token_use" to "on_behalf_of",
+                        "claims" to """{
                         "access_token": {
                             "groups": {
                                 "essential": true
@@ -75,22 +79,25 @@ object TokenExchangeHandler {
                                 "essential": true
                             }
                          }
-                    }"""
-                ).toBody()
-            )
+                    }""",
+                    ).toBody(),
+                )
         val res = clientCallWithRetries(req)
 
         val jwtEncoded = res.extractAccessToken(targetAlias, "obo", req)
         val jwt = JwtToken(jwtEncoded)
 
-        if (Application.useValkey) {
+        if (Application.USE_VALKEY) {
             updateRedisCache(jwt, jwtEncoded, key, jwtIn.encodedToken, "obo")
         }
         return jwt
     }
 
-    fun acquireServiceToken(targetAlias: String, scope: String): JwtToken {
-        if (Application.useValkey) {
+    fun acquireServiceToken(
+        targetAlias: String,
+        scope: String,
+    ): JwtToken {
+        if (Application.USE_VALKEY) {
             val millisBeforeRedisFetch = System.currentTimeMillis()
             val cachedResult = Valkey.commands.get(targetAlias)
             Metrics.fetchTimeObserve(System.currentTimeMillis() - millisBeforeRedisFetch)
@@ -101,34 +108,41 @@ object TokenExchangeHandler {
         }
         log.info { "Acquiring service token for $targetAlias" }
         val m2mscope = if (scope == "defaultaccess") ".default" else scope
-        val req = Request(Method.POST, azureTokenEndPoint)
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(
-                listOf(
-                    "client_id" to clientId,
-                    "scope" to "api://$targetAlias/$m2mscope",
-                    "client_secret" to clientSecret,
-                    "grant_type" to "client_credentials"
-                ).toBody()
-            )
+        val req =
+            Request(Method.POST, azureTokenEndPoint)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .body(
+                    listOf(
+                        "client_id" to clientId,
+                        "scope" to "api://$targetAlias/$m2mscope",
+                        "client_secret" to clientSecret,
+                        "grant_type" to "client_credentials",
+                    ).toBody(),
+                )
 
         val res = clientCallWithRetries(req)
 
         val jwtEncoded = res.extractAccessToken(targetAlias, "m2m", req)
         val jwt = JwtToken(jwtEncoded)
 
-        if (Application.useValkey) {
+        if (Application.USE_VALKEY) {
             updateRedisCache(jwt, jwtEncoded, targetAlias)
         }
         return jwt
     }
 
-    fun updateRedisCache(jwt: JwtToken, jwtEncoded: String, key: String, jwtIn: String = "N/A", lblType: String = "m2m") {
+    fun updateRedisCache(
+        jwt: JwtToken,
+        jwtEncoded: String,
+        key: String,
+        jwtIn: String = "N/A",
+        lblType: String = "m2m",
+    ) {
         val expireTime = jwt.jwtTokenClaims.expirationTime.toInstant()
         val secondsToLive = Duration.between(Instant.now(), expireTime).seconds
         val secondsToLiveInCache = secondsToLive - 3
         withLoggingContext(
-            mapOf("exchange_token_ttl" to secondsToLive.toString())
+            mapOf("exchange_token_ttl" to secondsToLive.toString()),
         ) {
             if (secondsToLiveInCache > 3) {
                 val millisBeforeRedisStore = System.currentTimeMillis()
@@ -136,7 +150,7 @@ object TokenExchangeHandler {
                 Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
             } else {
                 File("/tmp/badmargin-$lblType").writeText(
-                    "$currentDateTime\n\nJwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded"
+                    "$currentDateTime\n\nJwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded",
                 )
                 log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
             }
@@ -146,7 +160,7 @@ object TokenExchangeHandler {
     fun clientCallWithRetries(
         request: Request,
         maxRetries: Int = 3,
-        delayMillis: Long = 100
+        delayMillis: Long = 100,
     ): Response {
         var attempt = 0
         var lastException: Exception? = null
@@ -170,12 +184,16 @@ object TokenExchangeHandler {
         throw lastException ?: RuntimeException("Failed to execute action after $maxRetries attempts.")
     }
 
-    private fun Response.extractAccessToken(alias: String, tokenType: String, request: Request): String {
+    private fun Response.extractAccessToken(
+        alias: String,
+        tokenType: String,
+        request: Request,
+    ): String {
         try {
             return JSONObject(this.bodyString()).get("access_token").toString()
         } catch (e: Exception) {
             File("/tmp/failedExtractAccessToken-$alias-$tokenType").writeText(
-                "$currentDateTime\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage()
+                "$currentDateTime\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage(),
             )
             Metrics.tokenFetchFail.labels(alias, tokenType).inc()
             log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
