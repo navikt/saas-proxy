@@ -35,7 +35,7 @@ dependencies {
 
     implementation 'io.lettuce:lettuce-core:7.0.0.RELEASE'
 
-    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.json:json:20250517'
     implementation 'org.yaml:snakeyaml:2.0'
 
