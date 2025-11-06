@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package no.nav.saas.proxy
 
 import java.time.LocalDateTime
