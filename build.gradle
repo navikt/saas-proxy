@@ -39,9 +39,9 @@ dependencies {
     implementation 'org.json:json:20250517'
     implementation 'org.yaml:snakeyaml:2.0'
 
-    implementation "org.http4k:http4k-core:6.15.1.0"
-    implementation "org.http4k:http4k-server-netty:6.15.1.0"
-    implementation "org.http4k:http4k-client-okhttp:6.15.1.0"
+    implementation "org.http4k:http4k-core:6.20.1.0"
+    implementation "org.http4k:http4k-server-netty:6.20.1.0"
+    implementation "org.http4k:http4k-client-okhttp:6.20.1.0"
 
     implementation "io.github.microutils:kotlin-logging:3.0.5"
     implementation "ch.qos.logback:logback-classic:1.5.20"
