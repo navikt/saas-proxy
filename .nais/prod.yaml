@@ -80,8 +80,6 @@ spec:
           namespace: paw
         - application: tiltakspenger-datadeling
           namespace: tpts
-        - application: pen-nks-service
-          namespace: pensjon-saksbehandling
         - application: norg2
           namespace: org
         - application: repr-api
@@ -107,6 +105,7 @@ spec:
         - host: "pdl-api.prod-fss-pub.nais.io"
         - host: "dokument1.adeo.no"
         - host: "oebs-digihot-api.prod-fss-pub.nais.io"
+        - host: "pensjon-pen-q2.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
