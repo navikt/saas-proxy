@@ -88,6 +88,8 @@ spec:
           namespace: teamdigihot
         - application: aareg-tilgangskontroll
           namespace: arbeidsforhold
+        - application: api-intern
+          namespace: aap
       external:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"
