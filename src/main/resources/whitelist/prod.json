@@ -128,8 +128,8 @@
       "POST /graphql"
     ]
   },
-  "pensjon-q2": {
-    "pensjon-pen-q2": [
+  "pensjondeployer": {
+    "pensjon-pen": [
       "POST /api/uforetrygd/ekstern/nks/sak/.*/etteroppgjorshistorikk",
       "POST /api/uforetrygd/ekstern/nks/inntektsgrenser",
       "POST /api/ekstern/nks/leveattest",
