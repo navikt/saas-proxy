@@ -105,7 +105,7 @@ spec:
         - host: "pdl-api.prod-fss-pub.nais.io"
         - host: "dokument1.adeo.no"
         - host: "oebs-digihot-api.prod-fss-pub.nais.io"
-        - host: "pensjon-pen-q2.prod-fss-pub.nais.io"
+        - host: "pensjon-pen.prod-fss-pub.nais.io"
   env:
     - name: WHITELIST_FILE
       value: '/whitelist/prod.json'
