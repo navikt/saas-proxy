@@ -158,6 +158,14 @@
       "GET /api/fodselsnummer"
     ]
   },
+  "aap": {
+    "api-intern": [
+      "POST /perioder",
+      "POST /sakerByFnr",
+      "POST /maksimum",
+      "POST /kelvin/meldekort-detaljer"
+    ]
+  },
   "arbeidsforhold": {
     "aareg-tilgangskontroll": [
       "POST /api/v1/tilganger/opprett",
