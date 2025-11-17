@@ -139,13 +139,13 @@ object Application {
             val token = TokenValidation.firstValidToken(req)
 
             if (approvedByRules.isEmpty()) {
-                log.info { "Proxy: Bad request - not whitelisted" }
+                log.info { "Proxy: Bad request - not whitelisted path for app $targetApp, path $path" }
                 File("/tmp/notwhitelisted-$targetApp").writeText(
                     "$currentDateTime\n\nREQUEST:\n" + req.toMessage(),
                 )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (token == null) {
-                log.info { "Proxy: Not authorized" }
+                log.info { "Proxy: Not authorized - target app $targetApp" }
                 File("/tmp/noauth-$targetApp").writeText(
                     "$currentDateTime\n\n" + req.toMessage(),
                 )

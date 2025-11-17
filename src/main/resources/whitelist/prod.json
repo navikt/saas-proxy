@@ -128,8 +128,8 @@
       "POST /graphql"
     ]
   },
-  "pensjon-q2": {
-    "pensjon-pen-q2": [
+  "pensjondeployer": {
+    "pensjon-pen": [
       "POST /api/uforetrygd/ekstern/nks/sak/.*/etteroppgjorshistorikk",
       "POST /api/uforetrygd/ekstern/nks/inntektsgrenser",
       "POST /api/ekstern/nks/leveattest",
@@ -156,6 +156,14 @@
   "teamdigisos": {
     "sosialhjelp-modia-api": [
       "GET /api/fodselsnummer"
+    ]
+  },
+  "aap": {
+    "api-intern": [
+      "POST /perioder",
+      "POST /sakerByFnr",
+      "POST /maksimum",
+      "POST /kelvin/meldekort-detaljer"
     ]
   },
   "arbeidsforhold": {
