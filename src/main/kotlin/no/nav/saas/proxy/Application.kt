@@ -186,7 +186,7 @@ object Application {
                         )}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
                     }
 
-                    if (!response.status.successful && response.status.code != 404) {
+                    if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
                         File(
                             "/tmp/latest-$targetApp-${response.status.code}",
                         ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
