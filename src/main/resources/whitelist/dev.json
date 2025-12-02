@@ -120,8 +120,7 @@
   },
   "tpts": {
     "tiltakspenger-datadeling": [
-      "POST /vedtak/perioder",
-      "POST /vedtak/detaljer",
+      "POST /behandlinger/apne",
       "POST /vedtak/tidslinje",
       "POST /meldekort/detaljer"
     ]
