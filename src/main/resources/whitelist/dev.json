@@ -28,7 +28,7 @@
     "sokos-kontoregister-person": [
       "POST /api/system/v1/hent-aktiv-konto"
     ],
-    "sokos-skattekort-person": [
+    "sokos-skattekort": [
       "POST /api/v1/hent-skattekort"
     ],
     "sokos-utbetaldata": [
