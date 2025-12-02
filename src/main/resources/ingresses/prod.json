@@ -19,7 +19,6 @@
   },
   "okonomi": {
     "sokos-kontoregister": "https://sokos-kontoregister.prod-fss-pub.nais.io",
-    "sokos-skattekort-person": "https://sokos-skattekort-person.prod-fss-pub.nais.io",
     "sokos-utbetaldata": "https://sokos-utbetaldata.prod-fss-pub.nais.io"
   },
   "pdl": {

@@ -65,6 +65,8 @@ spec:
           namespace: team-rocket
         - application: sokos-kontoregister-person
           namespace: okonomi
+        - application: sokos-skattekort
+          namespace: okonomi
         - application: nom-api
           namespace: nom
         - application: sf-arkiv
@@ -99,7 +101,6 @@ spec:
         - host: "dokarkiv.prod-fss-pub.nais.io"
         - host: "regoppslag.prod-fss-pub.nais.io"
         - host: "arena-api.prod-fss-pub.nais.io"
-        - host: "sokos-skattekort-person.prod-fss-pub.nais.io"
         - host: "sokos-utbetaldata.prod-fss-pub.nais.io"
         - host: "sosialhjelp-modia-api.prod-fss-pub.nais.io"
         - host: "axsys.prod-fss-pub.nais.io"
