@@ -2,17 +2,17 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: saas-proxy
-  namespace: teamcrm
+  namespace: platforce
   labels:
-    team: teamcrm
+    team: platforce
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
 spec:
   image: '{{ image }}'
   port: 8080
   replicas:
-    min: 12
-    max: 12
+    min: 2 # TODO Adjust up when actually migrating
+    max: 2
   liveness:
     path: /internal/isAlive
   readiness:
@@ -39,8 +39,8 @@ spec:
       cpu: 10m
       memory: 512Mi
   ingresses:
-    - "https://saas-proxy.nav.no"
-    - "https://saas-proxy.intern.nav.no"
+    - "https://saas-proxy-tmp.nav.no"
+    - "https://saas-proxy-tmp.intern.nav.no"
   azure:
     application:
       enabled: true

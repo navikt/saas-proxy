@@ -2,9 +2,9 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: saas-proxy
-  namespace: teamcrm
+  namespace: platforce
   labels:
-    team: teamcrm
+    team: platforce
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
 spec:
@@ -39,8 +39,8 @@ spec:
       cpu: 10m
       memory: 512Mi
   ingresses:
-    - "https://saas-proxy.ekstern.dev.nav.no"
-    - "https://saas-proxy.intern.dev.nav.no"
+    - "https://saas-proxy-tmp.ekstern.dev.nav.no"
+    - "https://saas-proxy-tmp.intern.dev.nav.no"
   azure:
     application:
       enabled: true

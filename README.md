@@ -23,7 +23,7 @@ Den videresender forespørselen enten til pub.nais.io ingress eller til destinas
 Det må leggas til inbound rules i den app som ska exponeras av appeier:
 ```
 - application: saas-proxy
-  namespace: teamcrm
+  namespace: platforce
 ```
 
 Samt outbound rule her i [.nais/dev.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/dev.yaml) og [.nais/prod.yml](https://github.com/navikt/saas-proxy/blob/master/.nais/prod.yaml):
@@ -61,7 +61,7 @@ Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"patter
 Det må leggas til inbound rules i den app som ska exponeras av appeier:
 ```
 - application: saas-proxy
-  namespace: teamcrm
+  namespace: platforce
   cluster: <dev/prod>-gcp
 ```
 
