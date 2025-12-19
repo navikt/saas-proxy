@@ -73,8 +73,8 @@ object Application {
             "/internal/isReady" bind Method.GET to isReadyHttpHandler,
             "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
-            "/{rest:.*}" bind redirectHttpHandler,
             "/internal/gui" bind guiHandler,
+            "/{rest:.*}" bind redirectHttpHandler,
         )
 
     fun start() {
