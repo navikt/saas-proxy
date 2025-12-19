@@ -111,7 +111,12 @@ object Application {
         val targetNamespace = req.header(TARGET_NAMESPACE) // optional, but recommended
         val targetOnlyRedirect = req.header(TARGET_ONLY_REDIRECT) != null
 
-        Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
+        try {
+            Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
+        } catch (e: Exception) {
+            log.error { "Could not register api call metric " + e.message }
+            File("/tmp/failRegisterApiCall").writeText(e.stackTraceToString())
+        }
 
         if (targetOnlyRedirect) {
             if (TokenValidation.firstValidToken(req) != null) {
