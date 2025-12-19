@@ -1,5 +1,6 @@
 package no.nav.saas.proxy
 
+import com.google.gson.Gson
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.ingresses.IngressSet
@@ -96,7 +97,10 @@ object Application {
     }
 
     private val lastSeenHandler: HttpHandler = {
-        Response(OK).body(Valkey.fetchAllLastSeen().toString())
+        val data = Valkey.fetchAllLastSeen() // returns Map<String, Map<String, Long>>
+        Response(OK)
+            .header("Content-Type", "application/json")
+            .body(Gson().toJson(data))
     }
 
     private val redirectHttpHandler = { req: Request ->
