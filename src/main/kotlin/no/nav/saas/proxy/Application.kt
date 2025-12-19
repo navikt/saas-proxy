@@ -1,6 +1,7 @@
 package no.nav.saas.proxy
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.ingresses.IngressSet
@@ -98,9 +99,13 @@ object Application {
 
     private val lastSeenHandler: HttpHandler = {
         val data = buildNamespaceAppData(Valkey.fetchAllLastSeen(), ruleSet) // returns Map<String, Map<String, Long>>
+        val gson =
+            GsonBuilder()
+                .serializeNulls()
+                .create()
         Response(OK)
             .header("Content-Type", "application/json")
-            .body(Gson().toJson(data))
+            .body(gson.toJson(data))
     }
 
     fun buildNamespaceAppData(
