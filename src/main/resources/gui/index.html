@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SaaS-Proxy Usage Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <style>
+        body {
+            background:#0d1117;
+            color:#e6edf3;
+            font-family: system-ui;
+        }
+
+        text { fill:#e6edf3; font-size:12px; pointer-events:none }
+
+        .tooltip {
+            position: absolute;
+            padding: 6px 10px;
+            background: #111;
+            color: white;
+            border: 1px solid #888;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events:none;
+            opacity:0;
+        }
+    </style>
+</head>
+
+<body>
+<h2>SaaS-Proxy Usage Mindmap</h2>
+<svg width="1400" height="900"></svg>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+
+    const ENDPOINT = "/internal/lastseen";
+    const svg = d3.select("svg");
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+    const tooltip = d3.select("#tooltip");
+
+    // ----------------------------------------------
+    // Helpers
+    // ----------------------------------------------
+    function secondsAgo(ts){
+        const now = Math.floor(Date.now()/1000);
+        return now - ts;
+    }
+
+    function humanAgo(sec){
+        if (sec < 60) return `${sec}s ago`;
+        if (sec < 3600) return `${Math.floor(sec/60)} minutes ago`;
+        if (sec < 86400) return `${Math.floor(sec/3600)} hours ago`;
+        if (sec < 604800) return `${Math.floor(sec/86400)} days ago`;
+        return `${Math.floor(sec/604800)} weeks ago`;
+    }
+
+    /// color scale based on "ago"
+    function colorFor(sec){
+        if(sec < 300) return "#00ff7f";        // < 5 min
+        if(sec < 3600) return "#7fff00";       // < 1h
+        if(sec < 86400) return "#a8ff00";      // < 1d
+        if(sec < 604800) return "#ffd000";     // < 1w
+        if(sec < 2592000) return "#ff7f50";    // < 30d
+        return "#808080";                      // inactive / old
+    }
+
+    // ----------------------------------------------
+    // Build Graph from your JSON
+    // ----------------------------------------------
+    fetch(ENDPOINT)
+        .then(r => r.json())
+        .then(data => {
+
+            const nodes = [];
+            const links = [];
+
+            nodes.push({ id:"saas-proxy", type:"proxy" });
+
+            Object.entries(data).forEach(([namespace, apps]) => {
+                nodes.push({ id: namespace, type:"namespace" });
+                links.push({ source:"saas-proxy", target: namespace });
+
+                Object.entries(apps).forEach(([app, ts]) => {
+                    nodes.push({
+                        id:`${namespace}/${app}`,
+                        label: app,
+                        namespace,
+                        timestamp: ts,
+                        ago: secondsAgo(ts),
+                        type:"app"
+                    });
+
+                    links.push({
+                        source: namespace,
+                        target: `${namespace}/${app}`
+                    });
+                });
+            });
+
+            draw(nodes, links);
+        });
+
+    // ----------------------------------------------
+    // D3 Visualization
+    // ----------------------------------------------
+    function draw(nodes, links){
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+            .force("charge", d3.forceManyBody().strength(-500))
+            .force("center", d3.forceCenter(width/2, height/2));
+
+        const link = svg.append("g")
+            .attr("stroke", "#888")
+            .attr("stroke-width", 1.5)
+            .selectAll("line")
+            .data(links)
+            .enter().append("line");
+
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .enter()
+            .append("circle")
+            .attr("r", d => d.type==="proxy" ? 35 : d.type==="namespace" ? 28 : 18)
+            .attr("fill", d =>
+                d.type==="app" ? colorFor(d.ago) :
+                    d.type==="namespace" ? "#1f6feb" :
+                        "#9b4dff"
+            )
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2)
+            .call(drag(simulation))
+            .on("mouseover", (event,d)=>{
+                if(d.type==="app"){
+                    tooltip
+                        .style("opacity",1)
+                        .html(`
+                <b>${d.namespace}/${d.label}</b><br>
+                last seen: ${humanAgo(d.ago)}
+            `);
+                } else {
+                    tooltip.style("opacity",1).html(`<b>${d.id}</b>`);
+                }
+            })
+            .on("mousemove", event=>{
+                tooltip.style("left", (event.pageX+10)+"px")
+                    .style("top", (event.pageY+10)+"px");
+            })
+            .on("mouseout", ()=>{
+                tooltip.style("opacity",0);
+            });
+
+        const labels = svg.append("g")
+            .selectAll("text")
+            .data(nodes)
+            .enter()
+            .append("text")
+            .text(d => d.type==="app" ? d.label :
+                d.type==="namespace" ? d.id :
+                    "saas-proxy")
+            .attr("text-anchor","middle");
+
+        simulation.on("tick", ()=>{
+            link
+                .attr("x1",d=>d.source.x)
+                .attr("y1",d=>d.source.y)
+                .attr("x2",d=>d.target.x)
+                .attr("y2",d=>d.target.y);
+
+            node
+                .attr("cx",d=>d.x)
+                .attr("cy",d=>d.y);
+
+            labels
+                .attr("x",d=>d.x)
+                .attr("y",d=>d.y-40);
+        });
+    }
+
+    function drag(simulation){
+        function dragstarted(event){
+            if(!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+        }
+        function dragged(event){
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+        }
+        function dragended(event){
+            if(!event.active) simulation.alphaTarget(0);
+            event.subject.fx=null;
+            event.subject.fy=null;
+        }
+        return d3.drag()
+            .on("start",dragstarted)
+            .on("drag",dragged)
+            .on("end",dragended);
+    }
+
+</script>
+</body>
+</html>

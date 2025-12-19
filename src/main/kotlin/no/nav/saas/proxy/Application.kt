@@ -23,9 +23,11 @@ import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
+import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
@@ -73,7 +75,8 @@ object Application {
             "/internal/isReady" bind Method.GET to isReadyHttpHandler,
             "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
-            "/internal/gui" bind guiHandler,
+            "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
+            "/internal/lastseen" bind lastSeenHandler,
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
@@ -92,7 +95,7 @@ object Application {
         }
     }
 
-    private val guiHandler: HttpHandler = {
+    private val lastSeenHandler: HttpHandler = {
         Response(OK).body(Valkey.fetchAllLastSeen().toString())
     }
 
