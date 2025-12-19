@@ -97,10 +97,38 @@ object Application {
     }
 
     private val lastSeenHandler: HttpHandler = {
-        val data = Valkey.fetchAllLastSeen() // returns Map<String, Map<String, Long>>
+        val data = buildNamespaceAppData(Valkey.fetchAllLastSeen(), ruleSet) // returns Map<String, Map<String, Long>>
         Response(OK)
             .header("Content-Type", "application/json")
             .body(Gson().toJson(data))
+    }
+
+    fun buildNamespaceAppData(
+        redisData: Map<String, Map<String, Long>>,  // last seen from Valkey
+        ruleSet: RuleSet                             // full whitelist config
+    ): Map<String, Map<String, Long?>> {           // namespace -> app -> lastSeen (nullable)
+
+        val result = mutableMapOf<String, MutableMap<String, Long?>>()
+
+        for ((namespace, apps) in ruleSet) {
+            val nsMap = mutableMapOf<String, Long?>()
+            for ((app, _) in apps) {
+                // take value from Redis if exists, otherwise null
+                val lastSeen = redisData[namespace]?.get(app)
+                nsMap[app] = lastSeen
+            }
+            result[namespace] = nsMap
+        }
+
+        // Include any Redis-only apps (if not in config)
+        redisData.forEach { (namespace, apps) ->
+            val nsMap = result.getOrPut(namespace) { mutableMapOf() }
+            apps.forEach { (app, lastSeen) ->
+                nsMap.putIfAbsent(app, lastSeen)
+            }
+        }
+
+        return result
     }
 
     private val redirectHttpHandler = { req: Request ->

@@ -41,15 +41,15 @@
     const height = +svg.attr("height");
     const tooltip = d3.select("#tooltip");
 
-    // ----------------------------------------------
-    // Helpers
-    // ----------------------------------------------
+    // ---------- Helpers ----------
     function secondsAgo(ts){
+        if(ts == null) return null;
         const now = Math.floor(Date.now()/1000);
         return now - ts;
     }
 
     function humanAgo(sec){
+        if(sec == null) return "Never seen";
         if (sec < 60) return `${sec}s ago`;
         if (sec < 3600) return `${Math.floor(sec/60)} minutes ago`;
         if (sec < 86400) return `${Math.floor(sec/3600)} hours ago`;
@@ -59,17 +59,16 @@
 
     /// color scale based on "ago"
     function colorFor(sec){
-        if(sec < 300) return "#00ff7f";        // < 5 min
-        if(sec < 3600) return "#7fff00";       // < 1h
-        if(sec < 86400) return "#a8ff00";      // < 1d
-        if(sec < 604800) return "#ffd000";     // < 1w
-        if(sec < 2592000) return "#ff7f50";    // < 30d
-        return "#808080";                      // inactive / old
+        if(sec == null) return "#555555";    // never used
+        if(sec < 300) return "#00ff7f";      // < 5 min
+        if(sec < 3600) return "#7fff00";     // < 1h
+        if(sec < 86400) return "#a8ff00";    // < 1d
+        if(sec < 604800) return "#ffd000";   // < 1w
+        if(sec < 2592000) return "#ff7f50";  // < 30d
+        return "#808080";                    // inactive / old
     }
 
-    // ----------------------------------------------
-    // Build Graph from your JSON
-    // ----------------------------------------------
+    // ---------- Fetch + Graph ----------
     fetch(ENDPOINT)
         .then(r => r.json())
         .then(data => {
@@ -84,13 +83,16 @@
                 links.push({ source:"saas-proxy", target: namespace });
 
                 Object.entries(apps).forEach(([app, ts]) => {
+                    const ago = secondsAgo(ts);
+
                     nodes.push({
                         id:`${namespace}/${app}`,
                         label: app,
                         namespace,
                         timestamp: ts,
-                        ago: secondsAgo(ts),
-                        type:"app"
+                        ago,
+                        type:"app",
+                        neverSeen: ts === null
                     });
 
                     links.push({
@@ -103,9 +105,7 @@
             draw(nodes, links);
         });
 
-    // ----------------------------------------------
-    // D3 Visualization
-    // ----------------------------------------------
+    // ---------- D3 Visualization ----------
     function draw(nodes, links){
 
         const simulation = d3.forceSimulation(nodes)
@@ -125,7 +125,10 @@
             .data(nodes)
             .enter()
             .append("circle")
-            .attr("r", d => d.type==="proxy" ? 35 : d.type==="namespace" ? 28 : 18)
+            .attr("r", d =>
+                d.type==="proxy" ? 35 :
+                    d.type==="namespace" ? 28 : 18
+            )
             .attr("fill", d =>
                 d.type==="app" ? colorFor(d.ago) :
                     d.type==="namespace" ? "#1f6feb" :
@@ -135,33 +138,34 @@
             .attr("stroke-width", 2)
             .call(drag(simulation))
             .on("mouseover", (event,d)=>{
+                tooltip.style("opacity",1);
+
                 if(d.type==="app"){
-                    tooltip
-                        .style("opacity",1)
-                        .html(`
-                <b>${d.namespace}/${d.label}</b><br>
-                last seen: ${humanAgo(d.ago)}
-            `);
+                    tooltip.html(`
+                    <b>${d.namespace}/${d.label}</b><br>
+                    ${d.ago === null ? "Never seen" : "Last seen: " + humanAgo(d.ago)}
+                `);
                 } else {
-                    tooltip.style("opacity",1).html(`<b>${d.id}</b>`);
+                    tooltip.html(`<b>${d.id}</b>`);
                 }
             })
             .on("mousemove", event=>{
-                tooltip.style("left", (event.pageX+10)+"px")
+                tooltip
+                    .style("left", (event.pageX+10)+"px")
                     .style("top", (event.pageY+10)+"px");
             })
-            .on("mouseout", ()=>{
-                tooltip.style("opacity",0);
-            });
+            .on("mouseout", ()=> tooltip.style("opacity",0));
 
         const labels = svg.append("g")
             .selectAll("text")
             .data(nodes)
             .enter()
             .append("text")
-            .text(d => d.type==="app" ? d.label :
-                d.type==="namespace" ? d.id :
-                    "saas-proxy")
+            .text(d =>
+                d.type==="app" ? d.label :
+                    d.type==="namespace" ? d.id :
+                        "saas-proxy"
+            )
             .attr("text-anchor","middle");
 
         simulation.on("tick", ()=>{
