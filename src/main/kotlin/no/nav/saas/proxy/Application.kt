@@ -74,6 +74,7 @@ object Application {
             "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
             "/{rest:.*}" bind redirectHttpHandler,
+            "/internal/gui" bind guiHandler,
         )
 
     fun start() {
@@ -89,6 +90,10 @@ object Application {
         } else {
             Response(Status.SERVICE_UNAVAILABLE)
         }
+    }
+
+    private val guiHandler: HttpHandler = {
+        Response(OK).body(Valkey.fetchAllLastSeen().toString())
     }
 
     private val redirectHttpHandler = { req: Request ->
@@ -205,6 +210,14 @@ object Application {
                         )
                     } catch (e: Exception) {
                         log.error { "Could not register forwarded call metric " + e.message }
+                    }
+
+                    try {
+                        if (USE_VALKEY) {
+                            Valkey.updateAppLastSeen(targetApp, namespace)
+                        }
+                    } catch (e: Exception) {
+                        log.error { "Could not store timestamp for app call " + e.message }
                     }
 
                     response.withoutBlockedHeaders()
