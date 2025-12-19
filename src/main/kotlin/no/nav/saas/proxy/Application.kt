@@ -104,9 +104,9 @@ object Application {
     }
 
     fun buildNamespaceAppData(
-        redisData: Map<String, Map<String, Long>>,  // last seen from Valkey
-        ruleSet: RuleSet                             // full whitelist config
-    ): Map<String, Map<String, Long?>> {           // namespace -> app -> lastSeen (nullable)
+        redisData: Map<String, Map<String, Long>>, // last seen from Valkey
+        ruleSet: RuleSet, // full whitelist config
+    ): Map<String, Map<String, Long?>> { // namespace -> app -> lastSeen (nullable)
 
         val result = mutableMapOf<String, MutableMap<String, Long?>>()
 
