@@ -86,7 +86,7 @@ object Application {
         // HttpClientResources.scheduleConnectionMetricsUpdater()
 
         apiServer(8080).start()
-        File("/tmp/started").writeText("started")
+        File("/tmp/started").writeText("started2")
     }
 
     private val isReadyHttpHandler: HttpHandler = {
