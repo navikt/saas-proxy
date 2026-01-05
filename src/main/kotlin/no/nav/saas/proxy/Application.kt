@@ -1,5 +1,7 @@
 package no.nav.saas.proxy
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.ingresses.IngressSet
@@ -23,9 +25,11 @@ import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.http4k.routing.ResourceLoader
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
+import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
@@ -73,6 +77,8 @@ object Application {
             "/internal/isReady" bind Method.GET to isReadyHttpHandler,
             "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
+            "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
+            "/internal/lastseen" bind lastSeenHandler,
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
@@ -91,6 +97,45 @@ object Application {
         }
     }
 
+    private val lastSeenHandler: HttpHandler = {
+        val data = buildNamespaceAppData(Valkey.fetchAllLastSeen(), ruleSet) // returns Map<String, Map<String, Long>>
+        val gson =
+            GsonBuilder()
+                .serializeNulls()
+                .create()
+        Response(OK)
+            .header("Content-Type", "application/json")
+            .body(gson.toJson(data))
+    }
+
+    fun buildNamespaceAppData(
+        redisData: Map<String, Map<String, Long>>, // last seen from Valkey
+        ruleSet: RuleSet, // full whitelist config
+    ): Map<String, Map<String, Long?>> { // namespace -> app -> lastSeen (nullable)
+
+        val result = mutableMapOf<String, MutableMap<String, Long?>>()
+
+        for ((namespace, apps) in ruleSet) {
+            val nsMap = mutableMapOf<String, Long?>()
+            for ((app, _) in apps) {
+                // take value from Redis if exists, otherwise null
+                val lastSeen = redisData[namespace]?.get(app)
+                nsMap[app] = lastSeen
+            }
+            result[namespace] = nsMap
+        }
+
+        // Include any Redis-only apps (if not in config)
+        redisData.forEach { (namespace, apps) ->
+            val nsMap = result.getOrPut(namespace) { mutableMapOf() }
+            apps.forEach { (app, lastSeen) ->
+                nsMap.putIfAbsent(app, lastSeen)
+            }
+        }
+
+        return result
+    }
+
     private val redirectHttpHandler = { req: Request ->
         val millisAtStart = System.currentTimeMillis()
         val path = req.path("rest") ?: ""
@@ -99,7 +144,12 @@ object Application {
         val targetNamespace = req.header(TARGET_NAMESPACE) // optional, but recommended
         val targetOnlyRedirect = req.header(TARGET_ONLY_REDIRECT) != null
 
-        Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
+        try {
+            Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
+        } catch (e: Exception) {
+            log.error { "Could not register api call metric " + e.message }
+            File("/tmp/failRegisterApiCall").writeText(e.stackTraceToString())
+        }
 
         if (targetOnlyRedirect) {
             if (TokenValidation.firstValidToken(req) != null) {
@@ -205,6 +255,14 @@ object Application {
                         )
                     } catch (e: Exception) {
                         log.error { "Could not register forwarded call metric " + e.message }
+                    }
+
+                    try {
+                        if (USE_VALKEY) {
+                            Valkey.updateAppLastSeen(targetApp, namespace)
+                        }
+                    } catch (e: Exception) {
+                        log.error { "Could not store timestamp for app call " + e.message }
                     }
 
                     response.withoutBlockedHeaders()

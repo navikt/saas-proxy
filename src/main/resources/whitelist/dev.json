@@ -85,6 +85,9 @@
   "paw": {
     "paw-arbeidssoekerregisteret-api-oppslag": [
       "POST /api/v1/veileder/arbeidssoekerperioder"
+    ],
+    "paw-arbeidssoekerregisteret-api-oppslag-v2": [
+      "POST /api/v1/veileder/arbeidssoekerperioder"
     ]
   },
   "teamdokumenthandtering": {
