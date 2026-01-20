@@ -174,5 +174,11 @@
       "POST /api/v1/tilganger/opprett",
       "POST /api/v1/tilganger/fjern"
     ]
+  },
+  "pensjon-person": {
+    "pensjon-pid-encryption": [
+      "POST /api/encrypt",
+      "POST /api/decrypt"
+    ]
   }
 }
