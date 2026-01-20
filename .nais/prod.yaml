@@ -94,6 +94,8 @@ spec:
           namespace: arbeidsforhold
         - application: api-intern
           namespace: aap
+        - application: pensjon-pid-encryption
+          namespace: pensjon-person
       external:
         - host: "sf-arkiv-dokumentasjon.prod-fss-pub.nais.io"
         - host: "sf-websak.prod-fss-pub.nais.io"
