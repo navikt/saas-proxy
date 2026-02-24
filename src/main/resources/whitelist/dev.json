@@ -125,7 +125,9 @@
     "tiltakspenger-datadeling": [
       "POST /behandlinger/apne",
       "POST /vedtak/tidslinje",
-      "POST /meldekort/detaljer"
+      "POST /meldekort/detaljer",
+      "POST /arena/meldekort",
+      "POST /arena/utbetalingshistorikk"
     ]
   },
   "repr": {
