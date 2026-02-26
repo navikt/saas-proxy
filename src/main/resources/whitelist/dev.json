@@ -104,7 +104,7 @@
     ]
   },
   "oppgavehandtering": {
-    "oppgave-q1": [
+    "oppgave": [
       "GET /api/v1/oppgaver",
       "GET /api/v1/oppgaver/.*/oppfolging",
       "GET /api/v1/kodeverk/oppgavetype/.*",
