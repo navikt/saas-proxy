@@ -29,7 +29,7 @@
       "POST /api/system/v1/hent-aktiv-konto"
     ],
     "sokos-skattekort": [
-      "POST /api/v1/hent-skattekort"
+      "POST /api/v1/person/hent-skattekort"
     ],
     "sokos-utbetaldata": [
       "POST /utbetaldata/api/v2/hent-utbetalingsinformasjon/intern"
