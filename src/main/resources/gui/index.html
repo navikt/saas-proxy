@@ -29,13 +29,16 @@
 </head>
 
 <body>
-<h2>SaaS-Proxy Usage Mindmap</h2>
+<h2>
+    SaaS-Proxy Usage Mindmap
+    <span id="boot-info" style="font-size:14px; font-weight:normal; margin-left:12px; color:#8b949e;"></span>
+</h2>
 <svg width="1400" height="1200"></svg>
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-
-    const ENDPOINT = "/internal/lastseen";
+    const LASTSEEN_ENDPOINT = "/internal/lastseen";
+    const STARTED_AT_ENDPOINT = "/internal/startedAt";
     const svg = d3.select("svg");
     const width = +svg.attr("width");
     const height = +svg.attr("height");
@@ -46,6 +49,11 @@
         if(ts == null) return null;
         const now = Math.floor(Date.now()/1000);
         return now - ts;
+    }
+
+    function formatDateTime(ts){
+        if(ts == null) return "";
+        return new Date(ts * 1000).toLocaleString();
     }
 
     function humanAgo(sec){
@@ -59,51 +67,58 @@
 
     /// color scale based on "ago"
     function colorFor(sec){
-        if(sec == null) return "#555555";    // never used
-        if(sec < 300) return "#00ff7f";      // < 5 min
-        if(sec < 3600) return "#7fff00";     // < 1h
-        if(sec < 86400) return "#a8ff00";    // < 1d
-        if(sec < 604800) return "#ffd000";   // < 1w
+        if(sec == null) return "#555555";    // never seen
+        if(sec < 300) return "#66ff00";      // < 5 min
+        if(sec < 3600) return "#00ff6f";     // < 1h
+        if(sec < 86400) return "#ffdd00";    // < 1d
+        if(sec < 604800) return "#ff9900";   // < 1w
         if(sec < 2592000) return "#ff7f50";  // < 30d
         return "#808080";                    // inactive / old
     }
 
     // ---------- Fetch + Graph ----------
-    fetch(ENDPOINT)
-        .then(r => r.json())
-        .then(data => {
+    Promise.all([
+        fetch(LASTSEEN_ENDPOINT).then(r => r.json()),
+        fetch(STARTED_AT_ENDPOINT).then(r => r.json())
+    ]).then(([data, status]) => {
 
-            const nodes = [];
-            const links = [];
+        const startedAt = status.startedAt;
+        const bootAgo = Math.floor(Date.now() / 1000) - startedAt;
 
-            nodes.push({ id:"saas-proxy", type:"proxy" });
+        document.getElementById("boot-info").textContent =
+            `Activity since last boot (${formatDateTime(startedAt)}, ${humanAgo(bootAgo)})`;
 
-            Object.entries(data).forEach(([namespace, apps]) => {
-                nodes.push({ id: namespace, type:"namespace" });
-                links.push({ source:"saas-proxy", target: namespace });
+        const nodes = [];
+        const links = [];
 
-                Object.entries(apps).forEach(([app, ts]) => {
-                    const ago = secondsAgo(ts);
+        nodes.push({ id:"saas-proxy", type:"proxy" });
 
-                    nodes.push({
-                        id:`${namespace}/${app}`,
-                        label: app,
-                        namespace,
-                        timestamp: ts,
-                        ago,
-                        type:"app",
-                        neverSeen: ts === null
-                    });
+        Object.entries(data).forEach(([namespace, apps]) => {
+            nodes.push({ id: namespace, type:"namespace" });
+            links.push({ source:"saas-proxy", target: namespace });
 
-                    links.push({
-                        source: namespace,
-                        target: `${namespace}/${app}`
-                    });
+            Object.entries(apps).forEach(([app, ts]) => {
+                const ago = secondsAgo(ts);
+
+                nodes.push({
+                    id:`${namespace}/${app}`,
+                    label: app,
+                    namespace,
+                    timestamp: ts,
+                    ago,
+                    type:"app",
+                    neverSeen: ts === null
+                });
+
+                links.push({
+                    source: namespace,
+                    target: `${namespace}/${app}`
                 });
             });
-
-            draw(nodes, links);
         });
+
+        draw(nodes, links);
+    });
 
     // ---------- D3 Visualization ----------
     function draw(nodes, links){
