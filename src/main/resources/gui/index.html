@@ -90,7 +90,7 @@
         const bootAgo = Math.floor(Date.now() / 1000) - startedAt;
 
         document.getElementById("boot-info").textContent =
-            `Activity since last boot (${formatDateTime(startedAt)}, ${humanAgo(bootAgo)})`;
+            `Activity since start of usage of Valkey. App last boot (${formatDateTime(startedAt)}, ${humanAgo(bootAgo)})`;
 
         const nodes = [];
         const links = [];
