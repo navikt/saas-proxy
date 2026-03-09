@@ -29,7 +29,7 @@
       "POST /api/system/v1/hent-aktiv-konto"
     ],
     "sokos-skattekort": [
-      "POST /api/v1/hent-skattekort"
+      "POST /api/v1/person/hent-skattekort"
     ],
     "sokos-utbetaldata": [
       "POST /utbetaldata/api/v2/hent-utbetalingsinformasjon/intern"
@@ -104,7 +104,7 @@
     ]
   },
   "oppgavehandtering": {
-    "oppgave-q1": [
+    "oppgave": [
       "GET /api/v1/oppgaver",
       "GET /api/v1/oppgaver/.*/oppfolging",
       "GET /api/v1/kodeverk/oppgavetype/.*",
@@ -125,7 +125,9 @@
     "tiltakspenger-datadeling": [
       "POST /behandlinger/apne",
       "POST /vedtak/tidslinje",
-      "POST /meldekort/detaljer"
+      "POST /meldekort/detaljer",
+      "POST /arena/meldekort",
+      "POST /arena/utbetalingshistorikk"
     ]
   },
   "repr": {
@@ -189,6 +191,12 @@
     "aareg-tilgangskontroll-q2": [
       "POST /api/v1/tilganger/opprett",
       "POST /api/v1/tilganger/fjern"
+    ]
+  },
+  "pensjon-person": {
+    "pensjon-pid-encryption": [
+      "POST /api/encrypt",
+      "POST /api/decrypt"
     ]
   }
 }

@@ -35,6 +35,7 @@ import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
 import java.nio.ByteBuffer
+import java.time.Instant
 
 const val TARGET_APP = "target-app"
 const val TARGET_NAMESPACE = "target-namespace"
@@ -46,6 +47,8 @@ object Application {
     const val USE_VALKEY = true
 
     val cluster = env(env_NAIS_CLUSTER_NAME)
+
+    val startedAt: Instant = Instant.now()
 
     private val blockFromForwarding =
         listOf(TARGET_APP, TARGET_NAMESPACE, TARGET_ONLY_REDIRECT, "host", "authorization").map { it.lowercase() }
@@ -79,6 +82,7 @@ object Application {
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
             "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
             "/internal/lastseen" bind lastSeenHandler,
+            "/internal/startedAt" bind startedAtHandler,
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
@@ -87,6 +91,12 @@ object Application {
 
         apiServer(8080).start()
         File("/tmp/started").writeText("started2")
+    }
+
+    val startedAtHandler: HttpHandler = {
+        Response(OK)
+            .header("Content-Type", "application/json")
+            .body("""{"startedAt": ${startedAt.epochSecond}}""")
     }
 
     private val isReadyHttpHandler: HttpHandler = {
