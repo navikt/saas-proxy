@@ -102,6 +102,8 @@ spec:
           namespace: arbeidsforhold
         - application: pensjon-pid-encryption
           namespace: pensjon-person
+        - application: entra-proxy
+          namespace: sikkerhetstjenesten
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
