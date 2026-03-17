@@ -201,7 +201,7 @@
   },
   "sikkerhetstjenesten": {
     "entra-proxy": [
-      "GET /api/v1/enhet/.*"
+      "GET /api/v1/enhet/ansatt/.*"
     ]
   }
 }
