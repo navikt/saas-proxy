@@ -183,5 +183,10 @@
       "POST /api/encrypt",
       "POST /api/decrypt"
     ]
+  },
+  "sikkerhetstjenesten": {
+    "entra-proxy": [
+      "GET /api/v1/enhet/.*"
+    ]
   }
 }
