@@ -219,6 +219,7 @@ object Application {
                             !(blockFromForwarding.contains(it.first.lowercase()))
                         }.toList() +
                         listOf(
+                            "Connection" to "close",
                             "Authorization" to "Bearer ${
                                 TokenExchangeHandler.exchange(
                                     jwtIn = token,
