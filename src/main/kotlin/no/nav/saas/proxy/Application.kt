@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
+import no.nav.saas.proxy.HttpClientResources.clientRetry
 import no.nav.saas.proxy.ingresses.IngressSet
 import no.nav.saas.proxy.ingresses.Ingresses
 import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
@@ -219,6 +220,7 @@ object Application {
                             !(blockFromForwarding.contains(it.first.lowercase()))
                         }.toList() +
                         listOf(
+                            // "Connection" to "close", //To test if stale connections in connection pools is an issue
                             "Authorization" to "Bearer ${
                                 TokenExchangeHandler.exchange(
                                     jwtIn = token,
@@ -233,7 +235,8 @@ object Application {
 
                 try {
                     val millisBeforeRedirect = System.currentTimeMillis()
-                    val response = client(redirect)
+                    val clientToUse = if (redirect.method == Method.GET) clientRetry else client
+                    val response = clientToUse(redirect)
                     val millisAfterRedirect = System.currentTimeMillis()
 
                     val redirectCallTime = millisAfterRedirect - millisBeforeRedirect
@@ -246,11 +249,11 @@ object Application {
                         )}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
                     }
 
-                    if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
-                        File(
-                            "/tmp/latest-$targetApp-${response.status.code}",
-                        ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
-                    }
+                    // if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
+                    File(
+                        "/tmp/latest-$targetApp-${response.status.code}",
+                    ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
+                    // }
 
                     try {
                         val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"

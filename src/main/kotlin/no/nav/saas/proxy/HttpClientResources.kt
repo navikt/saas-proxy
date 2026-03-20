@@ -23,6 +23,15 @@ object HttpClientResources {
             .retryOnConnectionFailure(false)
             .build()
 
+    private val httpClientRetry: OkHttpClient =
+        OkHttpClient
+            .Builder()
+            .connectTimeout(Duration.ofSeconds(60))
+            .readTimeout(Duration.ofSeconds(60))
+            .writeTimeout(Duration.ofSeconds(60))
+            .retryOnConnectionFailure(true)
+            .build()
+
     // OkHttpClient for Azure/Entra token calls with shorter timeouts
     private val azureHttpClient: OkHttpClient =
         OkHttpClient
@@ -34,6 +43,7 @@ object HttpClientResources {
             .build()
 
     val client = OkHttp(httpClient)
+    val clientRetry = OkHttp(httpClientRetry)
     val clientAzure = OkHttp(azureHttpClient)
 
     fun scheduleConnectionMetricsUpdater() {
