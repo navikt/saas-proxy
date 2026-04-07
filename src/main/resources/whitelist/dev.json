@@ -127,7 +127,8 @@
       "POST /vedtak/tidslinje",
       "POST /meldekort/detaljer",
       "POST /arena/meldekort",
-      "POST /arena/utbetalingshistorikk"
+      "POST /arena/utbetalingshistorikk",
+      "POST /vedtak/sak"
     ]
   },
   "repr": {
