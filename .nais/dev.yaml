@@ -102,12 +102,14 @@ spec:
           namespace: arbeidsforhold
         - application: pensjon-pid-encryption
           namespace: pensjon-person
+        - application: entra-proxy
+          namespace: sikkerhetstjenesten
       external:
         - host: "sf-arkiv-dokumentasjon.dev-fss-pub.nais.io"
         - host: "sf-websak.dev-fss-pub.nais.io"
         - host: "sf-brukervarsel-proxy.dev-fss-pub.nais.io"
         - host: "saf-q2.dev-fss-pub.nais.io"
-        - host: "oppgave-q1.dev-fss-pub.nais.io"
+        - host: "oppgave.dev-fss-pub.nais.io"
         - host: "dokarkiv-q2.dev-fss-pub.nais.io"
         - host: "regoppslag.dev-fss-pub.nais.io"
         - host: "arena-api-q2.dev-fss-pub.nais.io"

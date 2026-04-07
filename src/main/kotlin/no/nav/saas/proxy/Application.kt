@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
+import no.nav.saas.proxy.HttpClientResources.clientRetry
 import no.nav.saas.proxy.ingresses.IngressSet
 import no.nav.saas.proxy.ingresses.Ingresses
 import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
@@ -35,6 +36,7 @@ import org.http4k.server.Netty
 import org.http4k.server.asServer
 import java.io.File
 import java.nio.ByteBuffer
+import java.time.Instant
 
 const val TARGET_APP = "target-app"
 const val TARGET_NAMESPACE = "target-namespace"
@@ -46,6 +48,8 @@ object Application {
     const val USE_VALKEY = true
 
     val cluster = env(env_NAIS_CLUSTER_NAME)
+
+    val startedAt: Instant = Instant.now()
 
     private val blockFromForwarding =
         listOf(TARGET_APP, TARGET_NAMESPACE, TARGET_ONLY_REDIRECT, "host", "authorization").map { it.lowercase() }
@@ -79,6 +83,7 @@ object Application {
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
             "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
             "/internal/lastseen" bind lastSeenHandler,
+            "/internal/startedAt" bind startedAtHandler,
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
@@ -87,6 +92,12 @@ object Application {
 
         apiServer(8080).start()
         File("/tmp/started").writeText("started")
+    }
+
+    val startedAtHandler: HttpHandler = {
+        Response(OK)
+            .header("Content-Type", "application/json")
+            .body("""{"startedAt": ${startedAt.epochSecond}}""")
     }
 
     private val isReadyHttpHandler: HttpHandler = {
@@ -209,6 +220,7 @@ object Application {
                             !(blockFromForwarding.contains(it.first.lowercase()))
                         }.toList() +
                         listOf(
+                            // "Connection" to "close", //To test if stale connections in connection pools is an issue
                             "Authorization" to "Bearer ${
                                 TokenExchangeHandler.exchange(
                                     jwtIn = token,
@@ -223,7 +235,8 @@ object Application {
 
                 try {
                     val millisBeforeRedirect = System.currentTimeMillis()
-                    val response = client(redirect)
+                    val clientToUse = if (redirect.method == Method.GET) clientRetry else client
+                    val response = clientToUse(redirect)
                     val millisAfterRedirect = System.currentTimeMillis()
 
                     val redirectCallTime = millisAfterRedirect - millisBeforeRedirect
@@ -236,11 +249,11 @@ object Application {
                         )}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
                     }
 
-                    if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
-                        File(
-                            "/tmp/latest-$targetApp-${response.status.code}",
-                        ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
-                    }
+                    // if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
+                    File(
+                        "/tmp/latest-$targetApp-${response.status.code}",
+                    ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
+                    // }
 
                     try {
                         val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
