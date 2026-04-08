@@ -1,11 +1,13 @@
 package no.nav.saas.proxy
 
 import mu.KotlinLogging
+import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
 import org.http4k.client.OkHttp
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 object HttpClientResources {
     private val log = KotlinLogging.logger { }
@@ -17,6 +19,7 @@ object HttpClientResources {
     private val httpClient: OkHttpClient =
         OkHttpClient
             .Builder()
+            .connectionPool(ConnectionPool(5, 60, TimeUnit.SECONDS))
             .connectTimeout(Duration.ofSeconds(60))
             .readTimeout(Duration.ofSeconds(60))
             .writeTimeout(Duration.ofSeconds(60))
@@ -26,6 +29,7 @@ object HttpClientResources {
     private val httpClientRetry: OkHttpClient =
         OkHttpClient
             .Builder()
+            .connectionPool(ConnectionPool(5, 60, TimeUnit.SECONDS))
             .connectTimeout(Duration.ofSeconds(60))
             .readTimeout(Duration.ofSeconds(60))
             .writeTimeout(Duration.ofSeconds(60))
@@ -36,10 +40,11 @@ object HttpClientResources {
     private val azureHttpClient: OkHttpClient =
         OkHttpClient
             .Builder()
+            .connectionPool(ConnectionPool(5, 60, TimeUnit.SECONDS))
             .connectTimeout(Duration.ofSeconds(5))
             .readTimeout(Duration.ofSeconds(5))
             .writeTimeout(Duration.ofSeconds(3))
-            .retryOnConnectionFailure(false)
+            .retryOnConnectionFailure(true)
             .build()
 
     val client = OkHttp(httpClient)

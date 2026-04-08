@@ -1,6 +1,10 @@
 name: Build, push, and deploy
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - 'chore/**'
+  pull_request:
 
 jobs:
   test:
@@ -33,7 +37,7 @@ jobs:
           java-version: 21
           distribution: 'temurin'
       - name: Setup Gradle to generate and submit dependency graphs
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
           cache-disabled: true
           dependency-graph: generate-and-submit
@@ -42,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean build shadowJar -x test
       - name: Build and publish Docker image
-        uses: nais/docker-build-push@078e460885ed0424b60d45ce9220b4be1748be9d # v0
+        uses: nais/docker-build-push@45d352fb62fb52ccb5ff6cba22c047fa02b35321 # v0
         id: docker-push
         with:
           team: platforce
