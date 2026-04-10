@@ -173,14 +173,7 @@ object Application {
                 val url = "$ingress${req.uri}"
                 val redirect = Request(req.method, url).body(req.body).headers(forwardHeaders)
                 val response = client(redirect)
-                log.info { "Forwarded call to $url" }
-//                try {
-//                    File("/tmp/latestRedirect-${response.status.code}").writeText(
-//                        "$currentDateTime\n\nREQUEST:\n" + req.toMessage() + "\n\nREDIRECT:\n" + redirect.toMessage() + "\n\nRESPONSE:\n" + response.toMessage()
-//                    )
-//                } catch (e: Exception) {
-//                    log.error { "Failed to store forwarded call" }
-//                }
+                log.info { "Forwarded call to $url via only redirect" }
                 response.withoutBlockedHeaders()
             } else {
                 Response(UNAUTHORIZED)
@@ -244,9 +237,10 @@ object Application {
                     val handlingTokenTime = totalCallTime - redirectCallTime
 
                     log.info {
-                        "Forwarded call (${response.status}) to ${req.method.name} $internUrl (target cluster ${targetCluster(
-                            ingress,
-                        )}) - call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
+                        "Forwarded call (${response.status}) to ${req.method.name} $internUrl " +
+                            "(with ${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}-token) " +
+                            "target cluster ${targetCluster(ingress)}) " +
+                            "- call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
                     }
 
                     // if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
