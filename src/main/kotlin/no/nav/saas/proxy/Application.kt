@@ -1,6 +1,5 @@
 package no.nav.saas.proxy
 
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import no.nav.saas.proxy.HttpClientResources.client
@@ -206,7 +205,6 @@ object Application {
                 Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
-
                 val forwardHeaders =
                     req.headers
                         .filter {
@@ -263,7 +261,6 @@ object Application {
                     } catch (e: Exception) {
                         log.error { "Could not register forwarded call metric " + e.message }
                     }
-
                     try {
                         if (USE_VALKEY) {
                             Valkey.updateAppLastSeen(targetApp, namespace)
@@ -271,53 +268,34 @@ object Application {
                     } catch (e: Exception) {
                         log.error { "Could not store timestamp for app call " + e.message }
                     }
-
                     response.withoutBlockedHeaders()
                 } catch (e: Exception) {
-                    // To catch issues in the client(request) call
+                    // To catch issues in the client(request) call and retry once on GET
                     log.error { "Failed call to $internUrl (target cluster ${targetCluster(ingress)}))" }
-                    File(
-                        "/tmp/latest-$targetApp-EXCEPTION",
-                    ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
-                    if (redirect.method == Method.GET) {
-                        // Retry on exceptions on GET // TODO refactor
-                        try {
-                            val response = client(redirect)
-                            val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
-                            Metrics.forwardedCallsInc(
-                                targetApp = targetApp,
-                                path = Metrics.mask(path),
-                                ingress = ingress ?: "",
-                                tokenType = tokenType,
-                                status = "retry-" + response.status.code.toString(),
-                            )
-                            response.withoutBlockedHeaders()
-                        } catch (e: Exception) {
-                            val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
-                            Metrics.forwardedCallsInc(
-                                targetApp = targetApp,
-                                path = Metrics.mask(path),
-                                ingress = ingress ?: "",
-                                tokenType = tokenType,
-                                status = "retry-500",
-                            )
-                            Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
+                    File("/tmp/latest-$targetApp-EXCEPTION")
+                        .writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
+                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
+
+                    val (response, statusCodeForMetrics) =
+                        if (redirect.method == Method.GET) {
+                            try {
+                                val retryResponse = client(redirect)
+                                retryResponse.withoutBlockedHeaders() to "retry-${retryResponse.status.code}"
+                            } catch (retryException: Exception) {
+                                Response(Status.INTERNAL_SERVER_ERROR).body(retryException.stackTraceToString()) to "retry-500"
+                            }
+                        } else {
+                            Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString()) to "500"
                         }
-                    } else {
-                        try {
-                            val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
-                            Metrics.forwardedCallsInc(
-                                targetApp = targetApp,
-                                path = Metrics.mask(path),
-                                ingress = ingress ?: "",
-                                tokenType = tokenType,
-                                status = "500",
-                            )
-                        } catch (e: Exception) {
-                            log.error { "Could not register forwarded call metric " + e.message }
-                        }
-                        Response(Status.INTERNAL_SERVER_ERROR).body(e.stackTraceToString())
-                    }
+
+                    Metrics.forwardedCallsInc(
+                        targetApp = targetApp,
+                        path = Metrics.mask(path),
+                        ingress = ingress ?: "",
+                        tokenType = tokenType,
+                        status = statusCodeForMetrics,
+                    )
+                    response
                 }
             }
         }

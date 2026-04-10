@@ -68,10 +68,14 @@ object Metrics {
         totalMs: Long? = null,
         handlingMs: Long? = null,
     ) {
-        forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
-        if (totalMs != null && handlingMs != null) {
-            totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
-            handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
+        try {
+            forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
+            if (totalMs != null && handlingMs != null) {
+                totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
+                handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())
+            }
+        } catch (e: Exception) {
+            log.error(e) { "Exception in forwarded calls metrics, ${e.message}" }
         }
     }
 
