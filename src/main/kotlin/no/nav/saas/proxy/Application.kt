@@ -224,6 +224,7 @@ object Application {
                 val host = ingress ?: "http://$targetApp.$namespace"
                 val targetUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
                 val redirect = Request(req.method, targetUrl).body(req.body).headers(forwardHeaders)
+                val tokenType = if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"
 
                 try {
                     val millisBeforeRedirect = System.currentTimeMillis()
@@ -244,10 +245,11 @@ object Application {
                         "targetUrl" to targetUrl,
                         "totalCallTime" to "$totalCallTime",
                         "handlingTokenTime" to "$handlingTokenTime",
+                        "tokenType" to tokenType,
                     ) {
                         log.info {
                             "Forwarded call (${response.status}) to ${req.method.name} $targetUrl " +
-                                "(with ${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}-token) " +
+                                "(with $tokenType-token) " +
                                 "target cluster ${targetCluster(ingress)}) " +
                                 "- call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
                         }
@@ -260,7 +262,6 @@ object Application {
                     // }
 
                     try {
-                        val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
                         Metrics.forwardedCallsInc(
                             targetApp = targetApp,
                             path = Metrics.mask(path),
@@ -290,6 +291,7 @@ object Application {
                         "targetApp" to targetApp,
                         "targetNamespace" to namespace,
                         "targetUrl" to targetUrl,
+                        "tokenType" to tokenType,
                     ) {
                         log.error {
                             "Failed call to $targetUrl (target cluster ${targetCluster(ingress)}))" +
@@ -298,7 +300,6 @@ object Application {
                     }
                     File("/tmp/latest-$targetApp-EXCEPTION")
                         .writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
-                    val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
 
                     val (response, statusCodeForMetrics) =
                         if (redirect.method == Method.GET) {
