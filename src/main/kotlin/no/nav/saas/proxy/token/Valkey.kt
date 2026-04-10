@@ -68,7 +68,7 @@ object Valkey {
             // Store timestamp with TTL
             commands.setex(redisKey, ttlSeconds, currentTimestamp.toString())
 
-            log.info("Updated last seen for $namespace $appName to $currentTimestamp with TTL $ttlSeconds seconds")
+            // log.info("Updated last seen for $namespace $appName to $currentTimestamp with TTL $ttlSeconds seconds")
         } catch (e: Exception) {
             log.error("Error updating last seen for $namespace $appName: ${e.message}")
         }

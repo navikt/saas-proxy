@@ -2,6 +2,7 @@ package no.nav.saas.proxy
 
 import com.google.gson.GsonBuilder
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.HttpClientResources.clientRetry
 import no.nav.saas.proxy.ingresses.IngressSet
@@ -221,8 +222,8 @@ object Application {
                         )
 
                 val host = ingress ?: "http://$targetApp.$namespace"
-                val internUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
-                val redirect = Request(req.method, internUrl).body(req.body).headers(forwardHeaders)
+                val targetUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
+                val redirect = Request(req.method, targetUrl).body(req.body).headers(forwardHeaders)
 
                 try {
                     val millisBeforeRedirect = System.currentTimeMillis()
@@ -234,11 +235,22 @@ object Application {
                     val totalCallTime = millisAfterRedirect - millisAtStart
                     val handlingTokenTime = totalCallTime - redirectCallTime
 
-                    log.info {
-                        "Forwarded call (${response.status}) to ${req.method.name} $internUrl " +
-                            "(with ${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}-token) " +
-                            "target cluster ${targetCluster(ingress)}) " +
-                            "- call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
+                    withLoggingContext(
+                        "statusCode" to response.status.code.toString(),
+                        "method" to req.method.name,
+                        "targetCluster" to targetCluster(ingress),
+                        "targetApp" to targetApp,
+                        "targetNamespace" to namespace,
+                        "targetUrl" to targetUrl,
+                        "totalCallTime" to "$totalCallTime",
+                        "handlingTokenTime" to "$handlingTokenTime",
+                    ) {
+                        log.info {
+                            "Forwarded call (${response.status}) to ${req.method.name} $targetUrl " +
+                                "(with ${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}-token) " +
+                                "target cluster ${targetCluster(ingress)}) " +
+                                "- call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
+                        }
                     }
 
                     // if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
@@ -271,7 +283,19 @@ object Application {
                     response.withoutBlockedHeaders()
                 } catch (e: Exception) {
                     // To catch issues in the client(request) call and retry once on GET
-                    log.error { "Failed call to $internUrl (target cluster ${targetCluster(ingress)}))" }
+                    withLoggingContext(
+                        "statusCode" to "EXCEPTION",
+                        "method" to req.method.name,
+                        "targetCluster" to targetCluster(ingress),
+                        "targetApp" to targetApp,
+                        "targetNamespace" to namespace,
+                        "targetUrl" to targetUrl,
+                    ) {
+                        log.error {
+                            "Failed call to $targetUrl (target cluster ${targetCluster(ingress)}))" +
+                                (if (redirect.method == Method.GET) " - will retry once" else "") + " ${e.message}"
+                        }
+                    }
                     File("/tmp/latest-$targetApp-EXCEPTION")
                         .writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
                     val tokenType = "proxy:${if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"}"
