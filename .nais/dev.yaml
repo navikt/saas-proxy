@@ -39,6 +39,8 @@ spec:
       cpu: 10m
       memory: 512Mi
   ingresses:
+    - "https://saas-proxy.ekstern.dev.nav.no"
+    - "https://saas-proxy.intern.dev.nav.no"
     - "https://saas-proxy-tmp.ekstern.dev.nav.no"
     - "https://saas-proxy-tmp.intern.dev.nav.no"
   azure:
