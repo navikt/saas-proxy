@@ -84,6 +84,7 @@ object Application {
             "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
             "/internal/lastseen" bind lastSeenHandler,
             "/internal/startedAt" bind startedAtHandler,
+            "/internal/whoAmI" bind Method.GET to { Response(OK).body(env(env_AZURE_APP_CLIENT_ID)) },
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
