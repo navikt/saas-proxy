@@ -60,10 +60,8 @@ spec:
         - application: salesforce
           namespace: teamcrm
           cluster: dev-external
-        - application: itestapp
-          namespace: teamcrm
         - application: simtest
-          namespace: teamcrm
+          namespace: platforce
     outbound:
       rules:
         - application: veilarbapi
