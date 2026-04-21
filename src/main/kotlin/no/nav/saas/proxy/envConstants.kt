@@ -16,6 +16,7 @@ const val env_NAIS_CLUSTER_NAME = "NAIS_CLUSTER_NAME"
 
 const val config_WHITELIST_FILE = "WHITELIST_FILE"
 const val config_INGRESS_FILE = "INGRESS_FILE"
+const val config_TEAMLOGGING_FILE = "TEAMLOGGING_FILE"
 
 /**
  * Shortcut for fetching environment variables

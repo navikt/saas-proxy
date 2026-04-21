@@ -33,7 +33,7 @@ object Metrics {
     private val cacheStoreTimeMax: Gauge = registerGauge("cache_store_time_max")
 
     private val forwardedCalls: Counter =
-        registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status")
+        registerLabelCounter("forwarded_calls", "target_app", "path", "ingress", "token_type", "status", "target_namespace")
 
     val totalMsHistogram = registerForwardedCallHistogram("total_ms")
 
@@ -65,11 +65,12 @@ object Metrics {
         ingress: String,
         tokenType: String,
         status: String,
+        targetNamespace: String,
         totalMs: Long? = null,
         handlingMs: Long? = null,
     ) {
         try {
-            forwardedCalls.labels(targetApp, path, ingress, tokenType, status).inc()
+            forwardedCalls.labels(targetApp, path, ingress, tokenType, status, targetNamespace).inc()
             if (totalMs != null && handlingMs != null) {
                 totalMsHistogram.labels(targetApp, tokenType, status).observe(totalMs.toDouble())
                 handlingMsHistogram.labels(targetApp, tokenType, status).observe(handlingMs.toDouble())

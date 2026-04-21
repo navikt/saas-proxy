@@ -124,3 +124,5 @@ spec:
       value: '/whitelist/prod.json'
     - name: INGRESS_FILE
       value: '/ingresses/prod.json'
+    - name: TEAMLOGGING_FILE
+      value: "/team-logging/prod.json"

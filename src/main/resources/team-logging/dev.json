@@ -1,0 +1,10 @@
+{
+  "teamnks": {
+    "gcpProject": "teamnks-dev-a4ad",
+    "teamdokumenthandtering.dokarkiv": {
+      "requestBody": false,
+      "responseBody": true,
+      "headers": ["nav-user-id", "X-Request-ID", "nav-call-id"]
+    }
+  }
+}

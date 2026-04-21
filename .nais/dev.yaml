@@ -130,3 +130,5 @@ spec:
       value: "/whitelist/dev.json"
     - name: INGRESS_FILE
       value: "/ingresses/dev.json"
+    - name: TEAMLOGGING_FILE
+      value: "/team-logging/dev.json"

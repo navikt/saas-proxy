@@ -1,13 +1,16 @@
 package no.nav.saas.proxy
 
-import com.google.gson.GsonBuilder
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.HttpClientResources.clientRetry
+import no.nav.saas.proxy.gui.Gui
 import no.nav.saas.proxy.ingresses.IngressSet
 import no.nav.saas.proxy.ingresses.Ingresses
 import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
+import no.nav.saas.proxy.teamlogs.LoggingLookup
+import no.nav.saas.proxy.teamlogs.TeamLogging
+import no.nav.saas.proxy.teamlogs.toLookup
 import no.nav.saas.proxy.token.TokenExchangeHandler
 import no.nav.saas.proxy.token.TokenValidation
 import no.nav.saas.proxy.token.Valkey
@@ -73,6 +76,8 @@ object Application {
 
     val ingressSet: IngressSet = Ingresses.parse(env(config_INGRESS_FILE))
 
+    val teamLogsLookup: LoggingLookup = TeamLogging.parse(env(config_TEAMLOGGING_FILE)).toLookup()
+
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
     fun api(): HttpHandler =
@@ -82,23 +87,16 @@ object Application {
             "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
             "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
-            "/internal/lastseen" bind lastSeenHandler,
-            "/internal/startedAt" bind startedAtHandler,
+            "/internal/lastseen" bind Gui.lastSeenHandler,
+            "/internal/startedAt" bind Gui.startedAtHandler,
             "/internal/whoAmI" bind Method.GET to { Response(OK).body(env(env_AZURE_APP_CLIENT_ID)) },
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
     fun start() {
         // HttpClientResources.scheduleConnectionMetricsUpdater()
-
         apiServer(8080).start()
         File("/tmp/started").writeText("started2")
-    }
-
-    val startedAtHandler: HttpHandler = {
-        Response(OK)
-            .header("Content-Type", "application/json")
-            .body("""{"startedAt": ${startedAt.epochSecond}}""")
     }
 
     private val isReadyHttpHandler: HttpHandler = {
@@ -107,45 +105,6 @@ object Application {
         } else {
             Response(Status.SERVICE_UNAVAILABLE)
         }
-    }
-
-    private val lastSeenHandler: HttpHandler = {
-        val data = buildNamespaceAppData(Valkey.fetchAllLastSeen(), ruleSet) // returns Map<String, Map<String, Long>>
-        val gson =
-            GsonBuilder()
-                .serializeNulls()
-                .create()
-        Response(OK)
-            .header("Content-Type", "application/json")
-            .body(gson.toJson(data))
-    }
-
-    fun buildNamespaceAppData(
-        redisData: Map<String, Map<String, Long>>, // last seen from Valkey
-        ruleSet: RuleSet, // full whitelist config
-    ): Map<String, Map<String, Long?>> { // namespace -> app -> lastSeen (nullable)
-
-        val result = mutableMapOf<String, MutableMap<String, Long?>>()
-
-        for ((namespace, apps) in ruleSet) {
-            val nsMap = mutableMapOf<String, Long?>()
-            for ((app, _) in apps) {
-                // take value from Redis if exists, otherwise null
-                val lastSeen = redisData[namespace]?.get(app)
-                nsMap[app] = lastSeen
-            }
-            result[namespace] = nsMap
-        }
-
-        // Include any Redis-only apps (if not in config)
-        redisData.forEach { (namespace, apps) ->
-            val nsMap = result.getOrPut(namespace) { mutableMapOf() }
-            apps.forEach { (app, lastSeen) ->
-                nsMap.putIfAbsent(app, lastSeen)
-            }
-        }
-
-        return result
     }
 
     private val redirectHttpHandler = { req: Request ->
@@ -224,7 +183,8 @@ object Application {
 
                 val host = ingress ?: "http://$targetApp.$namespace"
                 val targetUrl = "$host${req.uri}" // svc.cluster.local skipped due to same cluster
-                val redirect = Request(req.method, targetUrl).body(req.body).headers(forwardHeaders)
+                val bufferedReq = req.bodyString().let { req.body(it) } // To be safe if streaming body
+                val redirect = Request(req.method, targetUrl).body(bufferedReq.body).headers(forwardHeaders)
                 val tokenType = if (TokenExchangeHandler.isOBOToken(token)) "obo" else "m2m"
 
                 try {
@@ -237,6 +197,16 @@ object Application {
                     val totalCallTime = millisAfterRedirect - millisAtStart
                     val handlingTokenTime = totalCallTime - redirectCallTime
 
+                    val appKey = "$namespace.$targetApp"
+                    val teamLogConfig = teamLogsLookup[appKey]
+                    val gcpProject = teamLogConfig?.gcpProject
+
+                    val logMessage =
+                        "Forwarded call (${response.status}) to ${req.method.name} $targetUrl " +
+                            "(with $tokenType-token) " +
+                            "target cluster ${targetCluster(ingress)}) " +
+                            "- call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
+
                     withLoggingContext(
                         "statusCode" to response.status.code.toString(),
                         "method" to req.method.name,
@@ -247,42 +217,61 @@ object Application {
                         "totalCallTime" to "$totalCallTime",
                         "handlingTokenTime" to "$handlingTokenTime",
                         "tokenType" to tokenType,
+                        "teamLogsGcpProject" to (gcpProject ?: ""),
                     ) {
-                        log.info {
-                            "Forwarded call (${response.status}) to ${req.method.name} $targetUrl " +
-                                "(with $tokenType-token) " +
-                                "target cluster ${targetCluster(ingress)}) " +
-                                "- call time $totalCallTime ms ($handlingTokenTime handling, $redirectCallTime redirect)"
-                        }
-                    }
+                        log.info(logMessage)
 
-                    // if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
-                    File(
-                        "/tmp/latest-$targetApp-${response.status.code}",
-                    ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
-                    // }
+                        // if ((!response.status.successful && response.status.code != 404) || response.status.code == 201) {
+                        File(
+                            "/tmp/latest-$targetApp-${response.status.code}",
+                        ).writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${response.toMessage()}")
+                        // }
 
-                    try {
-                        Metrics.forwardedCallsInc(
-                            targetApp = targetApp,
-                            path = Metrics.mask(path),
-                            ingress = ingress ?: "",
-                            tokenType = tokenType,
-                            status = response.status.code.toString(),
-                            totalMs = totalCallTime,
-                            handlingMs = handlingTokenTime,
-                        )
-                    } catch (e: Exception) {
-                        log.error { "Could not register forwarded call metric " + e.message }
-                    }
-                    try {
-                        if (USE_VALKEY) {
-                            Valkey.updateAppLastSeen(targetApp, namespace)
+                        try {
+                            Metrics.forwardedCallsInc(
+                                targetApp = targetApp,
+                                targetNamespace = namespace,
+                                path = Metrics.mask(path),
+                                ingress = ingress ?: "",
+                                tokenType = tokenType,
+                                status = response.status.code.toString(),
+                                totalMs = totalCallTime,
+                                handlingMs = handlingTokenTime,
+                            )
+                        } catch (e: Exception) {
+                            log.error { "Could not register forwarded call metric " + e.message }
                         }
-                    } catch (e: Exception) {
-                        log.error { "Could not store timestamp for app call " + e.message }
+                        try {
+                            if (USE_VALKEY) {
+                                Valkey.updateAppLastSeen(targetApp, namespace)
+                            }
+                        } catch (e: Exception) {
+                            log.error { "Could not store timestamp for app call " + e.message }
+                        }
+                        val safeResponse = response.withoutBlockedHeaders()
+                        if (teamLogConfig != null) {
+                            val requestBody = if (teamLogConfig.requestBody) redirect.bodyString() else ""
+                            val responseBody = if (teamLogConfig.responseBody) safeResponse.bodyString() else ""
+                            val requestHeaders =
+                                teamLogConfig.headers.associate { header ->
+                                    "request-header-${header.lowercase()}" to (redirect.header(header) ?: "")
+                                }
+                            val responseHeaders =
+                                teamLogConfig.headers.associate { header ->
+                                    "response-header-${header.lowercase()}" to (safeResponse.header(header) ?: "")
+                                }
+                            withLoggingContext(
+                                mapOf(
+                                    "google_cloud_project" to teamLogConfig.gcpProject,
+                                    "requestBody" to requestBody,
+                                    "responseBody" to responseBody,
+                                ) + requestHeaders + responseHeaders,
+                            ) {
+                                log.info(logMessage)
+                            }
+                        }
+                        safeResponse
                     }
-                    response.withoutBlockedHeaders()
                 } catch (e: Exception) {
                     // To catch issues in the client(request) call and retry once on GET
                     withLoggingContext(
@@ -316,6 +305,7 @@ object Application {
 
                     Metrics.forwardedCallsInc(
                         targetApp = targetApp,
+                        targetNamespace = namespace,
                         path = Metrics.mask(path),
                         ingress = ingress ?: "",
                         tokenType = tokenType,
@@ -326,15 +316,6 @@ object Application {
             }
         }
     }
-
-    /**
-     * targetCluster - resolves target cluster based on the cluster of the proxy (dev or prod)
-     *                 with gcp replaced with fss if we are targeting an ingress
-     */
-    private fun targetCluster(specifiedIngress: String?) =
-        specifiedIngress?.let {
-            cluster.replace("gcp", "fss")
-        } ?: cluster
 
     private fun Response.withoutBlockedHeaders(): Response {
         val filteredHeaders = this.headers.filter { (key, _) -> key.lowercase() !in blockFromResponse }
