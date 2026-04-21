@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:property-naming")
+
 package no.nav.saas.proxy
 
 import mu.KotlinLogging
@@ -37,6 +39,7 @@ import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
+import org.slf4j.MarkerFactory
 import java.io.File
 import java.nio.ByteBuffer
 import java.time.Instant
@@ -51,6 +54,8 @@ object Application {
     const val USE_VALKEY = true
 
     val cluster = env(env_NAIS_CLUSTER_NAME)
+
+    private val TEAM_LOGS = MarkerFactory.getMarker("TEAM_LOGS")
 
     val startedAt: Instant = Instant.now()
 
@@ -266,7 +271,7 @@ object Application {
                                     "responseBody" to responseBody,
                                 ) + requestHeaders + responseHeaders,
                             ) {
-                                log.info(logMessage)
+                                log.info(TEAM_LOGS, logMessage)
                             }
                         }
                         safeResponse
