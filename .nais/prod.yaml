@@ -61,6 +61,8 @@ spec:
           cluster: prod-external
     outbound:
       rules:
+        - application: logging
+          namespace: nais-system
         - application: veilarbapi
           namespace: pto
         - application: sf-brukernotifikasjon
