@@ -168,9 +168,8 @@ object Application {
             } else {
                 val forwardHeaders =
                     req.headers
-                        .filter {
-                            !(blockFromForwarding.contains(it.first.lowercase()))
-                        }.toList() +
+                        .filter { !(blockFromForwarding.contains(it.first.lowercase())) }
+                        .toList() +
                         listOf(
                             // "Connection" to "close", //To test if stale connections in connection pools is an issue
                             "Authorization" to "Bearer ${

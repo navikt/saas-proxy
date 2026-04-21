@@ -20,5 +20,6 @@ class TeamLoggingTest {
     fun `Test that team logging parsing do not break`() {
         devTeamLoggingLookup.size
         prodTeamLoggingLookup.size
+        // println(devTeamLoggingLookup)
     }
 }

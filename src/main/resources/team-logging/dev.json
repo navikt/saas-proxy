@@ -5,6 +5,11 @@
       "requestBody": false,
       "responseBody": true,
       "headers": ["nav-user-id", "X-Request-ID", "nav-call-id"]
+    },
+    "team-rocket.digdir-krr-proxy": {
+      "requestBody": true,
+      "responseBody": true,
+      "headers": ["X-Request-ID", "nav-call-id"]
     }
   }
 }
