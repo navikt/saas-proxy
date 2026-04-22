@@ -65,18 +65,18 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .nais/dev.yaml
           VAR: image=${{ needs.build.outputs.image }}
-#  deploy-prod:
-#    name: Deploy to NAIS prod gcp
-#    needs: build
-##    if: github.ref == 'refs/heads/main' #TODO
-#    runs-on: ubuntu-latest
-#    permissions:
-#      id-token: write
-#      contents: read
-#    steps:
-#      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-#      - uses: nais/deploy/actions/deploy@fa754451577294aae42872a69b888b3470478ec1 # v2
-#        env:
-#          CLUSTER: prod-gcp
-#          RESOURCE: .nais/prod.yaml
-#          VAR: image=${{ needs.build.outputs.image }}
+  deploy-prod:
+    name: Deploy to NAIS prod gcp
+    needs: build
+#    if: github.ref == 'refs/heads/main' #TODO
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: nais/deploy/actions/deploy@fa754451577294aae42872a69b888b3470478ec1 # v2
+        env:
+          CLUSTER: prod-gcp
+          RESOURCE: .nais/prod.yaml
+          VAR: image=${{ needs.build.outputs.image }}
