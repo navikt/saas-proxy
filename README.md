@@ -154,8 +154,8 @@ En forutsetning for å ta i bruk dette er at Salesforce-teamet har et tilsvarend
 
 Konfigurasjonen ligger per miljø i:
 
-- [team-logging/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/team-logging/dev.json)
-- [team-logging/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/team-logging/prod.json)
+- [team-logging/dev.json](https://github.com/navikt/saas-proxy/blob/main/src/main/resources/team-logging/dev.json)
+- [team-logging/prod.json](https://github.com/navikt/saas-proxy/blob/main/src/main/resources/team-logging/prod.json)
 
 ### Struktur
 
