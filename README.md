@@ -209,6 +209,8 @@ Konfigurasjonen er strukturert per Salesforce-team som eier integrasjonen (ikke 
 
 Når et kall matches mot en konfigurert \<namespace>.\<app> sendes logger både til standardlogger og til teamets GCP-prosjekt med utvidet kontekst (body, headers, etc.)
 
+Du finner de resulterende loggene her: https://console.cloud.google.com/logs/query;query=resource.labels.container_name%3D%22saas-proxy%22
+<i>(velg riktig prosjekt)</i>
 </details> 
 
 <details>
