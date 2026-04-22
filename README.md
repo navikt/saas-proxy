@@ -150,7 +150,7 @@ Dette kan brukes av Salesforce-team for å logge potensielt sensitiv informasjon
 
 Se https://sikkerhet.nav.no/docs/sikker-utvikling/logging/ for mer information kring applikasjonslogging.
 
-Et krav er at Salesforce-teamet har et tilsvarende namespace i NAIS.
+En forutsetning for å ta i bruk dette er at Salesforce-teamet har et tilsvarende namespace i NAIS.
 
 Konfigurasjonen ligger per miljø i:
 
