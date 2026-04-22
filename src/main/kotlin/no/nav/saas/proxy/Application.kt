@@ -254,23 +254,25 @@ object Application {
                         }
                         val safeResponse = response.withoutBlockedHeaders()
                         if (teamLogConfig != null) {
-                            val requestBody = if (teamLogConfig.requestBody) redirect.bodyString() else ""
-                            val responseBody = if (teamLogConfig.responseBody) safeResponse.bodyString() else ""
-                            val requestHeaders =
-                                teamLogConfig.headers.associate { header ->
-                                    "request-header-${header.lowercase()}" to (redirect.header(header) ?: "")
-                                }
-                            val responseHeaders =
-                                teamLogConfig.headers.associate { header ->
-                                    "response-header-${header.lowercase()}" to (safeResponse.header(header) ?: "")
-                                }
-                            withLoggingContext(
-                                mapOf(
+                            val teamContext =
+                                mutableMapOf(
                                     "google_cloud_project" to teamLogConfig.gcpProject,
-                                    "requestBody" to requestBody,
-                                    "responseBody" to responseBody,
-                                ) + requestHeaders + responseHeaders,
-                            ) {
+                                )
+                            if (teamLogConfig.requestBody) {
+                                teamContext["requestBody"] = redirect.bodyString()
+                            }
+                            if (teamLogConfig.responseBody) {
+                                teamContext["responseBody"] = safeResponse.bodyString()
+                            }
+                            teamLogConfig.headers.forEach { header ->
+                                redirect.header(header)?.let {
+                                    teamContext["request-header-$header"] = it
+                                }
+                                safeResponse.header(header)?.let {
+                                    teamContext["response-header-$header"] = it
+                                }
+                            }
+                            withLoggingContext(teamContext) {
                                 log.info(TEAM_LOGS, logMessage)
                             }
                         }
