@@ -43,7 +43,7 @@ og
 
 Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path og ev. scope, f.eks:
 ```
-"teamnamespace": {
+"team-namespace": {
   "app": [
     "GET /getcall",
     "POST /done",
@@ -85,7 +85,7 @@ og
 
 Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"pattern"* er en streng bestående av http-metoden og regulære uttrykk før path og ev. scope, f.eks:
 ```
-"teamnamespace": {
+"team-namespace": {
   "app": [
     "GET /getcall",
     "POST /done",
@@ -141,6 +141,75 @@ https://saas-proxy.ekstern.dev.nav.no/do/a/call?param=1
 NB En app i gcp trenger ikke ha en ingress for å være tilgjengelig via proxy
 
 </details>
+
+<details>
+<summary><b>Team-logging</b></summary>
+
+Saas-proxy støtter valgfri videresending av request/response-logger til teamets egne logger i GCP som et verktøy for feilsøking av integrasjoner. 
+Dette kan brukes av Salesforce-team for å logge potensielt sensitiv informasjon som ikke eksponeres i standardlogger, som request body, response body og utvalgte headers.
+
+Se https://sikkerhet.nav.no/docs/sikker-utvikling/logging/ for mer information kring applikasjonslogging.
+
+Et krav er at Salesforce-teamet har et tilsvarende namespace i NAIS.
+
+Konfigurasjonen ligger per miljø i:
+
+- [team-logging/dev.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/team-logging/dev.json)
+- [team-logging/prod.json](https://github.com/navikt/saas-proxy/blob/master/src/main/resources/team-logging/prod.json)
+
+### Struktur
+
+Konfigurasjonen er strukturert per Salesforce-team som eier integrasjonen (ikke destinasjonsappens namespace):
+
+```json
+{
+  "<team-namespace>": {
+    "gcpProject": "<gcp-project-id>",
+    "<namespace>.<app>": {
+      "requestBody": <true|false>,
+      "responseBody": <true|false>,
+      "headers": ["header-1", "header-2"]
+    }
+  }
+}
+```
+**Eksempel:**
+```json
+{
+  "teamnks": {
+    "gcpProject": "teamnks-dev-a4ad",
+    "teamdokumenthandtering.dokarkiv": {
+      "requestBody": false,
+      "responseBody": true,
+      "headers": ["nav-user-id", "X-Request-ID", "nav-call-id"]
+    },
+    "team-rocket.digdir-krr-proxy": {
+      "requestBody": true,
+      "responseBody": true,
+      "headers": ["X-Request-ID", "nav-call-id"]
+    }
+  }
+}
+```
+**Forklaring**
+
+<b>team-namespace</b> - NAIS-namespace til teamet som eier integrasjonen (og mottar loggene)
+
+<b>gcpProject</b> - GCP-prosjektet loggene sendes til (du finner project-id f.eks. i https://console.cloud.google.com/logs via prosjektvelgeren)
+
+<b>namespace.app</b> - Destinasjonsappen som kalles via proxien, inkludert namespace
+
+<b>requestBody / responseBody</b> - Angir om request/response-body skal inkluderes i loggene
+
+<b>headers</b> - Liste over headers som skal inkluderes i loggene. En header inkluderes kun dersom den finnes i request/response, og logges med prefix <i>request-header-</i> eller <i>response-header-</i> 
+
+* Logging er <b>opt-in per integrasjon</b>
+
+* Felter som ikke er aktivert blir <b>ikke inkludert i loggene</b> (ikke tomme verdier)
+
+Når et kall matches mot en konfigurert \<namespace>.\<app> sendes logger både til standardlogger og til teamets GCP-prosjekt med utvidet kontekst (body, headers, etc.)
+
+</details> 
 
 <details>
 <summary><strong>Flyt</strong></summary>

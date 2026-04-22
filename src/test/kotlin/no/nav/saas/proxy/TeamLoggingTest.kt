@@ -22,4 +22,10 @@ class TeamLoggingTest {
         prodTeamLoggingLookup.size
         // println(devTeamLoggingLookup)
     }
+
+    @Test
+    fun `Ensure that tokens are not configured to be sent to team logs`() {
+        Assertions.assertFalse(devTeamLoggingLookup.values.any { it.headers.map { it.lowercase().trim() }.contains("authorization") })
+        Assertions.assertFalse(prodTeamLoggingLookup.values.any { it.headers.map { it.lowercase().trim() }.contains("authorization") })
+    }
 }
