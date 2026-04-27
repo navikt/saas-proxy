@@ -101,6 +101,7 @@
       "GET /api/v1/oppgaver/.*/oppfolging",
       "GET /api/v1/kodeverk/oppgavetype/.*",
       "GET /api/v1/oppgaver/.*",
+      "GET /api/v2/oppgaver/.*",
       "GET /api/v1/kodeverk",
       "PATCH /api/v1/oppgaver/.*",
       "POST /api/v1/oppgaver"
