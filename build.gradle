@@ -34,6 +34,11 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
 
     implementation 'io.lettuce:lettuce-core:7.6.0.RELEASE'
+    implementation 'io.netty:netty-resolver-dns:4.2.15.Final' // Transient
+    implementation 'io.netty:netty-handler:4.2.15.Final' // Transient
+    implementation 'io.netty:netty-codec-http:4.2.13.Final' // Transient
+    implementation 'io.netty:netty-codec-http2:4.2.13.Final' // Transient
+    implementation 'io.netty:netty-codec-compression:4.2.13.Final' // Transient
 
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.json:json:20250517'
