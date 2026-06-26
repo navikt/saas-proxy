@@ -38,6 +38,7 @@ dependencies {
     implementation "org.http4k:http4k-client-okhttp:6.53.0.0"
 
     implementation 'io.lettuce:lettuce-core:7.6.0.RELEASE'
+    implementation 'io.netty:netty-resolver-dns:4.2.15.Final' // Transient
 //    implementation 'io.netty:netty-resolver-dns:4.2.15.Final' // Transient
 //    implementation 'io.netty:netty-handler:4.2.15.Final' // Transient
 //    implementation 'io.netty:netty-codec-http:4.2.13.Final' // Transient
@@ -51,7 +52,8 @@ dependencies {
     implementation "io.github.microutils:kotlin-logging:3.0.5"
     implementation "ch.qos.logback:logback-classic:1.5.34"
     implementation "net.logstash.logback:logstash-logback-encoder:9.0"
-    //implementation 'tools.jackson.core:jackson-core:3.1.1' //Transient dependency bump
+    implementation 'tools.jackson.core:jackson-core:3.1.4' //Transient dependency bump
+    implementation 'tools.jackson.core:jackson-databind:3.1.4' //Transient
     //implementation "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:2.26.1-alpha"
 
     implementation "io.prometheus:simpleclient_common:0.8.1"
