@@ -176,7 +176,7 @@
   },
   "aap": {
     "api-intern": [
-      "POST /perioder",
+      "POST /nks/meldeperioder",
       "POST /sakerByFnr",
       "POST /maksimum",
       "POST /kelvin/meldekort-detaljer"
