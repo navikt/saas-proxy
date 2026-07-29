@@ -112,7 +112,8 @@
       "GET /api/v2/oppgaver/.*",
       "GET /api/v1/kodeverk",
       "PATCH /api/v1/oppgaver/.*",
-      "POST /api/v1/oppgaver"
+      "POST /api/v1/oppgaver",
+      "POST /api/v2/oppgaver"
     ]
   },
   "teamarenanais": {
