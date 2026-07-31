@@ -64,8 +64,6 @@ spec:
         - application: logging
           namespace: nais-system
         - application: veilarbapi
-          namespace: pto
-        - application: veilarbapi
           namespace: dab
         - application: sf-brukernotifikasjon
           namespace: teamnks
