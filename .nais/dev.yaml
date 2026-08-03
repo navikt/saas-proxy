@@ -69,7 +69,7 @@ spec:
         - application: logging
           namespace: nais-system
         - application: veilarbapi
-          namespace: pto
+          namespace: dab
         - application: sf-brukernotifikasjon
           namespace: teamnks
         - application: digdir-krr-proxy

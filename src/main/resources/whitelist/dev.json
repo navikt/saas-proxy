@@ -1,5 +1,5 @@
 {
-  "pto": {
+  "dab": {
     "veilarbapi": [
       "GET /v1/oppfolging/periode",
       "GET /v1/oppfolging/info"
