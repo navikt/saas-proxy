@@ -11,8 +11,8 @@ spec:
   image: '{{ image }}'
   port: 8080
   replicas:
-    min: 10 # TODO Adjust up when actually migrating
-    max: 10
+    min: 12
+    max: 12
   liveness:
     path: /internal/isAlive
   readiness:
