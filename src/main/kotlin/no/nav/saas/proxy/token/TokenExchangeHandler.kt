@@ -149,9 +149,9 @@ object TokenExchangeHandler {
                 Valkey.commands.setex(key, secondsToLiveInCache, jwtEncoded)
                 Metrics.storeTimeObserve(System.currentTimeMillis() - millisBeforeRedisStore)
             } else {
-                File("/tmp/badmargin-$lblType").writeText(
-                    "$currentDateTime\n\nJwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded",
-                )
+                // File("/tmp/badmargin-$lblType").writeText(
+                //    "$currentDateTime\n\nJwtIn:\n$jwtIn:\n\nJwtGotten:\n$jwtEncoded",
+                // )
                 log.warn { "Skipping caching token that would have been stored less then 3 seconds" }
             }
         }
@@ -192,9 +192,9 @@ object TokenExchangeHandler {
         try {
             return JSONObject(this.bodyString()).get("access_token").toString()
         } catch (e: Exception) {
-            File("/tmp/failedExtractAccessToken-$alias-$tokenType").writeText(
-                "$currentDateTime\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage(),
-            )
+            // File("/tmp/failedExtractAccessToken-$alias-$tokenType").writeText(
+            //    "$currentDateTime\n\nREQUEST:\n" + request.toMessage() + "\n\nRESPONSE:\n" + this.toMessage(),
+            // )
             Metrics.tokenFetchFail.labels(alias, tokenType).inc()
             log.error { "Failed to fetch $tokenType access token for $alias - ${this.bodyString()}" }
             throw AuthenticationException("Failed to fetch $tokenType access token for $alias - ${this.bodyString()}")

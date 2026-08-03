@@ -101,7 +101,6 @@ object Application {
     fun start() {
         // HttpClientResources.scheduleConnectionMetricsUpdater()
         apiServer(8080).start()
-        File("/tmp/started").writeText("started2")
     }
 
     private val isReadyHttpHandler: HttpHandler = {
@@ -124,7 +123,7 @@ object Application {
             Metrics.apiCalls.labels(targetApp, Metrics.mask(path)).inc()
         } catch (e: Exception) {
             log.error { "Could not register api call metric " + e.message }
-            File("/tmp/failRegisterApiCall").writeText(e.stackTraceToString())
+            // File("/tmp/failRegisterApiCall").writeText(e.stackTraceToString())
         }
 
         if (targetOnlyRedirect) {
@@ -145,7 +144,7 @@ object Application {
             }
         } else if (targetApp == null) {
             log.info { "Proxy: Bad request - missing targetApp header" }
-            File("/tmp/missingheader").writeText(req.toMessage())
+            // File("/tmp/missingheader").writeText(req.toMessage())
             Response(BAD_REQUEST).body("Proxy: Bad request - missing header")
         } else {
             val namespace = targetNamespace ?: ruleSet.namespaceOfApp(targetApp) ?: ""
@@ -159,15 +158,15 @@ object Application {
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted path for app $targetApp, path $path" }
-                File("/tmp/notwhitelisted-$targetApp").writeText(
-                    "$currentDateTime\n\nREQUEST:\n" + req.toMessage(),
-                )
+                // File("/tmp/notwhitelisted-$targetApp").writeText(
+                //    "$currentDateTime\n\nREQUEST:\n" + req.toMessage(),
+                // )
                 Response(BAD_REQUEST).body("Proxy: Bad request - $path is not whitelisted")
             } else if (token == null) {
                 log.info { "Proxy: Not authorized - target app $targetApp" }
-                File("/tmp/noauth-$targetApp").writeText(
-                    "$currentDateTime\n\n" + req.toMessage(),
-                )
+                // File("/tmp/noauth-$targetApp").writeText(
+                //    "$currentDateTime\n\n" + req.toMessage(),
+                // )
                 Metrics.noAuth.labels(targetApp).inc()
                 Response(UNAUTHORIZED).body("Proxy: Not authorized")
             } else {
@@ -294,8 +293,8 @@ object Application {
                                 (if (redirect.method == Method.GET) " - will retry once" else "") + " ${e.message}"
                         }
                     }
-                    File("/tmp/latest-$targetApp-EXCEPTION")
-                        .writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
+                    // File("/tmp/latest-$targetApp-EXCEPTION")
+                    //    .writeText("${currentDateTime}\nREDIRECT:\n${redirect.toMessage()}\n\nRESPONSE:\n${e.stackTraceToString()}")
 
                     val (response, statusCodeForMetrics) =
                         if (redirect.method == Method.GET) {
