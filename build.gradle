@@ -38,12 +38,7 @@ dependencies {
     implementation "org.http4k:http4k-client-okhttp:6.57.1.0"
 
     implementation 'io.lettuce:lettuce-core:7.6.0.RELEASE'
-    implementation 'io.netty:netty-resolver-dns:4.2.15.Final' // Transient
-//    implementation 'io.netty:netty-resolver-dns:4.2.15.Final' // Transient
-//    implementation 'io.netty:netty-handler:4.2.15.Final' // Transient
-//    implementation 'io.netty:netty-codec-http:4.2.13.Final' // Transient
-//    implementation 'io.netty:netty-codec-http2:4.2.13.Final' // Transient
-//    implementation 'io.netty:netty-codec-compression:4.2.13.Final' // Transient
+    implementation 'io.netty:netty-resolver-dns:4.2.17.Final' // Transient for lettuce-core:7.6.0
 
     implementation 'com.google.code.gson:gson:2.13.2'
     implementation 'org.json:json:20250517'
