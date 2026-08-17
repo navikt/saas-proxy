@@ -171,8 +171,7 @@
     "api-intern": [
       "POST /nks/meldeperioder",
       "POST /sakerByFnr",
-      "POST /maksimum",
-      "POST /kelvin/meldekort-detaljer"
+      "POST /maksimum"
     ]
   },
   "arbeidsforhold": {
