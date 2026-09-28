@@ -208,7 +208,7 @@
   },
   "dvh": {
     "dvh-api": [
-      "GET /ords/dvh/dt_hr/hvo_liste_salesforce\.json.*"
+      "GET /ords/dvh/dt_hr/hvo_liste_salesforce\\.json.*"
     ]
   }
 }
