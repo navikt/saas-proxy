@@ -95,6 +95,7 @@ object Application {
             "/internal/lastseen" bind Gui.lastSeenHandler,
             "/internal/startedAt" bind Gui.startedAtHandler,
             "/internal/whoAmI" bind Method.GET to { Response(OK).body(env(env_AZURE_APP_CLIENT_ID)) },
+            "/internal/whereGo" bind Method.GET to { Response(OK).body(env(env_AZURE_OPENID_CONFIG_TOKEN_ENDPOINT)) },
             "/{rest:.*}" bind redirectHttpHandler,
         )
 
