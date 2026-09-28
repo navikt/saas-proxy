@@ -205,5 +205,10 @@
     "entra-proxy": [
       "GET /api/v1/enhet/ansatt/.*"
     ]
+  },
+  "dvh": {
+    "dvh-api": [
+      "GET /ords/dvh/dt_hr/hvo_liste_salesforce\.json.*"
+    ]
   }
 }

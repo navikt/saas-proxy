@@ -37,5 +37,8 @@
   },
   "pensjon-q2": {
     "pensjon-pen-q2": "https://pensjon-pen-q2.dev-fss-pub.nais.io"
+  },
+  "dvh": {
+    "dvh-api": "https://dvh.adeo.no"
   }
 }
