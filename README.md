@@ -1,4 +1,4 @@
-# [saas-proxy](https://github.com/navikt/saas-proxy)
+# saas-proxy <a href="https://github.com/navikt/saas-proxy" title="View on GitHub">🔗</a>
 API for saas for å nå interna nav-apier i google cloud (enten app eller pub.nais.io ingress). 
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
 
