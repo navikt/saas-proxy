@@ -1,4 +1,4 @@
-# saas-proxy
+# [saas-proxy](https://github.com/navikt/saas-proxy)
 API for saas for å nå interna nav-apier i google cloud (enten app eller pub.nais.io ingress). 
 Proxyen slipper kun gjennom hvitelistede anrop med et gyldig azure token.
 
@@ -17,7 +17,7 @@ Den videresender forespørselen enten til pub.nais.io ingress eller til destinas
 > 4. Hvitelisten oppdateras.
 
 
-<details>
+<details markdown="1">
 <summary><b>Konfigurasjon hvis appen som skal eksponeres er i GCP</b></summary>
   
 Det må leggas til inbound rules i den app som ska exponeras av appeier:
@@ -54,7 +54,7 @@ Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"patter
 ```
 </details>
 
-<details>
+<details markdown="1">
 <summary><b>Konfigurasjon hvis appen som skal eksponeres er i FSS med en pub.nais.io ingress</b></summary>
 
   
@@ -96,7 +96,7 @@ Hvitelisten er strukturert under *"namespace"* *"app"* *"pattern"*, der *"patter
 ```
 </details>
 
-<details>
+<details markdown="1">
 <summary><b>Teste aktive hvitlisteregler</b></summary>
 Du kan teste om ett anrop er bestått eller ikke mot aktive regler hvis du går imot
 
@@ -116,7 +116,7 @@ Approved
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><b>Bruk av proxyn</b></summary>
 
 De eksterna klientene som ønsker anrope via proxyen må sende med tre headers:
@@ -142,7 +142,7 @@ NB En app i gcp trenger ikke ha en ingress for å være tilgjengelig via proxy
 
 </details>
 
-<details>
+<details markdown="1">
 <summary><b>Team-logging</b></summary>
 
 Saas-proxy støtter valgfri videresending av request/response-logger til teamets egne logger i GCP som et verktøy for feilsøking av integrasjoner. 
