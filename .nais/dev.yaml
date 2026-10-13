@@ -72,6 +72,8 @@ spec:
           namespace: dab
         - application: sf-brukernotifikasjon
           namespace: teamnks
+        - application: nks-foreldreansvar
+          namespace: teamnks
         - application: digdir-krr-proxy
           namespace: team-rocket
         - application: sokos-kontoregister-person
