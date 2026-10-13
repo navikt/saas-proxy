@@ -13,6 +13,11 @@
     "sf-nks-brukervarsel-proxy": [
       "POST /.*",
       "GET /.*"
+    ],
+    "nks-foreldreansvar": [
+      "GET /api/ping",
+      "POST /api/person",
+      "POST /api/foreldreansvar/verifiser"
     ]
   },
   "team-rocket": {
