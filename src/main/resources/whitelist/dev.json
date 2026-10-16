@@ -15,9 +15,8 @@
       "GET /.*"
     ],
     "nks-foreldreansvar": [
-      "GET /api/ping",
-      "POST /api/person",
-      "POST /api/foreldreansvar/verifiser"
+      "POST /api/foreldreansvar/verifiser",
+      "POST /api/foreldreansvar/barn"
     ]
   },
   "team-rocket": {
