@@ -7,6 +7,8 @@ Den videresender forespørselen enten til pub.nais.io ingress eller til destinas
 
 > [!TIP]
 > ### Sjekkliste for eksponering av nye endepunkter.
+> #### Hvis app har eksternt synlig ingress
+> 1. App-eier legger til inbound rule for Salesforce
 > #### Hvis app er i GCP
 > 1. Inbound rules i ny app oppdateras av appeier med saas-proxy
 > 2. Outbound rules til ny app oppdateras i denne Saas-proxyen
@@ -18,6 +20,21 @@ Den videresender forespørselen enten til pub.nais.io ingress eller til destinas
 > 4. Hvitelisten oppdateras.
 
 
+<details markdown="1">
+<summary><b>Hvis app har eksternt synlig ingress</b></summary>
+
+Salesforce kan kalle appens eksternt synlige ingress direkte med Entra-tokenet som brukes mot saas-proxyen: `salesforce:teamcrm:<dev/prod>-external`.
+
+App-eier må legge til følgende inbound rule i appen:
+
+```yaml
+- application: salesforce
+  namespace: teamcrm
+  cluster: <dev/prod>-external
+```
+
+Det er alt som trengs. Saas-proxyen brukes ikke.
+</details>
 <details markdown="1">
 <summary><b>Konfigurasjon hvis appen som skal eksponeres er i GCP</b></summary>
   
