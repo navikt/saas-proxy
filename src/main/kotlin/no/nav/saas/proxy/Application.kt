@@ -2,12 +2,12 @@
 
 package no.nav.saas.proxy
 
-import no.nav.saas.proxy.gui.filesHandler
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.saas.proxy.HttpClientResources.client
 import no.nav.saas.proxy.HttpClientResources.clientRetry
 import no.nav.saas.proxy.gui.Gui
+import no.nav.saas.proxy.gui.filesHandler
 import no.nav.saas.proxy.ingresses.IngressSet
 import no.nav.saas.proxy.ingresses.Ingresses
 import no.nav.saas.proxy.ingresses.Ingresses.ingressOf
