@@ -2,6 +2,7 @@
 
 package no.nav.saas.proxy
 
+import no.nav.saas.proxy.gui.filesHandler
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.saas.proxy.HttpClientResources.client
@@ -92,6 +93,8 @@ object Application {
             "/internal/metrics" bind Method.GET to Metrics.metricsHttpHandler,
             "/internal/test/{rest:.*}" bind Whitelist.testRulesHandler,
             "/internal/gui" bind Method.GET to static(ResourceLoader.Classpath("gui")),
+            "/internal/files" bind Method.GET to filesHandler(File("/tmp/files")),
+            "/internal/files/{path:.*}" bind Method.GET to filesHandler(File("/tmp/files")),
             "/internal/lastseen" bind Gui.lastSeenHandler,
             "/internal/startedAt" bind Gui.startedAtHandler,
             "/internal/whoAmI" bind Method.GET to { Response(OK).body(env(env_AZURE_APP_CLIENT_ID)) },
@@ -101,6 +104,8 @@ object Application {
 
     fun start() {
         // HttpClientResources.scheduleConnectionMetricsUpdater()
+        val dir = File("/tmp/files")
+        dir.mkdirs() // ensures /tmp/files exists
         apiServer(8080).start()
     }
 
@@ -156,6 +161,10 @@ object Application {
                     .filter { it.evaluateAsRule(req.method, "/$path") }
 
             val token = TokenValidation.firstValidToken(req)
+
+            if (cluster == "dev-gcp") {
+                File("/tmp/files/sample").writeText(req.toMessage())
+            }
 
             if (approvedByRules.isEmpty()) {
                 log.info { "Proxy: Bad request - not whitelisted path for app $targetApp, path $path" }
