@@ -16,7 +16,8 @@
     ],
     "nks-foreldreansvar": [
       "POST /api/foreldreansvar/verifiser",
-      "POST /api/foreldreansvar/barn"
+      "POST /api/foreldreansvar/barn",
+      "POST /api/foreldreansvar/ansvarlige"
     ]
   },
   "team-rocket": {
