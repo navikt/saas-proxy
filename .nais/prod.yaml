@@ -43,8 +43,6 @@ spec:
   ingresses:
     - "https://saas-proxy.nav.no"
     - "https://saas-proxy.intern.nav.no"
-    - "https://saas-proxy-tmp.nav.no"
-    - "https://saas-proxy-tmp.intern.nav.no"
   azure:
     application:
       enabled: true

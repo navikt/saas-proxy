@@ -19,7 +19,11 @@ class IngressesYamlVsJsonTest {
         for (key in keys) {
             current =
                 when (current) {
-                    is Map<*, *> -> current[key] // Access map by key
+                    is Map<*, *> -> {
+                        current[key]
+                    }
+
+                    // Access map by key
                     is List<*> -> {
                         if (key is String) {
                             // Map over list of maps to get specific key in each map
@@ -28,7 +32,10 @@ class IngressesYamlVsJsonTest {
                             return null
                         }
                     }
-                    else -> return null // Return null if the path is invalid
+
+                    else -> {
+                        return null
+                    } // Return null if the path is invalid
                 }
         }
         return current
