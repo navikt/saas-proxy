@@ -40,16 +40,16 @@ dependencies {
     implementation 'io.lettuce:lettuce-core:7.9.0.RELEASE'
 
     implementation 'com.google.code.gson:gson:2.15.0'
-    implementation 'org.json:json:20250517'
+    implementation 'org.json:json:20260814'
     implementation 'org.yaml:snakeyaml:2.7'
 
     implementation "io.github.microutils:kotlin-logging:3.0.5"
     implementation "ch.qos.logback:logback-classic:1.6.6"
     implementation "net.logstash.logback:logstash-logback-encoder:9.0"
-    implementation 'tools.jackson.core:jackson-databind:3.2.4' //Transient
+    implementation 'tools.jackson.core:jackson-databind:3.3.0' //Transient
     implementation "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:2.30.0-alpha"
 
-    implementation "io.opentelemetry:opentelemetry-api:1.67.0" // Transitive dependency for io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:2.30.0-alpha
+    implementation "io.opentelemetry:opentelemetry-api:1.68.0" // Transitive dependency for io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:2.30.0-alpha
     implementation "io.prometheus:simpleclient_common:0.9.0"
     implementation "io.prometheus:simpleclient_hotspot:0.9.0"
 
@@ -72,4 +72,11 @@ sourceSets {
 
 kotlin {
     jvmToolchain(21)
+}
+
+tasks.named('shadowJar') {
+    mergeServiceFiles()
+    filesMatching(['META-INF/services/**', 'META-INF/*.kotlin_module']) {
+        duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE
+    }
 }
